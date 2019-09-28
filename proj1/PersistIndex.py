@@ -6,10 +6,14 @@ from abc import ABC, abstractmethod
 
 # Abstract class for several types of index persistances
 
-class PersistIndex(ABC): 
 
-    def __init__(self, content, filename):
-        self.content = content
+class PersistIndex(ABC):
+
+    def __init__(self, filename, content=None, tokenizer=None):
+        if not tokenizer:
+            self.content = content
+        else:
+            self.content = tokenizer.tokenize()
         self.filename = filename
         super().__init__()
 
@@ -18,6 +22,7 @@ class PersistIndex(ABC):
         print("Persisting...")
 
 # Types of index persistance classes
+
 
 class PersistCSV(PersistIndex):
     def persist(self):

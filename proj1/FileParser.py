@@ -3,27 +3,46 @@
 
 import re
 from abc import ABC, abstractmethod
+import gzip
 
-# Class responsible for parsing input files
+# Abstract class for the several types of FileParser
 
-class FileParser:
+
+class FileParser(ABC):
     def __init__(self, files, limit):
         self.content = {}
         self.files = files
         self.limit = limit
 
+    @abstractmethod
     def getContent(self):
+        print("Reading...")
+        pass
+
+# Class responsible for parsing input files
+
+
+class GZipFileParser(FileParser):
+    def getContent(self):
+        super().getContent()
         for filename in self.files:
-            f = open(filename, "r")
+            f = gzip.open("2004_TREC_ASCII_MEDLINE_1.gz", "r")
             docID = ""
             docContent = ""
 
             if self.limit == None:
-                for x in f:
-                    line = f.readline()
+                for line in f:
+                    try:
+                        line = f.readline()
+                    except Exception as e:
+                        print(e)
+                        docID = ""
+                        docContent = ""
+                        continue
                     if line == "":
                         break
-                    splittedLine = line.strip().split("-")
+                    splittedLine = line.decode(
+                        "ISO-8859-1").strip().split("-")
                     label = splittedLine[0].strip()
                     if(len(splittedLine) >= 2):
                         content = splittedLine[1].strip()
@@ -33,7 +52,7 @@ class FileParser:
                             if docID != "":
                                 docContent = content
                         else:
-                            if docContent != "": # detects the end of titles with 2+ lines
+                            if docContent != "":  # detects the end of titles with 2+ lines
                                 self.content[docID] = docContent
                                 docID = ""
                                 docContent = ""
@@ -41,14 +60,21 @@ class FileParser:
                                 continue
                     else:
                         if docContent != "":
-                            docContent += " "+label # in this case label=title content
+                            docContent += " "+label  # in this case label=title content
                 f.close()
             else:
                 for x in range(self.limit):
-                    line = f.readline()
+                    try:
+                        line = f.readline()
+                    except Exception as e:
+                        print(e)
+                        docID = ""
+                        docContent = ""
+                        continue
                     if line == "":
                         break
-                    splittedLine = line.strip().split("-")
+                    splittedLine = line.decode(
+                        "ISO-8859-1").strip().split("-")
                     label = splittedLine[0].strip()
                     if(len(splittedLine) >= 2):
                         content = splittedLine[1].strip()
@@ -71,3 +97,4 @@ class FileParser:
                             docContent += " "+label
                 f.close()
 
+        return self.content
