@@ -29,18 +29,16 @@ class SimpleTokenizer(Tokenizer):
     def tokenize(self):
         super().tokenize()
         for docID, docContent in self.content.items():
-            normalizeData = re.sub(
-                "[^a-zA-Z]+", " ", docContent).lower()
-            token = re.split(" +", normalizeData)
+            token = re.sub(
+                "[^a-z]+", " ", docContent.lower()).split()
             for t in token:
                 if len(t) >= 3:
                     if t not in self.tokens:
                         self.tokens[t] = {docID: 1}
+                    elif docID not in self.tokens[t]:
+                        self.tokens[t][docID] = 1
                     else:
-                        if docID not in self.tokens[t]:
-                            self.tokens[t][docID] = 1
-                        else:
-                            self.tokens[t][docID] = self.tokens[t][docID]+1
+                        self.tokens[t][docID] = self.tokens[t][docID]+1
         return self.tokens
 
 
@@ -69,9 +67,8 @@ class ComplexTokenizer(Tokenizer):
                 if t not in self.stopWords:
                     if t not in self.tokens:
                         self.tokens[t] = {docID: 1}
+                    elif docID not in self.tokens[t]:
+                        self.tokens[t][docID] = 1
                     else:
-                        if docID not in self.tokens[t]:
-                            self.tokens[t][docID] = 1
-                        else:
-                            self.tokens[t][docID] = self.tokens[t][docID]+1
+                        self.tokens[t][docID] = self.tokens[t][docID]+1
         return self.tokens

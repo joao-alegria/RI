@@ -29,10 +29,11 @@ class PersistCSV(PersistIndex):
     def persist(self):
         super().persist()
         f = open(self.filename, "w")
+        currStr = ""
         for token, freqs in self.content.items():
-            f.write(token)
+            currStr += token
             for docID, count in freqs.items():
-                f.write(",")
-                f.write(docID+":"+str(count))
-            f.write("\n")
+                currStr += ","+docID+":"+str(count)
+            f.write(currStr+"\n")
+            currStr = ""
         f.close()

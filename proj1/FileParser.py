@@ -4,6 +4,7 @@
 import re
 from abc import ABC, abstractmethod
 import gzip
+import io
 
 # Abstract class for the several types of FileParser
 
@@ -25,28 +26,49 @@ class FileParser(ABC):
 class GZipFileParser(FileParser):
     def getContent(self):
         super().getContent()
-        numDocs = 0
-        for filename in self.files:
-            f = gzip.open(filename, "r")
-            docContent = ""
-            chunk = f.read(2000000000).decode("ISO-8859-1")
-            while chunk != "":
-                for line in chunk.split("\n"):
-                    if re.match("^PMID( )*-", line):
-                        docID = re.sub("^PMID( )*-( )*", "", line)
-                    elif re.match("^TI( )*-", line):
-                        docContent = re.sub(
-                            "^TI( )*-( )*", "", line)
-                    elif re.match("^PG( )*-", line):
-                        self.content[docID] = docContent
-                        docContent = ""
-                        # numDocs += 1
-                        # if self.limit != None and numDocs >= self.limit:
-                        #     break
-                        #print(numDocs, end="\r", flush=True)
-                    elif docContent != "":
-                        docContent += " "+re.sub("^( )+", "", line).strip()
-                chunk = f.read(2000000000).decode("ISO-8859-1")
-            f.close()
+        if self.limit == None:
+            for filename in self.files:
+                gz = gzip.open(filename, "rb")
+                f = io.BufferedReader(gz)
+                docContent = ""
+                for line in f:
+                    line = line.decode("ISO-8859-1")
+                    if line.startswith("PMID"):
+                        docID = line[6:].strip()
+                    elif line.startswith("TI"):
+                        docContent = line[6:].strip()
+                    elif line.startswith("      "):
+                        if docContent != "":
+                            docContent += " "+line[6:].strip()
+                    else:
+                        if docContent != "":
+                            self.content[docID] = docContent
+                            docContent = ""
+
+                gz.close()
+        else:
+            numDocs = 0
+            for filename in self.files:
+                gz = gzip.open(filename, "rb")
+                f = io.BufferedReader(gz)
+                docContent = ""
+                for line in f:
+                    line = line.decode("ISO-8859-1")
+                    if line.startswith("PMID"):
+                        docID = line[6:].strip()
+                    elif line.startswith("TI"):
+                        docContent = line[6:].strip()
+                    elif line.startswith("      "):
+                        if docContent != "":
+                            docContent += " "+line[6:].strip()
+                    else:
+                        if docContent != "":
+                            self.content[docID] = docContent
+                            docContent = ""
+                            numDocs += 1
+                            if numDocs >= self.limit:
+                                break
+
+                gz.close()
 
         return self.content
