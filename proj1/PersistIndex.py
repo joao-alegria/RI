@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 class PersistIndex(ABC):
 
     def __init__(self, filename, content=None, tokenizer=None):
+        self.tokenizer = tokenizer
         if not tokenizer:
             self.content = content
         else:
