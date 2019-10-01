@@ -1,2 +1,7 @@
 2004_TREC_ASCII_MEDLINE_1.gz
+2004_TREC_ASCII_MEDLINE_2.gz
+test.gz
+out.txt
+simpleTokenizerOut.txt
+complexTokenizerOut.txt
 __pycache__

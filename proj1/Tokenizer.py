@@ -29,8 +29,9 @@ class SimpleTokenizer(Tokenizer):
     def tokenize(self):
         super().tokenize()
         for docID, docContent in self.content.items():
-            normalizeData = re.sub("[^a-zA-Z]+", " ", docContent).lower()
-            token = normalizeData.split(" ")
+            normalizeData = re.sub(
+                "[^a-zA-Z]+", " ", docContent).lower()
+            token = re.split(" +", normalizeData)
             for t in token:
                 if len(t) >= 3:
                     if t not in self.tokens:
@@ -56,9 +57,15 @@ class ComplexTokenizer(Tokenizer):
         super().tokenize()
         for docID, docContent in self.content.items():
             normalizeData = docContent.lower()
-            token = normalizeData.split(" ")
+            token = re.split(" +", normalizeData)
             stemmedTokens = self.stemmer.stemWords(token)
             for t in stemmedTokens:
+                t = t if re.match(
+                    "[0-9]*(/|-)[0-9]*(/|-)[0-9]*", t) else re.sub("([,;.:?!\(\)\[\]\{\}/\"\|])", " ", t)
+                additionalWords = re.split(" +|_+|-+", t)
+                t = additionalWords[0]
+                tokens = stemmedTokens + \
+                    self.stemmer.stemWords(additionalWords[1:])
                 if t not in self.stopWords:
                     if t not in self.tokens:
                         self.tokens[t] = {docID: 1}

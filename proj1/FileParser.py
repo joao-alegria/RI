@@ -25,76 +25,28 @@ class FileParser(ABC):
 class GZipFileParser(FileParser):
     def getContent(self):
         super().getContent()
+        numDocs = 0
         for filename in self.files:
-            f = gzip.open("2004_TREC_ASCII_MEDLINE_1.gz", "r")
-            docID = ""
+            f = gzip.open(filename, "r")
             docContent = ""
-
-            if self.limit == None:
-                for line in f:
-                    try:
-                        line = f.readline()
-                    except Exception as e:
-                        print(e)
-                        docID = ""
+            chunk = f.read(2000000000).decode("ISO-8859-1")
+            while chunk != "":
+                for line in chunk.split("\n"):
+                    if re.match("^PMID( )*-", line):
+                        docID = re.sub("^PMID( )*-( )*", "", line)
+                    elif re.match("^TI( )*-", line):
+                        docContent = re.sub(
+                            "^TI( )*-( )*", "", line)
+                    elif re.match("^PG( )*-", line):
+                        self.content[docID] = docContent
                         docContent = ""
-                        continue
-                    if line == "":
-                        break
-                    splittedLine = line.decode(
-                        "ISO-8859-1").strip().split("-")
-                    label = splittedLine[0].strip()
-                    if(len(splittedLine) >= 2):
-                        content = splittedLine[1].strip()
-                        if label == "PMID":
-                            docID = content
-                        elif label == "TI":
-                            if docID != "":
-                                docContent = content
-                        else:
-                            if docContent != "":  # detects the end of titles with 2+ lines
-                                self.content[docID] = docContent
-                                docID = ""
-                                docContent = ""
-                            else:
-                                continue
-                    else:
-                        if docContent != "":
-                            docContent += " "+label  # in this case label=title content
-                f.close()
-            else:
-                for x in range(self.limit):
-                    try:
-                        line = f.readline()
-                    except Exception as e:
-                        print(e)
-                        docID = ""
-                        docContent = ""
-                        continue
-                    if line == "":
-                        break
-                    splittedLine = line.decode(
-                        "ISO-8859-1").strip().split("-")
-                    label = splittedLine[0].strip()
-                    if(len(splittedLine) >= 2):
-                        content = splittedLine[1].strip()
-                        if label == "PMID":
-                            docID = content
-                        elif label == "TI":
-                            if docID != "":
-                                docContent = content
-                        else:
-                            if docContent != "":
-                                # to do: consider that the file already exists and that we are reading it a second time
-                                # or leave it this way since we do not allow duplications
-                                self.content[docID] = docContent
-                                docID = ""
-                                docContent = ""
-                            else:
-                                continue
-                    else:
-                        if docContent != "":
-                            docContent += " "+label
-                f.close()
+                        # numDocs += 1
+                        # if self.limit != None and numDocs >= self.limit:
+                        #     break
+                        #print(numDocs, end="\r", flush=True)
+                    elif docContent != "":
+                        docContent += " "+re.sub("^( )+", "", line).strip()
+                chunk = f.read(2000000000).decode("ISO-8859-1")
+            f.close()
 
         return self.content
