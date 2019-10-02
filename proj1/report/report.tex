@@ -187,7 +187,6 @@ the method {\it persist()\/}. To try to improve our performance we adopted an ba
 all the document ID's where it appeared and the numbers of occurences on each document at the same time. After testing we observed
 that this approach improve our performance and execution time.
 
-\newpage
 \section*{2. Data Flow}
 
 The file \texttt{Indexer.py} serves as the command to be executed in order to 
@@ -215,20 +214,54 @@ be indexed.
 Once the arguments are validated, the program passes the file name(s) to the 
 File Parser, already capable of processing multiple files. 
 Once the parsing process is completed, the chosen Tokenizer accesses the 
-the data and tokenizes everything, that in this case is the title of each 
-document. ??????????????????????'
+data and tokenizes everything, that in this case is the title of each 
+document.
 Lastly, the information created by the tokenizer - the actual index - is 
 persisted into an output file, making possible its consultation and analysis.
 
-Below we present the actual implementation in Python of the function responsible 
-for parsing the information source file. \\
+Below we present both implementations of the method {\it tokenize()\/} for
+comparison purposes.
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
 \addtolength\baselineskip{-0.05in}
 \begin{quote}
 \begin{verbatim}
- ......
+  def tokenize(self): # of class SimpleTokenizer
+    for docID, docContent in self.content.items():
+        token = re.sub("[^a-z]+", " ", docContent.lower()).split()
+        for t in token:
+            if len(t) >= 3:
+                if t not in self.tokens:
+                    self.tokens[t] = {docID: 1}
+                elif docID not in self.tokens[t]:
+                    self.tokens[t][docID] = 1
+                else:
+                    self.tokens[t][docID] = self.tokens[t][docID]+1
+    return self.tokens
+
+  def tokenize(self): # of class ComplexTokenizer
+    super().tokenize()
+    for docID, docContent in self.content.items():
+        normalizeData = docContent.lower()
+        token = re.split(" +", normalizeData)
+        stemmedTokens = self.stemmer.stemWords(token)
+        for t in stemmedTokens:
+            t = t if re.match(
+                "[0-9]*(/|-)[0-9]*(/|-)[0-9]*", t) else re.sub(
+                "([,;.:?!\(\)\[\]\{\}/\"\|])", " ", t)
+            additionalWords = re.split(" +|_+|-+", t)
+            t = additionalWords[0]
+            tokens = stemmedTokens + \
+                self.stemmer.stemWords(additionalWords[1:])
+            if t not in self.stopWords:
+                if t not in self.tokens:
+                    self.tokens[t] = {docID: 1}
+                elif docID not in self.tokens[t]:
+                    self.tokens[t][docID] = 1
+                else:
+                    self.tokens[t][docID] = self.tokens[t][docID]+1
+    return self.tokens
 \end{verbatim}
 \end{quote}
 \endgroup
@@ -293,19 +326,23 @@ These were retrieved first filtering out all terms with document frequency
 above 1 and then ordering the remaining tokens alphabetically with the use 
 of the {\it quicksort\/} algorithm.
 
-The 10 terms with highest document frequency with the Simple Tokenizer are
-the following:
+\newpage
+The 10 terms with highest document frequency (for both tokenizers) are the 
+following:
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
 \addtolength\baselineskip{-0.05in}
 \begin{quote}
 \begin{verbatim}
-'and' with 2044099 occurs; 'the' with 2044099 occurs; 
-'with' with 2044099 occurs; 'for' with 2044099 occurs; 
-'from' with 2044099 occurs; 'patients' with 2044099 occurs; 
-'human' with 2044099 occurs; 'cell' with 2044099 occurs; 
-'cells' with 2044099 occurs; 'study' with 2044099 occurs
+Simple:
+Terms: 'and', 'the', 'with', 'for', 'from', 'patients', 'human', 
+'cell', 'cells', 'study'
+Total Number of Occurences: 2044099
+
+Complex:
+Terms: 
+Total Number of Occurences: 
 \end{verbatim}
 \end{quote}
 \endgroup
@@ -314,14 +351,57 @@ To retrieve these terms, we stored the maximum number of occurrences
 during the output file's reading process and then search for the terms
 with that document frequency; if these terms are less than 10, we proceed 
 on filtering for documents with the following highest frequency
-and repeat the process until the 10 terms are found.
+and repeat the process until the 10 terms are found. \\
 
-.................. discuss results ......................
+Let us now take a closer look at these results.
+Starting with the indexing time, the indicated values were the minimum
+achievable after optimizing our code as much as we could.
+These execution times were reduced mainly due to the use of a Buffer Reader
+and of batch writings to the output file.
+The achieved sizes on disk of the indexes were the outcome of our way of 
+treating the data. 
+By balancing the data normalization and reducing the lost of 
+knowledge throughout the processing pipeline, our solution seems to 
+deliver indexes of considerably good value.
+This space is smaller for the Complex Tokenizer as it is able to remove
+unnecessary characters and compress the data in a smarter way.
+
+The reason for the answers to questions b) and c) to be different depending on 
+the tokenizer used is simple to understand by looking at their implementation.
+For example, as the \texttt{ComplexTokenizer} splits tokens by hyphens, this
+alone will already increase the vocabulary for the respective index.
+Another example with this tokenizer is that we decided it should not eliminate
+some symbols from words and, when these symbols occur in the beggining of a 
+word, they are sorted as words that appear before the letter 'a', altering,
+in consequence, the answer to question c).
+
+Again, for the answers to the final question, the tokenizer implementations
+alter the results as they treat specific words in different ways.
+For example, the \texttt{ComplexTokenizer} eliminates stopwords such as 'and'
+that occur massively in most English texts.
 
 \newpage
 \section*{Conclusions}
 
-Lorem ipsum ...
+After completing the assignment, we drew a few conclusions regarding our
+solutions and the whole concept of indexing files containing textual information.
+
+First of all, we had to learn how to deal with the actual tokenization of 
+words and what rules should be taken in consideration when normalizing them.
+In this sense, the delivered code is the result of this learning process.
+
+Second, a few unpredicted setbacks such as the extensive time that Python 
+took when reading the input files without a buffer in the middle, made us 
+realize more clearly the fact that, when dealing with large amounts of data,
+the traditional tools are usually insufficient and that we must look at the 
+challenges with a different perspective.
+
+Regarding our satisfaction with the delivered code, not much can be said
+since we did not have access to the answers considered 'more correct'.
+However, taken in consideration the guidance given by our professor for 
+the average execution time, and looking at a few results shared by other 
+class colleagues, we believe that our solution fulfills all task requirements
+and surpasses the expectations in terms of performance.
 
 \begin{thebibliography}{9}
   \bibliographystyle{Science}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Arch Linux) (preloaded format=pdflatex 2019.9.24)  2 OCT 2019 11:36
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Arch Linux) (preloaded format=pdflatex 2019.9.24)  2 OCT 2019 16:35
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -139,26 +139,46 @@ Overfull \hbox (3.05696pt too wide) in paragraph at lines 155--179
  []
 
 [3]
-Underfull \hbox (badness 10000) in paragraph at lines 223--225
+Overfull \hbox (20.42287pt too wide) in paragraph at lines 265--265
+ []        \OT1/pcr/m/n/12 token = re.sub("[^a-z]+", " ", docContent.lower()).split()[] 
+ []
 
+
+Overfull \hbox (27.62286pt too wide) in paragraph at lines 265--265
+ []                    \OT1/pcr/m/n/12 self.tokens[t][docID] = self.tokens[t][docID]+1[] 
+ []
+
+
+Overfull \hbox (27.62286pt too wide) in paragraph at lines 265--265
+ []                    \OT1/pcr/m/n/12 self.tokens[t][docID] = self.tokens[t][docID]+1[] 
  []
 
 [4]
-Overfull \hbox (1.66452pt too wide) in paragraph at lines 239--246
+Overfull \hbox (1.66452pt too wide) in paragraph at lines 272--279
 \OT1/ptm/m/n/12 avail-able along with the as-sign-ment de-scrip-tion with the names \OT1/pcr/m/n/12 2004[]TREC[]ASCII[]MEDLINE
  []
 
-[5] [6] [7] (/home/fp/Desktop/4A1S/RI/P/RI/proj1/report/report.aux) ) 
+[5]
+Overfull \hbox (6.02287pt too wide) in paragraph at lines 346--346
+ []\OT1/pcr/m/n/12 Terms: 'and', 'the', 'with', 'for', 'from', 'patients', 'human',[] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 350--355
+
+ []
+
+[6] [7] (/home/fp/Desktop/4A1S/RI/P/RI/proj1/report/report.aux) ) 
 Here is how much of TeX's memory you used:
  1584 strings out of 492623
  22559 string characters out of 6135669
- 87050 words of memory out of 5000000
+ 89050 words of memory out of 5000000
  5491 multiletter control sequences out of 15000+600000
  13938 words of font info for 31 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  41i,7n,25p,316b,233s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on /home/fp/Desktop/4A1S/RI/P/RI/proj1/report/report.pdf (7 pages, 93821 bytes).
+Output written on /home/fp/Desktop/4A1S/RI/P/RI/proj1/report/report.pdf (7 pages, 98292 bytes).
 PDF statistics:
  48 PDF objects out of 1000 (max. 8388607)
  32 compressed objects within 1 object stream

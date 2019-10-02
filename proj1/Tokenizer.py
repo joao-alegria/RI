@@ -59,7 +59,8 @@ class ComplexTokenizer(Tokenizer):
             stemmedTokens = self.stemmer.stemWords(token)
             for t in stemmedTokens:
                 t = t if re.match(
-                    "[0-9]*(/|-)[0-9]*(/|-)[0-9]*", t) else re.sub("([,;.:?!\(\)\[\]\{\}/\"\|])", " ", t)
+                    "[0-9]*(/|-)[0-9]*(/|-)[0-9]*", t) else re.sub(
+                    "([,;.:?!\(\)\[\]\{\}/\"\|])", " ", t)
                 additionalWords = re.split(" +|_+|-+", t)
                 t = additionalWords[0]
                 tokens = stemmedTokens + \
