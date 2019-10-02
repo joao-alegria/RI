@@ -142,13 +142,18 @@ program to other corpora structures easier to implement.
 
 The class \texttt{FileParser} is an abstract class for all file parsers.
 In our case, we only needed to develop 1 derived class to parse files on
-.gz format. It is \texttt{GZipFileParser} that actually ...................
+.gz format. It is \texttt{GZipFileParser} that actually reads the various compressed 
+files passed to the program and dinamically processes them, meaning that the program will
+line by line decompress the file to retrieve the text bytes and with that information will
+create an dictionary that makes direct relation between a document id("PMID") and it's title("TI").
+To improve our reading performance we used a reading buffer that significantly decreases the execution time. 
 
 \texttt{Tokenizer} is the abstract base class for our 2 Tokenizer implementations.
-This class depends on the \texttt{FileParser} as it uses its ...............
-The \texttt{SimpleTokenizer} contains only one method called {\it tokenize()\/} 
-that replaces all non-alphabetic characters by a space, lowercases tokens, 
-splits on whitespace, and ignores all tokens with less than 3 characters.
+This class depends on the \texttt{FileParser} as it uses the dictionary created by the file processing
+already mentioned.
+The \texttt{SimpleTokenizer} contains only one method called {\it tokenize()\/}, defined by the parent,
+that replaces all non-alphabetic characters by a space, lowercases the entire content, 
+splits on whitespace, and ignores all tokens(resulting strings after the split) with less than 3 characters.
 The \texttt{ComplexTokenizer}, on the other hand, is, as the name indicates, a
 more complex implementation aimed to return a more valuable set of tokens.
 This class integrates a stopword filter to ignore words considered not relevant
@@ -158,14 +163,20 @@ words with the same linguistic base form.
 The stemmer used was PyStemmer \cite{pystemmer}, which is an implementation of 
 Porter Stemmer, as recommended on the assignment instructions. 
 For this reason, \texttt{ComplexTokenizer} depends on the class \texttt{Stemmer}.
+In addition this tokenizer also implements custom rules conserning pontuation, dates, emails, etc. We opted to 
+implement restrictions in a way that will maintain dates, emails, phone numbers, money amounts and numbers in general, but in the 
+other hand will eliminate any kind of pontuation(i.e. ,;.:!?" ...) and will separate if any whitespace, hyphen or underscore, considering
+the resulting terms as tokens too.
 
 Finally we have the \texttt{PersistIndex} abstract class.
 Our implementation, \texttt{PersistCSV}, is the class responsible for persisting
 the ids of the documents where a given token appears and the number of
 occurrences in each of those documents, for all of the tokens from the entire
 vocabulary of the input files. 
-This is done by storing the data in a map structure (a Python dictionary) using
-the method {\it persist()\/}.
+This is done by storing the data present in a dictionary constructed by one of the previous tokenizers in a text file using
+the method {\it persist()\/}. To try to improve our performance we adopted an batch processing like system, were we store the token,
+all the document ID's where it appeared and the numbers of occurences on each document at the same time. After testing we observed
+that this approach improve our performance and execution time.
 
 \newpage
 \section*{2. Data Flow}
@@ -193,7 +204,10 @@ must appear right after the respective options.
 The final argument(s) of the command must be the name(s) of the input file(s) to
 be indexed.
 
-Once the arguments are validated, the program attempts to ...............
+Once the arguments are validated, the program passes the file(s) name(s) to the FileParser that already is capable
+of processing multiple files. Once all the documents have been parsed, a choosen Tokenizer will access the processing resulting
+and will tokenize everything, that in this case is the title of each document. Lastly a PersistIndex class will persist the 
+information created by the tokenizer in a file, make possible further consultation and analisys of the index.
 
 Below we present the actual implementation in Python of the function responsible 
 for parsing the information source file. \\
@@ -235,17 +249,17 @@ This command returned us 3 measured times during the execution, but we
 were interested only in one of them - the Elapsed real time (in seconds)
 since the execution start.
 After all code optimizations, the best value we could achieve was of 
-\texttt{9'12''} (nine minutes and twelve seconds) and an index size on 
-disk of \texttt{500.9 Mbs} with the \texttt{SimpleTokenizer} and of 
-\texttt{14'15''} (fourteen minutes and fifteen seconds) and an index 
-size on disk of \texttt{484.3 Mbs} with the \texttt{ComplexTokenizer}.
+\texttt{5'48''} (five minutes and forty-eight seconds) and an index size on 
+disk of \texttt{470.3 Mbs} with the \texttt{SimpleTokenizer} and of 
+\texttt{10'52''} (ten minutes and fifty-two seconds) and an index 
+size on disk of \texttt{406.1 Mbs} with the \texttt{ComplexTokenizer}.
 
 For the remaining questions, we developed a small script called
 \texttt{IndexAnalyzer.py} that processes the output file passed as argument.
-The calculated size of the vocabulary of both input files combined was of 
-\texttt{N} unique terms.
+The calculated size of the vocabulary generated by the SimpleTokenizer was \texttt{346221} unique terms.
+The calculated size of the vocabulary generated by the ComplexTokenizer was \texttt{N} unique terms.
 
-The 10 first terms (ordered alphabetically) with document frequency of 1
+The 10 first terms (ordered alphabetically) with document frequency of 1 of the SimpleTokenizer
 are the following:
 
 \begingroup
@@ -253,31 +267,49 @@ are the following:
 \addtolength\baselineskip{-0.05in}
 \begin{quote}
 \begin{verbatim}
- ......
+'aaaat', 'aaab', 'aaac', 'aaacr', 'aaact', 'aaaction', 'aaad', 
+'aaaga', 'aaagat', 'aaah'
 \end{verbatim}
 \end{quote}
 \endgroup
 
-These were retrieved first filtering out all terms with document frequency
-above 1 and then ordering the remaining alphabetically with the use of the
-{\it quicksort\/} algorithm.
-
-The 10 terms with highest document frequency are the following:
+The 10 first terms (ordered alphabetically) with document frequency of 1 of the ComplexTokenizer
+are the following:
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
 \addtolength\baselineskip{-0.05in}
 \begin{quote}
 \begin{verbatim}
- ......
+XXX
+\end{verbatim}
+\end{quote}
+\endgroup
+
+These were retrieved first filtering out all terms with document frequency
+above 1 and then ordering the remaining tokens alphabetically with the use of the
+{\it quicksort\/} algorithm.
+
+The 10 terms with highest document frequency with the SimpleTokenizer are the following:
+
+\begingroup
+\addtolength\leftmargini{-0.4in}
+\addtolength\baselineskip{-0.05in}
+\begin{quote}
+\begin{verbatim}
+'and' with 2044099 occurs; 'the' with 2044099 occurs; 
+'with' with 2044099 occurs; 'for' with 2044099 occurs; 
+'from' with 2044099 occurs; 'patients' with 2044099 occurs; 
+'human' with 2044099 occurs; 'cell' with 2044099 occurs; 
+'cells' with 2044099 occurs; 'study' with 2044099 occurs
 \end{verbatim}
 \end{quote}
 \endgroup
 
 To retrieve these terms, we stored the maximum number of occurrences
 during the output file's reading process and then search for the terms
-with that document frequency; these terms are less than 10, we proceed 
-on filtering for documents with document frequency of 1 less document
+with that document frequency; if these terms are less than 10, we proceed 
+on filtering for documents with the following highest frequency
 and repeat the process until the 10 terms are found.
 
 \newpage

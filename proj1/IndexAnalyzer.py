@@ -13,7 +13,11 @@ def buildDict(outputFileName):
         elements = line.split(",")
         count = 0
         for e in elements[1:]:
-            count += int(e.split(":")[1])
+            try:
+                count += int(e.split(":")[1])
+            except Exception:
+                print(e+"banana")
+                sys.exit()
         content[elements[0]] = count
         if highestFrequency < count:
             highestFrequency = count
