@@ -83,13 +83,13 @@ def main(args):
     l = list(set(content.values()))
     l.sort()
     highestTerms = []
-    auxFrequency = highestFrequency
     # decrease auxFrequency as long as the list of terms with highest frequency isn't long enough (while possible)
     while len(highestTerms) < HIGHEST_ELEMENTS and l != []:
-        auxList = list(filterByOccur(l.pop()).keys())
+        ma = l.pop()
+        auxList = list(filterByOccur(ma).keys())
         for element in auxList:
             if len(highestTerms) < HIGHEST_ELEMENTS:
-                highestTerms += [(element, auxFrequency)]
+                highestTerms += [(element, ma)]
     if len(highestTerms) < 10:
         print("\nThe " + str(len(highestTerms)) +
               " terms with highest document frequency:")

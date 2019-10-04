@@ -9,12 +9,11 @@ from abc import ABC, abstractmethod
 
 class PersistIndex(ABC):
 
-    def __init__(self, filename, content=None, tokenizer=None):
-        self.tokenizer = tokenizer
-        if not tokenizer:
+    def __init__(self, filename, content=None, indexer=None):
+        if not indexer:
             self.content = content
         else:
-            self.content = tokenizer.tokenize()
+            self.content = indexer.createIndex()
         self.filename = filename
         super().__init__()
 

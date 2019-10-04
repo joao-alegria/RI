@@ -37,13 +37,12 @@ class GZipFileParser(FileParser):
                         docID = line[6:].strip()
                     elif line.startswith("TI"):
                         docContent = line[6:].strip()
-                    elif line.startswith("      "):
-                        if docContent != "":
-                            docContent += " "+line[6:].strip()
+                    elif line.startswith("PG"):
+                        self.content[docID] = docContent
+                        docContent = ""
                     else:
                         if docContent != "":
-                            self.content[docID] = docContent
-                            docContent = ""
+                            docContent += " "+line[6:].strip()
 
                 gz.close()
         else:
@@ -58,16 +57,15 @@ class GZipFileParser(FileParser):
                         docID = line[6:].strip()
                     elif line.startswith("TI"):
                         docContent = line[6:].strip()
-                    elif line.startswith("      "):
-                        if docContent != "":
-                            docContent += " "+line[6:].strip()
+                    elif line.startswith("PG"):
+                        self.content[docID] = docContent
+                        docContent = ""
+                        numDocs += 1
+                        if numDocs >= self.limit:
+                            break
                     else:
                         if docContent != "":
-                            self.content[docID] = docContent
-                            docContent = ""
-                            numDocs += 1
-                            if numDocs >= self.limit:
-                                break
+                            docContent += " "+line[6:].strip()
 
                 gz.close()
 
