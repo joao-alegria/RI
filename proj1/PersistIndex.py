@@ -9,11 +9,8 @@ from abc import ABC, abstractmethod
 
 class PersistIndex(ABC):
 
-    def __init__(self, filename, content=None, indexer=None):
-        if not indexer:
-            self.content = content
-        else:
-            self.content = indexer.createIndex()
+    def __init__(self, filename, indexer):
+        self.content = sorted(indexer.createIndex().items())
         self.filename = filename
         super().__init__()
 
@@ -29,7 +26,7 @@ class PersistCSV(PersistIndex):
         super().persist()
         f = open(self.filename, "w")
         currStr = ""
-        for token, freqs in self.content.items():
+        for token, freqs in self.content:
             currStr += token
             for docID, count in freqs.items():
                 currStr += ","+docID+":"+str(count)

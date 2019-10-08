@@ -1,4 +1,4 @@
-% Use only LaTeX2e, calling the article.cls class and 12-point type.
+  % Use only LaTeX2e, calling the article.cls class and 12-point type.
 
 \documentclass[12pt]{article}
 
@@ -154,12 +154,10 @@ significantly decreases the execution time.
 \newpage
 \texttt{Tokenizer} is the abstract base class for our 2 Tokenizer 
 implementations.
-This class depends on the \texttt{FileParser} as it uses the dictionary 
-created by the File Parser.
-The \texttt{SimpleTok} \texttt{enizer} contains only one method called 
-{\it tokenize()\/}, defined by the parent, that replaces all non-alphabetic 
+The \texttt{SimpleTokenizer} contains only one method called 
+{\it tokenize()\/}, defined by the parent, that receives some text and processes it by replacing all non-alphabetic 
 characters by a space, lowercases the entire content, splits on whitespace, 
-and ignores all tokens (all resulting strings after the split operation) with 
+and ignoring all tokens(all resulting strings after the split operation) with 
 less than 3 characters.
 The \texttt{ComplexTokenizer}, on the other hand, is, as the name indicates, a
 more complex implementation aimed to return a more valuable set of tokens.
@@ -173,29 +171,30 @@ For this reason, our Complex Tokenizer depends on the class \texttt{Stemmer}.
 In addition this tokenizer also implements custom rules conserning puctuation
 and more.
 We opted to implement restrictions in a way that maintains dates, emails, phone
-numbers, money amounts and numbers in general, but eliminates any kind of 
+numbers, money amounts and numbers in general, but eliminate any kind of 
 regular punctuation and separates words connected with hyphens or underscores,
 considering the resulting terms as tokens as well.
 
-Finally we have the \texttt{PersistIndex} abstract class.
-Our implementation, \texttt{PersistCSV}, is the class responsible for persisting
-the ids of the documents where a given token appears and the number of
-occurrences in each of those documents, for all of the tokens from the entire
-vocabulary of the input files. 
+\texttt{Indexer} is the abstract base class that serves as the interface for any indexer that may be implemented. In our case we only needed to implement one, which is present in \texttt{FileIndexer}. Our Indexer depends on the FileParser and the Tokenizer, because it's needed the contents from the files and the way to tokenize them, having that the program can successfully construct the whole index, which is basically the ids of the documents where a given token appears and the number of occurrences in each of those documents, for all of the tokens from the entire
+vocabulary of the input files.
+
+Finally we have the \texttt{PersistIndex} abstract class that only depend on the \texttt{Indexer}.
+Our implementation, \texttt{PersistCSV}, is the class responsible for persisting the index.
 This is done by storing the data present in a dictionary constructed by one of the previous tokenizers in a text file using
 the method {\it persist()\/}. To try to improve our performance we adopted an batch processing like system, were we store the token,
 all the document ID's where it appeared and the numbers of occurences on each document at the same time. After testing we observed
 that this approach improve our performance and execution time.
 
+\newpage
 \section*{2. Data Flow}
 
-The file \texttt{Indexer.py} serves as the command to be executed in order to 
+The file \texttt{CreateIndex.py} serves as the command to be executed in order to 
 indexing all documents passed as arguments.
 This command has the following format:
 
 \begin{quote}
 \begin{verbatim}
-$ python3 Indexer.py [-h] [-o outputFile] [-l limit] \\
+$ python3 CreateIndex.py [-h] [-o outputFile] [-l limit] \\
   [-t tokenizer] inputFile1 [inputFile2]+
 \end{verbatim}
 \end{quote}
@@ -227,41 +226,22 @@ comparison purposes.
 \addtolength\baselineskip{-0.05in}
 \begin{quote}
 \begin{verbatim}
-  def tokenize(self): # of class SimpleTokenizer
-    for docID, docContent in self.content.items():
-        token = re.sub("[^a-z]+", " ", docContent.lower()).split()
-        for t in token:
-            if len(t) >= 3:
-                if t not in self.tokens:
-                    self.tokens[t] = {docID: 1}
-                elif docID not in self.tokens[t]:
-                    self.tokens[t][docID] = 1
-                else:
-                    self.tokens[t][docID] = self.tokens[t][docID]+1
-    return self.tokens
+  def tokenize(self, processText): # of class SimpleTokenizer
+    tokens = self.regex2.split(self.regex1.sub(" ", processText.lower()))
+    return [t for t in tokens if len(t) >= 3]
 
-  def tokenize(self): # of class ComplexTokenizer
-    super().tokenize()
-    for docID, docContent in self.content.items():
-        normalizeData = docContent.lower()
-        token = re.split(" +", normalizeData)
-        stemmedTokens = self.stemmer.stemWords(token)
-        for t in stemmedTokens:
-            t = t if re.match(
-                "[0-9]*(/|-)[0-9]*(/|-)[0-9]*", t) else re.sub(
-                "([,;.:?!\(\)\[\]\{\}/\"\|])", " ", t)
-            additionalWords = re.split(" +|_+|-+", t)
-            t = additionalWords[0]
-            tokens = stemmedTokens + \
-                self.stemmer.stemWords(additionalWords[1:])
-            if t not in self.stopWords:
-                if t not in self.tokens:
-                    self.tokens[t] = {docID: 1}
-                elif docID not in self.tokens[t]:
-                    self.tokens[t][docID] = 1
-                else:
-                    self.tokens[t][docID] = self.tokens[t][docID]+1
-    return self.tokens
+  def tokenize(self, processText): # of class ComplexTokenizer
+    intermidiateTokens = self.regex1.split(processText.lower())
+    resultingTokens = []
+    for t in intermidiateTokens:
+        t = self.regex2.sub(" ", t) if self.regex3.search(
+            t) else self.regex4.sub(" ", t)
+        additionalWords = list(filter(None, self.regex1.split(t)))
+        if len(additionalWords) == 0:
+            continue
+        resultingTokens += additionalWords
+    return [t for t in self.stemmer.stemWords(resultingTokens) 
+      if t not in self.stopWords and len(t) > 2]
 \end{verbatim}
 \end{quote}
 \endgroup
@@ -287,22 +267,22 @@ only one document (document frequency = 1)?
 d) What are the ten terms with highest document frequency?
 
 To answer question a), we simple added the command \texttt{time} in the
-beginning of the execution of the \texttt{Indexer.py} 
-(e.g. \texttt{\$time python3 Indexer.py (...)}).
+beginning of the execution of the \texttt{CreateIndex.py} 
+(e.g. \texttt{\$time python3 CreateIndex.py (...)}).
 This command returned us 3 measured times during the execution, but we 
 were interested only in one of them - the Elapsed real time (in seconds)
 since the execution start.
 After all code optimizations, the best value we could achieve was of 
-\texttt{5'48''} (five minutes and forty-eight seconds) and an index size on 
+\texttt{6'10''} (six minutes and ten seconds) and an index size on 
 disk of \texttt{470.3 Mbs} with the \texttt{SimpleTokenizer} and of 
 \texttt{10'52''} (ten minutes and fifty-two seconds) and an index 
-size on disk of \texttt{406.1 Mbs} with the \texttt{ComplexTokenizer}.
+size on disk of \texttt{413.8 Mbs} with the \texttt{ComplexTokenizer}.
 
 For the remaining questions, we developed a small script called
 \texttt{IndexAnalyzer.py} that processes the output file passed as argument.
 The calculated size of the vocabulary generated by the Simple Tokenizer
 was \texttt{346221} unique terms and of the vocabulary generated by the 
-Complex Tokenizer was \texttt{N}.
+Complex Tokenizer was \texttt{342949}.
 
 The 10 first terms (ordered alphabetically) with document frequency of 1 
 of the Simple and Complex Tokenizers are the following:
@@ -317,7 +297,8 @@ Simple:
 'aaaga', 'aaagat', 'aaah'
 
 Complex:
-.................
+'$102', '$105m', '$108m', '$10m', '$11', '$111k', '$115',
+'$121', '$125', '$13'
 \end{verbatim}
 \end{quote}
 \endgroup
@@ -336,13 +317,16 @@ following:
 \begin{quote}
 \begin{verbatim}
 Simple:
-Terms: 'and', 'the', 'with', 'for', 'from', 'patients', 'human', 
-'cell', 'cells', 'study'
-Total Number of Occurences: 2044099
+Terms: 'and'(2044099), 'the'(2033707), 'with'(633062), 
+'for'(608296), 'from'(234101), 'patients'(228824),
+'human'(217457), 'cell'(184034), 'cells'(174998),
+'study'(170588)
 
 Complex:
-Terms: 
-Total Number of Occurences: 
+Terms: 'cell'(359036), 'patient'(289130), 'effect'(281633),
+'human'(232049), 'studi'(219451), 'activ'(202904),
+'protein'(188952), 'use'(178166), 'rat'(173397),
+'diseas'(169893)
 \end{verbatim}
 \end{quote}
 \endgroup
