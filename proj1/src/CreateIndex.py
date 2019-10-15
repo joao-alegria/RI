@@ -1,5 +1,8 @@
-
-# Authors: Filipe Pires [85122] & João Alegria [85048]
+"""
+.. module:: CreateIndex
+    :noindex:
+.. moduleauthor:: Filipe Pires [85122] & João Alegria [85048]
+"""
 
 import sys
 
@@ -8,10 +11,15 @@ import Tokenizer
 import PersistIndex
 import Indexer
 
-# Main class for Project 1
-
 
 def main(args):
+    """
+    Main script for Project 1. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.
+
+    :param args: receives the arguments passed to the program during execution
+    :type args: list<str>
+
+    """
 
     HELP = """USAGE:\n
            python3 Indexer.py [-h] [-o outputFile] [-l limit] [-t tokenizer] inputFile1 [inputFile2]+ \n
@@ -37,11 +45,13 @@ def main(args):
             print(HELP)
             return 2
 
+    # default variables
     inputFiles = args.copy()
     outputFile = "out.txt"
     limit = None
     tokenizer = "simple"
 
+    # verifies if any option was passed to the script
     for i in range(0, len(args)-1):
         if args[i] == "-o":
             assert not args[i +
@@ -64,6 +74,7 @@ def main(args):
             inputFiles.remove(args[i])
             inputFiles.remove(args[i+1])
 
+    # taking in account the choosen tokenizer, the respective data flow is created
     if tokenizer == "simple":
         PersistIndex.PersistCSV(
             outputFile,
@@ -84,4 +95,6 @@ def main(args):
     return 0
 
 
-main(sys.argv[1:])
+if __name__ == "__main__":
+    # bypassing the script arguments to the main function
+    main(sys.argv[1:])

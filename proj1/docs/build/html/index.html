@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to RI-Indexer’s documentation! &#8212; RI-Indexer 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-ri-indexer-s-documentation">
+<h1>Welcome to RI-Indexer’s documentation!<a class="headerlink" href="#welcome-to-ri-indexer-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-CreateIndex">
+<span id="index-creator-script"></span><h2>Index Creator Script<a class="headerlink" href="#module-CreateIndex" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="CreateIndex.main">
+<code class="sig-prename descclassname">CreateIndex.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#CreateIndex.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main script for Project 1. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>args</strong> (<em>list&lt;str&gt;</em>) – receives the arguments passed to the program during execution</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-FileParser">
+<span id="file-parser-module"></span><h2>File Parser Module<a class="headerlink" href="#module-FileParser" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="FileParser.FileParser">
+<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">FileParser</code><span class="sig-paren">(</span><em class="sig-param">files</em>, <em class="sig-param">limit</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.FileParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class that serves as template and interface for future instances and implementations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> – list of file names to be processed</p></li>
+<li><p><strong>limit</strong> (<em>int</em>) – limit number of documents to have in consideration, None if no limit</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="FileParser.FileParser.getContent">
+<em class="property">abstract </em><code class="sig-name descname">getContent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.FileParser.getContent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that processes the files passed to the object during it’s creation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="FileParser.GZipFileParser">
+<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">GZipFileParser</code><span class="sig-paren">(</span><em class="sig-param">files</em>, <em class="sig-param">limit</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.GZipFileParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#FileParser.FileParser" title="FileParser.FileParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileParser.FileParser</span></code></a></p>
+<p>Implementation of a file parser dedicated to the current context of RI. Processing of one or varios zip files.</p>
+<dl class="method">
+<dt id="FileParser.GZipFileParser.getContent">
+<code class="sig-name descname">getContent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.GZipFileParser.getContent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the function defined by the abstract class. Fetches the PMID and the TI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dictionary where the key is the PMID of the document and the value the TI</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>map&lt;int, str&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-IndexAnalyzer">
+<span id="index-analyzer-auxiliar-script"></span><h2>Index Analyzer Auxiliar Script<a class="headerlink" href="#module-IndexAnalyzer" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="IndexAnalyzer.buildDict">
+<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">buildDict</code><span class="sig-paren">(</span><em class="sig-param">outputFileName</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.buildDict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="IndexAnalyzer.filterByOccur">
+<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">filterByOccur</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.filterByOccur" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="IndexAnalyzer.main">
+<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="IndexAnalyzer.partition">
+<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">partition</code><span class="sig-paren">(</span><em class="sig-param">terms</em>, <em class="sig-param">low</em>, <em class="sig-param">high</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.partition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="IndexAnalyzer.quicksortAlphabetical">
+<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">quicksortAlphabetical</code><span class="sig-paren">(</span><em class="sig-param">terms</em>, <em class="sig-param">low</em>, <em class="sig-param">high</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.quicksortAlphabetical" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-Indexer">
+<span id="indexer-module"></span><h2>Indexer Module<a class="headerlink" href="#module-Indexer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Indexer.FileIndexer">
+<em class="property">class </em><code class="sig-prename descclassname">Indexer.</code><code class="sig-name descname">FileIndexer</code><span class="sig-paren">(</span><em class="sig-param">fileParser</em>, <em class="sig-param">tokenizer</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Indexer.Indexer" title="Indexer.Indexer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Indexer.Indexer</span></code></a></p>
+<p>Implementation of a indexer dedicated to the current context of RI.</p>
+<dl class="method">
+<dt id="Indexer.FileIndexer.createIndex">
+<code class="sig-name descname">createIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer.createIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the function defined by the abstract class. Creates the index and returns it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>map&lt;str, map&lt;int, str&gt;&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Indexer.Indexer">
+<em class="property">class </em><code class="sig-prename descclassname">Indexer.</code><code class="sig-name descname">Indexer</code><span class="sig-paren">(</span><em class="sig-param">fileParser</em>, <em class="sig-param">tokenizer</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class and interface for several types of index persistances implementations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fileParser</strong> (<a class="reference internal" href="#FileParser.FileParser" title="FileParser.FileParser"><em>FileParser</em></a>) – instance of the file parser used in the context to retrieve the data from the corpus</p></li>
+<li><p><strong>tokenizer</strong> (<a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><em>Tokenizer</em></a>) – instance of the tokenizer used in the context to process the content of the corpus</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="Indexer.Indexer.createIndex">
+<em class="property">abstract </em><code class="sig-name descname">createIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer.createIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that creates the entire index by iterating over the corpus content and with the help of the tokenizer process and create the token index</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-PersistIndex">
+<span id="index-persistance-module"></span><h2>Index Persistance Module<a class="headerlink" href="#module-PersistIndex" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="PersistIndex.PersistCSV">
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistCSV</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">indexer</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#PersistIndex.PersistIndex" title="PersistIndex.PersistIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">PersistIndex.PersistIndex</span></code></a></p>
+<dl class="simple">
+<dt>Implementation of the index persister dedicated to the current context of RI. This instance persists the index in a text file, following a csv-like format, such as:</dt><dd><p>token1,docID1:numOcur,docID2:numOcur,…
+token2,docID1:numOcur,docID2:numOcur,…</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="PersistIndex.PersistCSV.persist">
+<code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV.persist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that effectively persists the data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="PersistIndex.PersistIndex">
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistIndex</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">indexer</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class and interface for several types of index persistance implementations, due to file format or processing method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – name of the file were the information should be written too</p></li>
+<li><p><strong>indexer</strong> (<a class="reference internal" href="#Indexer.Indexer" title="Indexer.Indexer"><em>Indexer</em></a>) – instance of the indexer used in the context to create the corpus index</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="PersistIndex.PersistIndex.persist">
+<em class="property">abstract </em><code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex.persist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that effectively persists the data.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-Tokenizer">
+<span id="tokenizer-module"></span><h2>Tokenizer Module<a class="headerlink" href="#module-Tokenizer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Tokenizer.ComplexTokenizer">
+<em class="property">class </em><code class="sig-prename descclassname">Tokenizer.</code><code class="sig-name descname">ComplexTokenizer</code><a class="headerlink" href="#Tokenizer.ComplexTokenizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer.Tokenizer</span></code></a></p>
+<p>Implementation of a tokenizer dedicated to the current context of RI. This instance is the complex implementation porposed in 2.2. This version uses the PorterStemmer, eliminates stop words and implements some personal rules in relation to special characters(split by [ -_], keeps dates, emails, money, digits, … ; eliminates majority of the punctuantion)</p>
+<dl class="method">
+<dt id="Tokenizer.ComplexTokenizer.tokenize">
+<code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">processText</em><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.ComplexTokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that receives a string and tokenizes it, applying as many rules as implemented by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>processText</strong> (<em>str</em>) – text that will be tokenized</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Tokenizer.SimpleTokenizer">
+<em class="property">class </em><code class="sig-prename descclassname">Tokenizer.</code><code class="sig-name descname">SimpleTokenizer</code><a class="headerlink" href="#Tokenizer.SimpleTokenizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer.Tokenizer</span></code></a></p>
+<p>Implementation of a tokenizer dedicated to the current context of RI. This instance is the simple implementation porposed in 2.1, spliting by ” ” and eliminating all non-alphabetic characters.</p>
+<dl class="method">
+<dt id="Tokenizer.SimpleTokenizer.tokenize">
+<code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">processText</em><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.SimpleTokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that receives a string and tokenizes it, applying as many rules as implemented by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>processText</strong> (<em>str</em>) – text that will be tokenized</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Tokenizer.Tokenizer">
+<em class="property">class </em><code class="sig-prename descclassname">Tokenizer.</code><code class="sig-name descname">Tokenizer</code><a class="headerlink" href="#Tokenizer.Tokenizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class and interface for the various possible implementations of tokenizers</p>
+<dl class="method">
+<dt id="Tokenizer.Tokenizer.tokenize">
+<em class="property">abstract </em><code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">porcessText</em><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.Tokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that receives a string and tokenizes it, applying as many rules as implemented by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>processText</strong> (<em>str</em>) – text that will be tokenized</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">RI-Indexer</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Joao Alegria & FIlipe Pires.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
