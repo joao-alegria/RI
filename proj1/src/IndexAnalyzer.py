@@ -51,48 +51,46 @@ def filterByOccur(n):
     return retdict
 
 
-def partition(terms, low, high):
-    """
-    Auxiliary method for the quicksort algorithm. Acts as a partitioner of the terms and when doing so, also sorts them.
+# def partition(terms, low, high):
+#     """
+#     Auxiliary method for the quicksort algorithm. Acts as a partitioner of the terms and when doing so, also sorts them.
 
-    :param: terms: list of terms to be sorted
-    :type terms: list<str>
-    :param: low: minimum index that the algorithm must consider
-    :type low: int
-    :param: hight: maximum index that the algorithm must consider
-    :type high: int
-    :returns: the index where the list should be partitioned
-    :rtype: int
+#     :param: terms: list of terms to be sorted
+#     :type terms: list<str>
+#     :param: low: minimum index that the algorithm must consider
+#     :type low: int
+#     :param: hight: maximum index that the algorithm must consider
+#     :type high: int
+#     :returns: the index where the list should be partitioned
+#     :rtype: int
 
-    """
-    i = (low-1)
-    pivot = terms[high]
+#     """
+#     i = (low-1)
+#     pivot = terms[high]
 
-    for j in range(low, high):
-        if terms[j] <= pivot:
-            i += 1
-            terms[i], terms[j] = terms[j], terms[i]
+#     for j in range(low, high):
+#         if terms[j] <= pivot:
+#             i += 1
+#             terms[i], terms[j] = terms[j], terms[i]
 
-    terms[i+1], terms[high] = terms[high], terms[i+1]
-    return (i+1)
+#     terms[i+1], terms[high] = terms[high], terms[i+1]
+#     return (i+1)
 
 
-def quicksortAlphabetical(terms, low, high):
-    """
-    Quicksort algorithm implementation that orders the passed terms alphabetically.
+# def quicksortAlphabetical(terms):
+#     """
+#     Quicksort algorithm implementation that orders the passed terms alphabetically.
 
-    :param: terms: list of terms to be sorted
-    :type terms: list<str>
-    :param: low: minimum index that the algorithm must consider
-    :type low: int
-    :param: hight: maximum index that the algorithm must consider
-    :type high: int
+#     :param: terms: list of terms to be sorted
+#     :type terms: list<str>
 
-    """
-    if low < high:
-        pi = partition(terms, low, high)  # partitioning index
-        quicksortAlphabetical(terms, low, pi-1)
-        quicksortAlphabetical(terms, pi+1, high)
+#     """
+#     if len(terms) <= 1:
+#         return terms
+#     pi = terms[0]
+#     greater = [x for x in terms[1:] if x >= pi]
+#     less = [x for x in terms[1:] if x < pi]
+#     return quicksortAlphabetical(less)+[pi]+quicksortAlphabetical(greater)
 
 
 def main(args):
@@ -118,7 +116,7 @@ def main(args):
 
     # retrieve only the keys with the desired document frequency
     terms = list(filterByOccur(documentFrequency).keys())
-    quicksortAlphabetical(terms, 0, len(terms)-1)  # sort them alphabetically
+    terms = sorted(terms)  # sort them alphabetically
     firstTerms = terms[0:10]
     print("\nThe " + str(len(firstTerms)) + " first terms with document frequency of " +
           str(documentFrequency) + " (ordered alphabetically):")
