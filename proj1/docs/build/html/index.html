@@ -101,27 +101,81 @@
 <dl class="function">
 <dt id="IndexAnalyzer.buildDict">
 <code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">buildDict</code><span class="sig-paren">(</span><em class="sig-param">outputFileName</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.buildDict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Reads index output file and builds dictionary with terms as keys and number of occurrences as values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>outputFileName: name of the file to be processed</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="IndexAnalyzer.filterByOccur">
 <code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">filterByOccur</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.filterByOccur" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Finds the subset of the dictionary where the values are equal to value passed to the function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>n: value that the user wants to find</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>subset of the dictionary that contains the value passed</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>map&lt;str, int&gt;</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="IndexAnalyzer.main">
 <code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.main" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Function that answerers to some of the assignment’s questions. Function that creates the data flow for the auxiliar script.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>args: the list of arguments passed to the script when executed</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="IndexAnalyzer.partition">
 <code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">partition</code><span class="sig-paren">(</span><em class="sig-param">terms</em>, <em class="sig-param">low</em>, <em class="sig-param">high</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.partition" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Auxiliary method for the quicksort algorithm. Acts as a partitioner of the terms and when doing so, also sorts them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>terms: list of terms to be sorted</p>
+</dd>
+<dt class="field-even">Param</dt>
+<dd class="field-even"><p>low: minimum index that the algorithm must consider</p>
+</dd>
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>hight: maximum index that the algorithm must consider</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the index where the list should be partitioned</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="function">
 <dt id="IndexAnalyzer.quicksortAlphabetical">
 <code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">quicksortAlphabetical</code><span class="sig-paren">(</span><em class="sig-param">terms</em>, <em class="sig-param">low</em>, <em class="sig-param">high</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.quicksortAlphabetical" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Quicksort algorithm implementation that orders the passed terms alphabetically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>terms: list of terms to be sorted</p>
+</dd>
+<dt class="field-even">Param</dt>
+<dd class="field-even"><p>low: minimum index that the algorithm must consider</p>
+</dd>
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>hight: maximum index that the algorithm must consider</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 <div class="section" id="module-Indexer">

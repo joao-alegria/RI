@@ -1,12 +1,23 @@
+"""
+.. module:: IndexAnalyzer
+    :noindex:
+.. moduleauthor:: Filipe Pires [85122] & João Alegria [85048]
+"""
 import sys
 
 content = {}
 highestFrequency = 0
 HIGHEST_ELEMENTS = 10
-# reads output file and builds dictionary with terms as keys and number of occurrences as values
 
 
 def buildDict(outputFileName):
+    """
+    Reads index output file and builds dictionary with terms as keys and number of occurrences as values
+
+    :param: outputFileName: name of the file to be processed
+    :type outputFileName: str
+
+    """
     global highestFrequency
     outputFile = open(outputFileName, "r")
     for line in outputFile:
@@ -22,20 +33,38 @@ def buildDict(outputFileName):
         if highestFrequency < count:
             highestFrequency = count
 
-# returns fraction of the 'content' dictionary where the values are equal to 'n'
-
 
 def filterByOccur(n):
+    """
+    Finds the subset of the dictionary where the values are equal to value passed to the function.
+
+    :param: n: value that the user wants to find
+    :type n: str
+    :returns: subset of the dictionary that contains the value passed
+    :rtype: map<str, int>
+
+    """
     retdict = {}
     for key in content:
         if content[key] == int(n):
             retdict[key] = content[key]
     return retdict
 
-# aux method for the quicksort
-
 
 def partition(terms, low, high):
+    """
+    Auxiliary method for the quicksort algorithm. Acts as a partitioner of the terms and when doing so, also sorts them.
+
+    :param: terms: list of terms to be sorted
+    :type terms: list<str>
+    :param: low: minimum index that the algorithm must consider
+    :type low: int
+    :param: hight: maximum index that the algorithm must consider
+    :type high: int
+    :returns: the index where the list should be partitioned
+    :rtype: int
+
+    """
     i = (low-1)
     pivot = terms[high]
 
@@ -47,19 +76,34 @@ def partition(terms, low, high):
     terms[i+1], terms[high] = terms[high], terms[i+1]
     return (i+1)
 
-# quicksort implementation to order the terms alphabetically
-
 
 def quicksortAlphabetical(terms, low, high):
+    """
+    Quicksort algorithm implementation that orders the passed terms alphabetically.
+
+    :param: terms: list of terms to be sorted
+    :type terms: list<str>
+    :param: low: minimum index that the algorithm must consider
+    :type low: int
+    :param: hight: maximum index that the algorithm must consider
+    :type high: int
+
+    """
     if low < high:
         pi = partition(terms, low, high)  # partitioning index
         quicksortAlphabetical(terms, low, pi-1)
         quicksortAlphabetical(terms, pi+1, high)
 
-# main function to answer to some of the assignment's questions
-
 
 def main(args):
+    """
+    Function that answerers to some of the assignment's questions. Function that creates the data flow for the auxiliar script.
+
+    :param: args: the list of arguments passed to the script when executed
+    :type args: list<str>
+
+    """
+
     if len(args) == 0:
         print("Please insert output file name as first argument.")
         return
@@ -100,4 +144,5 @@ def main(args):
 
 
 if __name__ == "__main__":
+    # bypassing the arguments of the script to the main function
     main(sys.argv[1:])
