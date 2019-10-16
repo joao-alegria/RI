@@ -1,6 +1,6 @@
-# RI- Project1 - Indexer
+# RI - Project1 - Indexer
 
-This project was developed under the discipline Information Retrieval.
+This project was developed under the discipline of Information Retrieval.
 
 Its main porpuse is to read a corpus of data, without a size limitation, process it by extracting the most important information(PMID and TI, in this case), tokenizing the content, creating an index and persisting it.
 
@@ -18,7 +18,7 @@ pip3 install -r requirements.txt
 
 ### Examples
 
-For running the code please do so inside the src directory and access the input and the output accessing the respective directories.
+For running the code, please do so inside the src directory. Access the input and the output files by accessing the respective directories.
 
 An example for the Simple Tokenizer with output file and various input files is:
 
