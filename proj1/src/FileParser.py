@@ -48,10 +48,11 @@ class GZipFileParser(FileParser):
         Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
 
         :returns: dictionary where the key is the PMID of the document and the value the TI
-        :rtype: map<int, str>
+        :rtype: map<str, str>
 
         """
         super().getContent()
+        docID = 0
         # if the limit is None it means that the entirity of the corpus must be read, all the files
         if self.limit == None:
             for filename in self.files:
@@ -61,11 +62,12 @@ class GZipFileParser(FileParser):
                 for line in f:
                     line = line.decode("ISO-8859-1")
                     if line.startswith("PMID"):
-                        docID = line[6:].strip()
+                        #docID = line[6:].strip()
+                        docID += 1
                     elif line.startswith("TI"):
                         docContent = line[6:].strip()
                     elif line.startswith("PG"):
-                        self.content[docID] = docContent
+                        self.content[str(docID)] = docContent
                         docContent = ""
                     else:
                         if docContent != "":
@@ -82,11 +84,12 @@ class GZipFileParser(FileParser):
                 for line in f:
                     line = line.decode("ISO-8859-1")
                     if line.startswith("PMID"):
-                        docID = line[6:].strip()
+                        #docID = line[6:].strip()
+                        docID += 1
                     elif line.startswith("TI"):
                         docContent = line[6:].strip()
                     elif line.startswith("PG"):
-                        self.content[docID] = docContent
+                        self.content[str(docID)] = docContent
                         docContent = ""
                         numDocs += 1
                         # if limit is non positive, the program will process always 1 document

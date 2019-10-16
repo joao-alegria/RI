@@ -46,7 +46,7 @@ class FileIndexer(Indexer):
         Implementation of the function defined by the abstract class. Creates the index and returns it.
 
         :returns: dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index
-        :rtype: map<str, map<int, str>>
+        :rtype: map<str, map<str, str>>
 
         """
         super().createIndex()

@@ -88,7 +88,7 @@
 <dd class="field-odd"><p>dictionary where the key is the PMID of the document and the value the TI</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>map&lt;int, str&gt;</p>
+<dd class="field-even"><p>map&lt;str, str&gt;</p>
 </dd>
 </dl>
 </dd></dl>
@@ -137,46 +137,6 @@
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="IndexAnalyzer.partition">
-<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">partition</code><span class="sig-paren">(</span><em class="sig-param">terms</em>, <em class="sig-param">low</em>, <em class="sig-param">high</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.partition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Auxiliary method for the quicksort algorithm. Acts as a partitioner of the terms and when doing so, also sorts them.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Param</dt>
-<dd class="field-odd"><p>terms: list of terms to be sorted</p>
-</dd>
-<dt class="field-even">Param</dt>
-<dd class="field-even"><p>low: minimum index that the algorithm must consider</p>
-</dd>
-<dt class="field-odd">Param</dt>
-<dd class="field-odd"><p>hight: maximum index that the algorithm must consider</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the index where the list should be partitioned</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="IndexAnalyzer.quicksortAlphabetical">
-<code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">quicksortAlphabetical</code><span class="sig-paren">(</span><em class="sig-param">terms</em>, <em class="sig-param">low</em>, <em class="sig-param">high</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.quicksortAlphabetical" title="Permalink to this definition">¶</a></dt>
-<dd><p>Quicksort algorithm implementation that orders the passed terms alphabetically.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Param</dt>
-<dd class="field-odd"><p>terms: list of terms to be sorted</p>
-</dd>
-<dt class="field-even">Param</dt>
-<dd class="field-even"><p>low: minimum index that the algorithm must consider</p>
-</dd>
-<dt class="field-odd">Param</dt>
-<dd class="field-odd"><p>hight: maximum index that the algorithm must consider</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 <div class="section" id="module-Indexer">
 <span id="indexer-module"></span><h2>Indexer Module<a class="headerlink" href="#module-Indexer" title="Permalink to this headline">¶</a></h2>
@@ -194,7 +154,7 @@
 <dd class="field-odd"><p>dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>map&lt;str, map&lt;int, str&gt;&gt;</p>
+<dd class="field-even"><p>map&lt;str, map&lt;str, str&gt;&gt;</p>
 </dd>
 </dl>
 </dd></dl>
