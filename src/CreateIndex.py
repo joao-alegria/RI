@@ -99,16 +99,16 @@ def main(args):
             assignment1(Tokenizer.SimpleTokenizer(),
                         outputFile, inputFiles, limit)
         else:
-            assignment2(Tokenizer.SimpleTokenizer(),
-                        outputFile, inputFiles, limit)
+            assignment2(Tokenizer.SimpleTokenizer(), outputFile,
+                        inputFiles, limit, maximumRAM)
 
     else:  # 'complex' = default tokenizer
         if maximumRAM is None:
             assignment1(Tokenizer.ComplexTokenizer(),
                         outputFile, inputFiles, limit)
         else:
-            assignment2(Tokenizer.ComplexTokenizer(),
-                        outputFile, inputFiles, limit)
+            assignment2(Tokenizer.ComplexTokenizer(), outputFile,
+                        inputFiles, limit, maximumRAM)
     return 0
 
 
@@ -116,27 +116,39 @@ def assignment1(tokenizer, outputFile, inputFiles, limit):
     PersistIndex.PersistCSV(
         outputFile,
         indexer=Indexer.FileIndexer(
-            FileParser.GZipFileParser(inputFiles, limit),
-            tokenizer
+            tokenizer,
+            FileParser.GZipFileParser(inputFiles, limit)
         )
     ).persist()
 
 
 def assignment2(tokenizer, outputFile, inputFiles, limit):
     parser = FileParser.LimitedRamFileParser(inputFiles, limit)
+
+    # Indexer is not always the same!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     indexer = Indexer.NewFileIndexer(tokenizer)
-    persister = PersistIndex.NewPersist(outputFile)         # fazer NewPersist
+    # Persistor is not always the same!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    persister = PersistIndex.NewPersist(outputFile)
     auxFile = "intermediate_index_{0}.txt"
     blockCounter = 0
 
     # fazer getContent() no NewFileParser retorna so 1 documento
     doc = parser.getContent()
     while(doc != None):
+
+
+<< << << < HEAD
         while(doc != None and isMemoryAvailable()):         # fazer aux func isMemoryAvailable()
             # fazer indexByDocument() no NewFileIndexer
             indexer.indexByDocument(doc)
             doc = parser.getContent()
 
+== == == =
+        while(doc != None and isMemoryAvailable(maximumRAM)):
+            indexer.createIndex(doc)
+            doc = parser.getDocument()
+
+>>>>>> > c15db816a343b7a4b31ba405b3e51157989d2845
         blockCounter += 1
         persister.persist(                                  # fazer persist() no NewPersist
             auxFile.format(blockCounter),
@@ -147,7 +159,16 @@ def assignment2(tokenizer, outputFile, inputFiles, limit):
     persister.mergeIndex()
 
 
-def isMemoryAvailable():
+
+def isMemoryAvailable(maximumRAM):
+
+    if psutil.virtual_memory().percent > 98: # we avoid using 100% of memory as a prevention measure
+        return False
+
+    process = (psutil.Process(os.getpid())).memory_info().rss # get memory being used by program
+    if process >= maximumRAM:
+        return False
+
     return True
 
 
