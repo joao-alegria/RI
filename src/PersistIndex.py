@@ -16,6 +16,7 @@ class PersistIndex(ABC):
     :param indexer: instance of the indexer used in the context to create the corpus index
     :type indexer: Indexer
     """
+    currentFilename = "banana"
 
     def __init__(self, filename, indexer=None):
         """
@@ -27,13 +28,22 @@ class PersistIndex(ABC):
         super().__init__()
 
     @abstractmethod
-    def persist(self, content=None):
+    def persist(self, content=None, overrideFile=None):
         """
         Function that effectively persists the data.
         """
         if content:
             self.content = content
+        if overrideFile:
+            self.currentFilename = overrideFile
+        else:
+            self.currentFilename = self.filename
         print("Persisting...")
+
+    # @abstractmethod
+    # def mergeIndex(self, blockCount):
+    #     print("Merging...")
+    #     pass
 
 
 class PersistCSV(PersistIndex):
@@ -43,10 +53,10 @@ class PersistCSV(PersistIndex):
         token2,docID1:numOcur,docID2:numOcur,...
     """
 
-   def persist(self, content=None):
-        super().persist()
+    def persist(self, content=None, overrideFile=None):
+        super().persist(content, overrideFile)
         self.content = sorted(self.content.items())
-        f = open(self.filename, "w")
+        f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.content:
             currStr += token
@@ -59,10 +69,10 @@ class PersistCSV(PersistIndex):
 
 
 class PersistCSVWeighted(PersistIndex):
-    def persist(self, content=None):
-        super().persist()
+    def persist(self, content=None, overrideFile=None):
+        super().persist(content, overrideFile)
         self.content = sorted(self.content.items())
-        f = open(self.filename, "w")
+        f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.content:
             currStr += token+":1"
@@ -75,11 +85,11 @@ class PersistCSVWeighted(PersistIndex):
 
 
 class PersistCSVWeightedPosition(PersistIndex):
-    def persist(self, content=None):
-        super().persist()
+    def persist(self, content=None, overrideFile=None):
+        super().persist(content, overrideFile)
         index, positions = self.content
         index = sorted(index.items())
-        f = open(self.filename, "w")
+        f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in index:
             currStr += token+":1"

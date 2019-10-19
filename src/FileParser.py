@@ -21,13 +21,17 @@ class FileParser(ABC):
 
     """
 
-    def __init__(self, files, limit):
+    def __init__(self, files, limit=None):
         """
         Class constructor
         """
         self.content = {}
         self.files = files
-        self.limit = limit
+        if limit == None:
+            # a number bigger than all the rest
+            self.limit = float('inf')
+        else:
+            self.limit = limit
 
     @abstractmethod
     def getContent(self):
@@ -53,53 +57,30 @@ class GZipFileParser(FileParser):
         """
         super().getContent()
         docID = 0
-        # if the limit is None it means that the entirity of the corpus must be read, all the files
-        if self.limit == None:
-            for filename in self.files:
-                gz = gzip.open(filename, "rb")
-                f = io.BufferedReader(gz)
-                docContent = ""
-                for line in f:
-                    line = line.decode("ISO-8859-1")
-                    if line.startswith("PMID"):
-                        # docID = line[6:].strip()
-                        docID += 1
-                    elif line.startswith("TI"):
-                        docContent = line[6:].strip()
-                    elif line.startswith("PG"):
-                        self.content[str(docID)] = docContent
-                        docContent = ""
-                    else:
-                        if docContent != "":
-                            docContent += " "+line[6:].strip()
+        numDocs = 0
+        for filename in self.files:
+            gz = gzip.open(filename, "rb")
+            f = io.BufferedReader(gz)
+            docContent = ""
+            for line in f:
+                line = line.decode("ISO-8859-1")
+                if line.startswith("PMID"):
+                    # docID = line[6:].strip()
+                    docID += 1
+                elif line.startswith("TI"):
+                    docContent = line[6:].strip()
+                elif line.startswith("PG"):
+                    self.content[str(docID)] = docContent
+                    docContent = ""
+                    numDocs += 1
+                    # if limit is non positive, the program will process always 1 document
+                    if numDocs >= self.limit:
+                        break
+                else:
+                    if docContent != "":
+                        docContent += " "+line[6:].strip()
 
-                gz.close()
-        else:
-            # if limit is defined the program will only process until the number of documents is reached
-            numDocs = 0
-            for filename in self.files:
-                gz = gzip.open(filename, "rb")
-                f = io.BufferedReader(gz)
-                docContent = ""
-                for line in f:
-                    line = line.decode("ISO-8859-1")
-                    if line.startswith("PMID"):
-                        # docID = line[6:].strip()
-                        docID += 1
-                    elif line.startswith("TI"):
-                        docContent = line[6:].strip()
-                    elif line.startswith("PG"):
-                        self.content[str(docID)] = docContent
-                        docContent = ""
-                        numDocs += 1
-                        # if limit is non positive, the program will process always 1 document
-                        if numDocs >= self.limit:
-                            break
-                    else:
-                        if docContent != "":
-                            docContent += " "+line[6:].strip()
-
-                gz.close()
+            gz.close()
 
         return self.content
 
@@ -109,9 +90,9 @@ class LimitedRamFileParser(FileParser):
     def __init__(self, files, limit):
         super().__init__(files, limit)
         self.numDocs = 0
-        if files != []:
+        if self.files != []:
             self.gz = gzip.open(self.files.pop(0), "rb")
-            self.f = io.BufferedReader(gz)
+            self.f = io.BufferedReader(self.gz)
 
     def getContent(self):
         docID = 0
@@ -123,18 +104,18 @@ class LimitedRamFileParser(FileParser):
             elif line.startswith("TI"):
                 docContent = line[6:].strip()
             elif line.startswith("PG"):
-                numDocs += 1
-                if numDocs >= self.limit:
+                self.numDocs += 1
+                if self.numDocs >= self.limit:
                     return None
                 return {str(docID): docContent}
             else:
                 if docContent != "":
                     docContent += " "+line[6:].strip()
 
-            self.gz.close()
+        self.gz.close()
 
-        if files != []:
+        if self.files != []:
             self.gz = gzip.open(self.files.pop(0), "rb")
-            self.f = io.BufferedReader(gz)
+            self.f = io.BufferedReader(self.gz)
         else:
             return None
