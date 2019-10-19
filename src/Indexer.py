@@ -22,18 +22,22 @@ class Indexer(ABC):
 
     """
 
-    def __init__(self, fileParser, tokenizer):
+    def __init__(self, tokenizer, fileParser=None):
         """
         Class constructor
         """
         self.tokenizer = tokenizer
-        self.fileParser = fileParser
-        self.docs = fileParser.getContent()
+        if fileParser: # if fileParser != None
+            self.fileParser = fileParser
+            self.docs = fileParser.getContent()
+        else:
+            self.fileParser = None
+            self.docs = None
         self.index = {}
         super().__init__()
 
     @abstractmethod
-    def createIndex(self):
+    def createIndex(self, content=None):
         """
         Function that creates the entire index by iterating over the corpus content and with the help of the tokenizer process and create the token index
         """
@@ -45,7 +49,7 @@ class FileIndexer(Indexer):
     Implementation of a indexer dedicated to the current context of RI.
     """
 
-    def createIndex(self):
+    def createIndex(self, content=None):
         """
         Implementation of the function defined by the abstract class. Creates the index and returns it.
 
@@ -54,55 +58,99 @@ class FileIndexer(Indexer):
 
         """
         super().createIndex()
-        for docID, docContent in self.docs.items():
-            tokens = self.tokenizer.tokenize(docContent)
-            for t in tokens:
-                if t not in self.index:
-                    self.index[t] = {docID: 1}
-                elif docID not in self.index[t]:
-                    self.index[t][docID] = 1
-                else:
-                    self.index[t][docID] += 1
-        return self.index
-
+        if not content: # if regular (full) createIndex()
+            for docID, docContent in self.docs.items():
+                tokens = self.tokenizer.tokenize(docContent)
+                for t in tokens:
+                    if t not in self.index:
+                        self.index[t] = {docID: 1}
+                    elif docID not in self.index[t]:
+                        self.index[t][docID] = 1
+                    else:
+                        self.index[t][docID] += 1
+            return self.index
+        else:
+            for docID, docContent in content:
+                tokens = self.tokenizer.tokenize(docContent)
+                for t in tokens:
+                    if t not in self.index:
+                        self.index[t] = {docID: 1}
+                    elif docID not in self.index[t]:
+                        self.index[t][docID] = 1
+                    else:
+                        self.index[t][docID] += 1
+            return self.index
 
 class WeightedFileIndexer(FileIndexer):
-    def createIndex(self):
+    def createIndex(self, content=None):
         super().createIndex()
-        for token, postingList in self.index.items():
-            for docID, tf in postingList.items():
-                postingList[docID] = 1+math.log10(tf)
-            vectorNorme = math.sqrt(
-                sum([math.pow(x, 2) for x in postingList.values()]))
-            for docID, tf in postingList.items():
-                postingList[docID] = Decimal(
-                    postingList[docID])/Decimal(vectorNorme)
-
+        if not content: # if regular (full) createIndex()
+            for token, postingList in self.index.items():
+                for docID, tf in postingList.items():
+                    postingList[docID] = 1+math.log10(tf)
+                vectorNorme = math.sqrt(
+                    sum([math.pow(x, 2) for x in postingList.values()]))
+                for docID, tf in postingList.items():
+                    postingList[docID] = Decimal(
+                        postingList[docID])/Decimal(vectorNorme)
+        else:
+            for token, postingList in content:
+                for docID, tf in postingList.items():
+                    postingList[docID] = 1+math.log10(tf)
+                vectorNorme = math.sqrt(
+                    sum([math.pow(x, 2) for x in postingList.values()]))
+                for docID, tf in postingList.items():
+                    postingList[docID] = Decimal(
+                        postingList[docID])/Decimal(vectorNorme)
 
 class WeightedFilePositionIndexer(Indexer):
-    def createIndex(self):
+    def createIndex(self, content=None):
         super().createIndex()
         positionIndex = {}
-        for docID, docContent in self.docs.items():
-            tokens = self.tokenizer.tokenize(docContent)
-            for idx, t in enumerate(tokens):
-                if t not in self.index:
-                    self.index[t] = {docID: 1}
-                    positionIndex[t] = {docID: [idx+1]}
-                elif docID not in self.index[t]:
-                    self.index[t][docID] = 1
-                    positionIndex[t][docID] = [idx+1]
-                else:
-                    self.index[t][docID] += 1
-                    positionIndex[t][docID].append(idx+1)
+        if not content: # if regular (full) createIndex()
+            for docID, docContent in self.docs.items():
+                tokens = self.tokenizer.tokenize(docContent)
+                for idx, t in enumerate(tokens):
+                    if t not in self.index:
+                        self.index[t] = {docID: 1}
+                        positionIndex[t] = {docID: [idx+1]}
+                    elif docID not in self.index[t]:
+                        self.index[t][docID] = 1
+                        positionIndex[t][docID] = [idx+1]
+                    else:
+                        self.index[t][docID] += 1
+                        positionIndex[t][docID].append(idx+1)
 
-        for token, postingList in self.index.items():
-            for docID, tf in postingList.items():
-                postingList[docID] = 1+math.log10(tf)
-            vectorNorme = math.sqrt(
-                sum([math.pow(x, 2) for x in postingList.values()]))
-            for docID, tf in postingList.items():
-                postingList[docID] = Decimal(
-                    postingList[docID])/Decimal(vectorNorme)
+            for token, postingList in self.index.items():
+                for docID, tf in postingList.items():
+                    postingList[docID] = 1+math.log10(tf)
+                vectorNorme = math.sqrt(
+                    sum([math.pow(x, 2) for x in postingList.values()]))
+                for docID, tf in postingList.items():
+                    postingList[docID] = Decimal(
+                        postingList[docID])/Decimal(vectorNorme)
+
+        else:
+            for docID, docContent in content:
+                tokens = self.tokenizer.tokenize(docContent)
+                for idx, t in enumerate(tokens):
+                    if t not in self.index:
+                        self.index[t] = {docID: 1}
+                        positionIndex[t] = {docID: [idx+1]}
+                    elif docID not in self.index[t]:
+                        self.index[t][docID] = 1
+                        positionIndex[t][docID] = [idx+1]
+                    else:
+                        self.index[t][docID] += 1
+                        positionIndex[t][docID].append(idx+1)
+
+            for token, postingList in content:
+                for docID, tf in postingList.items():
+                    postingList[docID] = 1+math.log10(tf)
+                vectorNorme = math.sqrt(
+                    sum([math.pow(x, 2) for x in postingList.values()]))
+                for docID, tf in postingList.items():
+                    postingList[docID] = Decimal(
+                        postingList[docID])/Decimal(vectorNorme)
 
         return self.index, positionIndex

@@ -95,13 +95,13 @@ def main(args):
         if maximumRAM is None:
             assignment1(Tokenizer.SimpleTokenizer(),outputFile,inputFiles,limit)
         else:
-            assignment2(Tokenizer.SimpleTokenizer(),outputFile,inputFiles,limit)
+            assignment2(Tokenizer.SimpleTokenizer(),outputFile,inputFiles,limit,maximumRAM)
 
     else: # 'complex' = default tokenizer
         if maximumRAM is None:
             assignment1(Tokenizer.ComplexTokenizer(),outputFile,inputFiles,limit)
         else:
-            assignment2(Tokenizer.ComplexTokenizer(),outputFile,inputFiles,limit)
+            assignment2(Tokenizer.ComplexTokenizer(),outputFile,inputFiles,limit,maximumRAM)
     return 0
 
 
@@ -109,12 +109,13 @@ def assignment1(tokenizer,outputFile,inputFiles,limit):
     PersistIndex.PersistCSV(
         outputFile,
         indexer=Indexer.FileIndexer(
-            FileParser.GZipFileParser(inputFiles, limit),
-            tokenizer
+            tokenizer,
+            FileParser.GZipFileParser(inputFiles, limit)
         )
     ).persist()
 
-def assignment2(tokenizer,outputFile,inputFiles,limit):
+
+def assignment2(tokenizer,outputFile,inputFiles,limit,maximumRAM):
     parser = FileParser.NewFileParser(inputFiles, limit)    # fazer NewFileParser
     indexer = Indexer.NewFileIndexer(                       # fazer NewFileIndexer
         tokenizer
@@ -125,8 +126,8 @@ def assignment2(tokenizer,outputFile,inputFiles,limit):
     
     doc = parser.getDocument()                              # fazer getDocument() no NewFileParser
     while(doc != None):
-        while(doc != None and isMemoryAvailable()):         # fazer aux func isMemoryAvailable()
-            indexer.indexByDocument(doc)                    # fazer indexByDocument() no NewFileIndexer
+        while(doc != None and isMemoryAvailable(maximumRAM)):
+            indexer.createIndex(doc)
             doc = parser.getDocument()
         
         blockCounter += 1
@@ -137,8 +138,18 @@ def assignment2(tokenizer,outputFile,inputFiles,limit):
         indexer.content.clear()
     persister.mergeIndex()                                  # fazer mergeIndex() no NewPersist
 
-def isMemoryAvailable():
+
+def isMemoryAvailable(maximumRAM):
+
+    if psutil.virtual_memory().percent > 98: # we avoid using 100% of memory as a prevention measure
+        return False
+
+    process = (psutil.Process(os.getpid())).memory_info().rss # get memory being used by program
+    if process >= maximumRAM:
+        return False
+
     return True
+
 
 if __name__ == "__main__":
     # bypassing the script arguments to the main function
