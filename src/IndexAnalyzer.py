@@ -31,8 +31,8 @@ def buildDict(outputFileName):
                 count += freq
                 if max_freq < freq:
                     max_freq = freq
-            except Exception:
-                print(e+"banana")
+            except Exception as ex:
+                print(ex)
                 sys.exit()
         content[elements[0]] = count
 
