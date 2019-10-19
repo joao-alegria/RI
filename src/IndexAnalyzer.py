@@ -8,7 +8,7 @@ import sys
 content = {}
 highestFrequency = 0
 HIGHEST_ELEMENTS = 10
-
+docfreqdict = {} 
 
 def buildDict(outputFileName):
     """
@@ -20,18 +20,31 @@ def buildDict(outputFileName):
     """
     global highestFrequency
     outputFile = open(outputFileName, "r")
-    for line in outputFile:
+    for line in outputFile: 
         elements = line.split(",")
         count = 0
+        max_freq = 0
         for e in elements[1:]:
             try:
-                count += int(e.split(":")[1])
+                aux = e.split(":")
+                docID,freq = aux[0],int(aux[1])
+                count += freq
+                if max_freq < freq:
+                    max_freq = freq
             except Exception:
                 print(e+"banana")
                 sys.exit()
         content[elements[0]] = count
+
+        if max_freq in docfreqdict.keys():
+            docfreqdict[max_freq].append(elements[0])
+        else:
+            docfreqdict[max_freq] = [elements[0]]
+
         if highestFrequency < count:
             highestFrequency = count
+        
+        
 
 
 def filterByOccur(n):
@@ -49,49 +62,6 @@ def filterByOccur(n):
         if content[key] == int(n):
             retdict[key] = content[key]
     return retdict
-
-
-# def partition(terms, low, high):
-#     """
-#     Auxiliary method for the quicksort algorithm. Acts as a partitioner of the terms and when doing so, also sorts them.
-
-#     :param: terms: list of terms to be sorted
-#     :type terms: list<str>
-#     :param: low: minimum index that the algorithm must consider
-#     :type low: int
-#     :param: hight: maximum index that the algorithm must consider
-#     :type high: int
-#     :returns: the index where the list should be partitioned
-#     :rtype: int
-
-#     """
-#     i = (low-1)
-#     pivot = terms[high]
-
-#     for j in range(low, high):
-#         if terms[j] <= pivot:
-#             i += 1
-#             terms[i], terms[j] = terms[j], terms[i]
-
-#     terms[i+1], terms[high] = terms[high], terms[i+1]
-#     return (i+1)
-
-
-# def quicksortAlphabetical(terms):
-#     """
-#     Quicksort algorithm implementation that orders the passed terms alphabetically.
-
-#     :param: terms: list of terms to be sorted
-#     :type terms: list<str>
-
-#     """
-#     if len(terms) <= 1:
-#         return terms
-#     pi = terms[0]
-#     greater = [x for x in terms[1:] if x >= pi]
-#     less = [x for x in terms[1:] if x < pi]
-#     return quicksortAlphabetical(less)+[pi]+quicksortAlphabetical(greater)
-
 
 def main(args):
     """
@@ -122,24 +92,38 @@ def main(args):
           str(documentFrequency) + " (ordered alphabetically):")
     print(firstTerms[0:10])  # print a maximum of 10 terms
 
-    l = list(set(content.values()))
+    l = list(set(content.values())) # [(term,{doc:n_occur})]   # []
     l.sort()
-    highestTerms = []
+    highestCollectionTerms = []
     # decrease auxFrequency as long as the list of terms with highest frequency isn't long enough (while possible)
-    while len(highestTerms) < HIGHEST_ELEMENTS and l != []:
+    while len(highestCollectionTerms) < HIGHEST_ELEMENTS and l != []:
         ma = l.pop()
         auxList = list(filterByOccur(ma).keys())
         for element in auxList:
-            if len(highestTerms) < HIGHEST_ELEMENTS:
-                highestTerms += [(element, ma)]
-    if len(highestTerms) < 10:
-        print("\nThe " + str(len(highestTerms)) +
+            if len(highestCollectionTerms) < HIGHEST_ELEMENTS:
+                highestCollectionTerms += [(element, ma)]
+    if len(highestCollectionTerms) < HIGHEST_ELEMENTS:
+        print("\nThe " + str(len(highestCollectionTerms)) +
+              " terms with highest collection frequency:")
+    else:
+        print("\nThe 10 terms with highest collection frequency:")
+    print(highestCollectionTerms[0:HIGHEST_ELEMENTS])  # print a maximum of HIGHEST_ELEMENTS terms
+
+    l = sorted(docfreqdict.items())
+    highestDocumentTerms = []
+    count = 0
+    while count < HIGHEST_ELEMENTS and l != []:
+        highestDocumentTerms += [(l[len(l)-1][1],l[len(l)-1][0])]
+        count += len(l[len(l)-1][1])
+        l = l[0:-1]
+
+    if count < HIGHEST_ELEMENTS:
+        print("\nThe " + count +
               " terms with highest document frequency:")
     else:
         print("\nThe 10 terms with highest document frequency:")
-    print(highestTerms[0:10])  # print a maximum of 10 terms
+    print(highestDocumentTerms)
     print()
-
 
 if __name__ == "__main__":
     # bypassing the arguments of the script to the main function
