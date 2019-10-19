@@ -21,7 +21,7 @@ class PersistIndex(ABC):
         """
         Class constructor
         """
-        self.content = sorted(indexer.createIndex().items())
+        self.content = indexer.createIndex()
         self.filename = filename
         super().__init__()
 
@@ -42,12 +42,49 @@ class PersistCSV(PersistIndex):
 
     def persist(self):
         super().persist()
+        self.content = sorted(self.content.items())
         f = open(self.filename, "w")
         currStr = ""
         for token, freqs in self.content:
             currStr += token
             for docID, count in freqs.items():
                 currStr += ","+docID+":"+str(count)
+            # batch-like writting, writting 1 token and its ocurrences at a time
+            f.write(currStr+"\n")
+            currStr = ""
+        f.close()
+
+
+class PersistCSVWeighted(PersistIndex):
+    def persist(self):
+        super().persist()
+        self.content = sorted(self.content.items())
+        f = open(self.filename, "w")
+        currStr = ""
+        for token, freqs in self.content:
+            currStr += token+":1"
+            for docID, count in freqs.items():
+                currStr += ";"+docID+":"+str(count)
+            # batch-like writting, writting 1 token and its ocurrences at a time
+            f.write(currStr+"\n")
+            currStr = ""
+        f.close()
+
+
+class PersistCSVWeightedPosition(PersistIndex):
+    def persist(self):
+        super().persist()
+        index, positions = self.content
+        index = sorted(index.items())
+        f = open(self.filename, "w")
+        currStr = ""
+        for token, freqs in index:
+            currStr += token+":1"
+            for docID, count in freqs.items():
+                currStr += ";"+docID+":" + \
+                    str(count)+":"+str(positions[token][docID][0])
+                for pos in positions[token][docID][1:]:
+                    currStr += ","+str(pos)
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
             currStr = ""

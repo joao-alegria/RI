@@ -4,7 +4,11 @@
 .. moduleauthor:: Filipe Pires [85122] & João Alegria [85048]
 """
 import re
+import math
+from decimal import *
 from abc import ABC, abstractmethod
+
+getcontext().prec = 2
 
 
 class Indexer(ABC):
@@ -60,3 +64,45 @@ class FileIndexer(Indexer):
                 else:
                     self.index[t][docID] += 1
         return self.index
+
+
+class WeightedFileIndexer(FileIndexer):
+    def createIndex(self):
+        super().createIndex()
+        for token, postingList in self.index.items():
+            for docID, tf in postingList.items():
+                postingList[docID] = 1+math.log10(tf)
+            vectorNorme = math.sqrt(
+                sum([math.pow(x, 2) for x in postingList.values()]))
+            for docID, tf in postingList.items():
+                postingList[docID] = Decimal(
+                    postingList[docID])/Decimal(vectorNorme)
+
+
+class WeightedFilePositionIndexer(Indexer):
+    def createIndex(self):
+        super().createIndex()
+        positionIndex = {}
+        for docID, docContent in self.docs.items():
+            tokens = self.tokenizer.tokenize(docContent)
+            for idx, t in enumerate(tokens):
+                if t not in self.index:
+                    self.index[t] = {docID: 1}
+                    positionIndex[t] = {docID: [idx+1]}
+                elif docID not in self.index[t]:
+                    self.index[t][docID] = 1
+                    positionIndex[t][docID] = [idx+1]
+                else:
+                    self.index[t][docID] += 1
+                    positionIndex[t][docID].append(idx+1)
+
+        for token, postingList in self.index.items():
+            for docID, tf in postingList.items():
+                postingList[docID] = 1+math.log10(tf)
+            vectorNorme = math.sqrt(
+                sum([math.pow(x, 2) for x in postingList.values()]))
+            for docID, tf in postingList.items():
+                postingList[docID] = Decimal(
+                    postingList[docID])/Decimal(vectorNorme)
+
+        return self.index, positionIndex
