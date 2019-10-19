@@ -136,19 +136,10 @@ def assignment2(tokenizer, outputFile, inputFiles, limit):
     doc = parser.getContent()
     while(doc != None):
 
-
-<< << << < HEAD
-        while(doc != None and isMemoryAvailable()):         # fazer aux func isMemoryAvailable()
-            # fazer indexByDocument() no NewFileIndexer
-            indexer.indexByDocument(doc)
-            doc = parser.getContent()
-
-== == == =
         while(doc != None and isMemoryAvailable(maximumRAM)):
             indexer.createIndex(doc)
             doc = parser.getDocument()
 
->>>>>> > c15db816a343b7a4b31ba405b3e51157989d2845
         blockCounter += 1
         persister.persist(                                  # fazer persist() no NewPersist
             auxFile.format(blockCounter),
@@ -159,13 +150,13 @@ def assignment2(tokenizer, outputFile, inputFiles, limit):
     persister.mergeIndex()
 
 
-
 def isMemoryAvailable(maximumRAM):
 
-    if psutil.virtual_memory().percent > 98: # we avoid using 100% of memory as a prevention measure
+    if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
         return False
 
-    process = (psutil.Process(os.getpid())).memory_info().rss # get memory being used by program
+    # get memory being used by program
+    process = (psutil.Process(os.getpid())).memory_info().rss
     if process >= maximumRAM:
         return False
 
