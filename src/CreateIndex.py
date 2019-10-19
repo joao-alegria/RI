@@ -13,6 +13,7 @@ import Tokenizer
 import PersistIndex
 import Indexer
 
+
 def main(args):
     """
     Main script for Project 1. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.
@@ -80,32 +81,38 @@ def main(args):
         if args[i] == "-r":
             assert not args[i +
                             1].startswith("-"), "This option must have the value indicated."
-            assert args[i+1].isdigit() and int(args[i+1])>=0, "RAM capacity value must be an integer larger or equal to zero."
+            assert args[i+1].isdigit() and int(args[i+1]
+                                               ) >= 0, "RAM capacity value must be an integer larger or equal to zero."
             maximumRAM = int(args[i+1])*1000000000
             print(maximumRAM)
             print(psutil.virtual_memory().free)
             if maximumRAM > psutil.virtual_memory().free:
                 maximumRAM = psutil.virtual_memory().free
-                print("Warning: Memory available is less than the asked value, maximumRAM set to " + str(int(maximumRAM/1000000000)) + "Gb.")
+                print("Warning: Memory available is less than the asked value, maximumRAM set to " +
+                      str(int(maximumRAM/1000000000)) + "Gb.")
             inputFiles.remove(args[i])
             inputFiles.remove(args[i+1])
-    
+
     # taking in account the choosen tokenizer, the respective data flow is created
     if tokenizer == "simple":
         if maximumRAM is None:
-            assignment1(Tokenizer.SimpleTokenizer(),outputFile,inputFiles,limit)
+            assignment1(Tokenizer.SimpleTokenizer(),
+                        outputFile, inputFiles, limit)
         else:
-            assignment2(Tokenizer.SimpleTokenizer(),outputFile,inputFiles,limit)
+            assignment2(Tokenizer.SimpleTokenizer(),
+                        outputFile, inputFiles, limit)
 
-    else: # 'complex' = default tokenizer
+    else:  # 'complex' = default tokenizer
         if maximumRAM is None:
-            assignment1(Tokenizer.ComplexTokenizer(),outputFile,inputFiles,limit)
+            assignment1(Tokenizer.ComplexTokenizer(),
+                        outputFile, inputFiles, limit)
         else:
-            assignment2(Tokenizer.ComplexTokenizer(),outputFile,inputFiles,limit)
+            assignment2(Tokenizer.ComplexTokenizer(),
+                        outputFile, inputFiles, limit)
     return 0
 
 
-def assignment1(tokenizer,outputFile,inputFiles,limit):
+def assignment1(tokenizer, outputFile, inputFiles, limit):
     PersistIndex.PersistCSV(
         outputFile,
         indexer=Indexer.FileIndexer(
@@ -114,31 +121,35 @@ def assignment1(tokenizer,outputFile,inputFiles,limit):
         )
     ).persist()
 
-def assignment2(tokenizer,outputFile,inputFiles,limit):
-    parser = FileParser.NewFileParser(inputFiles, limit)    # fazer NewFileParser
-    indexer = Indexer.NewFileIndexer(                       # fazer NewFileIndexer
-        tokenizer
-    )
+
+def assignment2(tokenizer, outputFile, inputFiles, limit):
+    parser = FileParser.LimitedRamFileParser(inputFiles, limit)
+    indexer = Indexer.NewFileIndexer(tokenizer)
     persister = PersistIndex.NewPersist(outputFile)         # fazer NewPersist
     auxFile = "intermediate_index_{0}.txt"
     blockCounter = 0
-    
-    doc = parser.getDocument()                              # fazer getDocument() no NewFileParser
+
+    # fazer getContent() no NewFileParser retorna so 1 documento
+    doc = parser.getContent()
     while(doc != None):
         while(doc != None and isMemoryAvailable()):         # fazer aux func isMemoryAvailable()
-            indexer.indexByDocument(doc)                    # fazer indexByDocument() no NewFileIndexer
-            doc = parser.getDocument()
-        
+            # fazer indexByDocument() no NewFileIndexer
+            indexer.indexByDocument(doc)
+            doc = parser.getContent()
+
         blockCounter += 1
         persister.persist(                                  # fazer persist() no NewPersist
             auxFile.format(blockCounter),
             indexer.content
         )
         indexer.content.clear()
-    persister.mergeIndex()                                  # fazer mergeIndex() no NewPersist
+    # fazer mergeIndex() no NewPersist
+    persister.mergeIndex()
+
 
 def isMemoryAvailable():
     return True
+
 
 if __name__ == "__main__":
     # bypassing the script arguments to the main function

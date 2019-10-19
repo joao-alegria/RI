@@ -62,7 +62,7 @@ class GZipFileParser(FileParser):
                 for line in f:
                     line = line.decode("ISO-8859-1")
                     if line.startswith("PMID"):
-                        #docID = line[6:].strip()
+                        # docID = line[6:].strip()
                         docID += 1
                     elif line.startswith("TI"):
                         docContent = line[6:].strip()
@@ -84,7 +84,7 @@ class GZipFileParser(FileParser):
                 for line in f:
                     line = line.decode("ISO-8859-1")
                     if line.startswith("PMID"):
-                        #docID = line[6:].strip()
+                        # docID = line[6:].strip()
                         docID += 1
                     elif line.startswith("TI"):
                         docContent = line[6:].strip()
@@ -102,3 +102,39 @@ class GZipFileParser(FileParser):
                 gz.close()
 
         return self.content
+
+
+class LimitedRamFileParser(FileParser):
+
+    def __init__(self, files, limit):
+        super().__init__(files, limit)
+        self.numDocs = 0
+        if files != []:
+            self.gz = gzip.open(self.files.pop(0), "rb")
+            self.f = io.BufferedReader(gz)
+
+    def getContent(self):
+        docID = 0
+        docContent = ""
+        for line in self.f:
+            line = line.decode("ISO-8859-1")
+            if line.startswith("PMID"):
+                docID += 1
+            elif line.startswith("TI"):
+                docContent = line[6:].strip()
+            elif line.startswith("PG"):
+                numDocs += 1
+                if numDocs >= self.limit:
+                    return None
+                return {str(docID): docContent}
+            else:
+                if docContent != "":
+                    docContent += " "+line[6:].strip()
+
+            self.gz.close()
+
+        if files != []:
+            self.gz = gzip.open(self.files.pop(0), "rb")
+            self.f = io.BufferedReader(gz)
+        else:
+            return None

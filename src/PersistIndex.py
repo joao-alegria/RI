@@ -17,19 +17,22 @@ class PersistIndex(ABC):
     :type indexer: Indexer
     """
 
-    def __init__(self, filename, indexer):
+    def __init__(self, filename, indexer=None):
         """
         Class constructor
         """
-        self.content = indexer.createIndex()
+        if indexer:
+            self.content = indexer.createIndex()
         self.filename = filename
         super().__init__()
 
     @abstractmethod
-    def persist(self):
+    def persist(self, content=None):
         """
         Function that effectively persists the data.
         """
+        if content:
+            self.content = content
         print("Persisting...")
 
 
@@ -40,7 +43,7 @@ class PersistCSV(PersistIndex):
         token2,docID1:numOcur,docID2:numOcur,...
     """
 
-    def persist(self):
+   def persist(self, content=None):
         super().persist()
         self.content = sorted(self.content.items())
         f = open(self.filename, "w")
@@ -56,7 +59,7 @@ class PersistCSV(PersistIndex):
 
 
 class PersistCSVWeighted(PersistIndex):
-    def persist(self):
+    def persist(self, content=None):
         super().persist()
         self.content = sorted(self.content.items())
         f = open(self.filename, "w")
@@ -72,7 +75,7 @@ class PersistCSVWeighted(PersistIndex):
 
 
 class PersistCSVWeightedPosition(PersistIndex):
-    def persist(self):
+    def persist(self, content=None):
         super().persist()
         index, positions = self.content
         index = sorted(index.items())
