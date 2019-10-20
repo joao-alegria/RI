@@ -42,12 +42,14 @@ class Indexer(ABC):
         if content:
             # overriding docs with recent content passed to the function
             self.docs = content
-        print("Indexing...")
+        # print("Indexing...")
+
+    @abstractmethod
+    def normalizeIndex(self):
+        print("Normalizing...")
 
     def clearVar(self):
         self.index = {}
-        # sleep??????????????????????????????????????????????????????? para escrever so 1 file
-        time.sleep(0.5)
 
 
 class FileIndexer(Indexer):
@@ -73,6 +75,9 @@ class FileIndexer(Indexer):
                     self.index[t][docID] = 1
                 else:
                     self.index[t][docID] += 1
+
+    def normalizeIndex(self):
+        super().normalizeIndex()
         return self.index
 
 
@@ -88,6 +93,10 @@ class WeightedFileIndexer(FileIndexer):
                 postingList[docID] = Decimal(
                     postingList[docID])/Decimal(vectorNorme)
 
+    def normalizeIndex(self):
+        super().normalizeIndex()
+        return self.index
+
 
 class WeightedFilePositionIndexer(Indexer):
     def __init__(self, tokenizer, fileParser=None):
@@ -97,8 +106,6 @@ class WeightedFilePositionIndexer(Indexer):
     def clearVar(self):
         self.index = {}
         self.positionIndex = {}
-        # sleep??????????????????????????????????????????????????????? para escrever so 1 file
-        time.sleep(1)
 
     def createIndex(self, content=None):
         super().createIndex(content)
@@ -118,6 +125,10 @@ class WeightedFilePositionIndexer(Indexer):
         for token, postingList in self.index.items():
             for docID, tf in postingList.items():
                 postingList[docID] = 1+math.log10(tf)
+
+    def normalizeIndex(self):
+        super().normalizeIndex()
+        for token, postingList in self.index.items():
             vectorNorme = math.sqrt(
                 sum([math.pow(x, 2) for x in postingList.values()]))
             for docID, tf in postingList.items():

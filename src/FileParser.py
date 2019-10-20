@@ -27,6 +27,8 @@ class FileParser(ABC):
         """
         self.content = {}
         self.files = files
+        self.docID = 0
+        self.numDocs = 0
         if limit == None:
             # a number bigger than all the rest
             self.limit = float('inf')
@@ -56,8 +58,6 @@ class GZipFileParser(FileParser):
 
         """
         super().getContent()
-        docID = 0
-        numDocs = 0
         for filename in self.files:
             gz = gzip.open(filename, "rb")
             f = io.BufferedReader(gz)
@@ -66,15 +66,15 @@ class GZipFileParser(FileParser):
                 line = line.decode("ISO-8859-1")
                 if line.startswith("PMID"):
                     # docID = line[6:].strip()
-                    docID += 1
+                    self.docID += 1
                 elif line.startswith("TI"):
                     docContent = line[6:].strip()
                 elif line.startswith("PG"):
-                    self.content[str(docID)] = docContent
+                    self.content[str(self.docID)] = docContent
                     docContent = ""
-                    numDocs += 1
+                    self.numDocs += 1
                     # if limit is non positive, the program will process always 1 document
-                    if numDocs >= self.limit:
+                    if self.numDocs >= self.limit:
                         break
                 else:
                     if docContent != "":
@@ -89,25 +89,23 @@ class LimitedRamFileParser(FileParser):
 
     def __init__(self, files, limit):
         super().__init__(files, limit)
-        self.numDocs = 0
         if self.files != []:
             self.gz = gzip.open(self.files.pop(0), "rb")
             self.f = io.BufferedReader(self.gz)
 
     def getContent(self):
-        docID = 0
         docContent = ""
         for line in self.f:
             line = line.decode("ISO-8859-1")
             if line.startswith("PMID"):
-                docID += 1
+                self.docID += 1
             elif line.startswith("TI"):
                 docContent = line[6:].strip()
             elif line.startswith("PG"):
                 self.numDocs += 1
                 if self.numDocs >= self.limit:
                     return None
-                return {str(docID): docContent}
+                return {str(self.docID): docContent}
             else:
                 if docContent != "":
                     docContent += " "+line[6:].strip()

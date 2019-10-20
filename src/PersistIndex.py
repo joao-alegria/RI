@@ -4,6 +4,7 @@
 .. moduleauthor:: Filipe Pires [85122] & João Alegria [85048]
 """
 import re
+import io
 from abc import ABC, abstractmethod
 
 
@@ -16,14 +17,14 @@ class PersistIndex(ABC):
     :param indexer: instance of the indexer used in the context to create the corpus index
     :type indexer: Indexer
     """
-    currentFilename = "banana"
 
     def __init__(self, filename, indexer=None):
         """
         Class constructor
         """
         if indexer:
-            self.content = indexer.createIndex()
+            indexer.createIndex()
+            self.content = indexer.normalizeIndex()
         self.filename = filename
         super().__init__()
 
@@ -38,12 +39,14 @@ class PersistIndex(ABC):
             self.currentFilename = overrideFile
         else:
             self.currentFilename = self.filename
+        if self.content == {}:
+            return False
         print("Persisting...")
 
-    # @abstractmethod
-    # def mergeIndex(self, blockCount):
-    #     print("Merging...")
-    #     pass
+    @abstractmethod
+    def mergeIndex(self, intermideiateIndex):
+        print("Merging...")
+        pass
 
 
 class PersistCSV(PersistIndex):
@@ -66,6 +69,11 @@ class PersistCSV(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        return True
+
+    def mergeIndex(self, intermidiateIndex):
+        # TODO
+        pass
 
 
 class PersistCSVWeighted(PersistIndex):
@@ -82,11 +90,18 @@ class PersistCSVWeighted(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        return True
+
+    def mergeIndex(self, intermidiateIndex):
+        # TODO
+        pass
 
 
 class PersistCSVWeightedPosition(PersistIndex):
     def persist(self, content=None, overrideFile=None):
         super().persist(content, overrideFile)
+        if self.content == ({}, {}):
+            return False
         index, positions = self.content
         index = sorted(index.items())
         f = open(self.currentFilename, "w")
@@ -102,3 +117,39 @@ class PersistCSVWeightedPosition(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        return True
+
+    def mergeIndex(self, intermidiateIndex):
+        # TODO: when reached ram total
+        safeIdx = 0
+        sortedTerms = []
+
+        files = [io.open(x, "r") for x in intermidiateIndex]
+        line = files[0].readline().strip().split(";")
+        currentTerm = line[0]
+
+        terms = {line[0]: line[1:]}
+        sortedTerms.append(line[0])
+        while files != []:
+            for f in files:
+                line = f.readline().strip().split(";")
+                if line == [""]:
+                    files.remove(f)
+                    continue
+                if line[0] in terms:
+                    terms[line[0]] += line[1:]
+                else:
+                    terms[line[0]] = line[1:]
+                    sortedTerms.append(line[0])
+                    sorted(sortedTerms)
+            safeIdx += 1
+
+        out = open(self.filename, "w")
+        auxString = ""
+        print(sortedTerms)
+        for t in sortedTerms:
+            auxString += t
+            for doc in terms[t]:
+                auxString += ";"+doc
+            out.write(auxString+"\n")
+            auxString = ""

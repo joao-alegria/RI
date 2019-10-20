@@ -131,36 +131,37 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, maximumRAM):
     # Persistor is not always the same!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     persister = PersistIndex.PersistCSVWeightedPosition(outputFile)
     auxFile = "intermediate_index_{0}.txt"
-    blockCounter = 0
+    blockCounter = 1
 
     # fazer getContent() no NewFileParser retorna so 1 documento
-    doc = parser.getContent()
-    while(doc != None):
+    runSPIMI = True
+    while(runSPIMI):
 
-        while(doc != None and isMemoryAvailable(maximumRAM)):
-            indexer.createIndex(doc)
+        while(isMemoryAvailable(maximumRAM)):
             doc = parser.getContent()
+            if not doc:
+                runSPIMI = False
+                break
+            indexer.createIndex(doc)
 
-        blockCounter += 1
-        persister.persist(                                  # fazer persist() no NewPersist
+        indexer.normalizeIndex
+        if persister.persist(
             # ver as posiçoes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            (indexer.index, indexer.positionIndex),
-            auxFile.format(blockCounter)
-        )
+                (indexer.index, indexer.positionIndex), auxFile.format(blockCounter)):
+            blockCounter += 1
         indexer.clearVar()
         gc.collect()
-        doc = parser.getContent()
     # fazer mergeIndex() no NewPersist
-    # persister.mergeIndex()
+    persister.mergeIndex([auxFile.format(x) for x in range(1, blockCounter)])
 
 
 process = psutil.Process(os.getpid())
 
 
 def isMemoryAvailable(maximumRAM):
-
-    if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
-        return False
+    # pass this verification because if it's to much its user error
+    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
+    #     return False
 
     # get memory being used by program
     processMemory = process.memory_info().rss
