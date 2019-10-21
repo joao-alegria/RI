@@ -43,10 +43,7 @@ def buildDict(outputFileName):
 
         if highestFrequency < count:
             highestFrequency = count
-        
-        
-
-
+      
 def filterByOccur(n):
     """
     Finds the subset of the dictionary where the values are equal to value passed to the function.
@@ -65,7 +62,7 @@ def filterByOccur(n):
 
 def main(args):
     """
-    Function that answerers to some of the assignment's questions. Function that creates the data flow for the auxiliar script.
+    Function that answers to some of the assignment's questions. Function that creates the data flow for the auxiliar script.
 
     :param: args: the list of arguments passed to the script when executed
     :type args: list<str>

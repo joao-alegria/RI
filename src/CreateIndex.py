@@ -13,6 +13,7 @@ import Tokenizer
 import PersistIndex
 import Indexer
 
+maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
 
 def main(args):
     """
@@ -122,7 +123,7 @@ def assignment1(tokenizer, outputFile, inputFiles, limit):
     ).persist()
 
 
-def assignment2(tokenizer, outputFile, inputFiles, limit):
+def assignment2(tokenizer, outputFile, inputFiles, limit, maximumRAM):
     parser = FileParser.LimitedRamFileParser(inputFiles, limit)
 
     # Indexer is not always the same!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -151,13 +152,18 @@ def assignment2(tokenizer, outputFile, inputFiles, limit):
 
 
 def isMemoryAvailable(maximumRAM):
+    global maxRAMused
 
     if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
+        if process > maxRAMused:
+            maxRAMused = process
         return False
 
     # get memory being used by program
     process = (psutil.Process(os.getpid())).memory_info().rss
     if process >= maximumRAM:
+        if process > maxRAMused:
+            maxRAMused = process
         return False
 
     return True
