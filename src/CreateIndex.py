@@ -7,6 +7,7 @@
 import os
 import sys
 import psutil
+import gc
 
 import FileParser
 import Tokenizer
@@ -82,9 +83,9 @@ def main(args):
         if args[i] == "-r":
             assert not args[i +
                             1].startswith("-"), "This option must have the value indicated."
-            assert args[i+1].isdigit() and int(args[i+1]
-                                               ) >= 0, "RAM capacity value must be an integer larger or equal to zero."
-            maximumRAM = int(args[i+1])*1000000000
+            assert float(args[i+1]
+                         ) >= 0, "RAM capacity value must be an integer larger or equal to zero."
+            maximumRAM = float(args[i+1])*1000000000
             print(maximumRAM)
             print(psutil.virtual_memory().free)
             if maximumRAM > psutil.virtual_memory().free:
@@ -127,43 +128,46 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, maximumRAM):
     parser = FileParser.LimitedRamFileParser(inputFiles, limit)
 
     # Indexer is not always the same!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    indexer = Indexer.NewFileIndexer(tokenizer)
+    indexer = Indexer.WeightedFilePositionIndexer(tokenizer)
     # Persistor is not always the same!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    persister = PersistIndex.NewPersist(outputFile)
+    persister = PersistIndex.PersistCSVWeightedPosition(outputFile)
     auxFile = "intermediate_index_{0}.txt"
-    blockCounter = 0
+    blockCounter = 1
 
     # fazer getContent() no NewFileParser retorna so 1 documento
-    doc = parser.getContent()
-    while(doc != None):
+    runSPIMI = True
+    while(runSPIMI):
 
-        while(doc != None and isMemoryAvailable(maximumRAM)):
+        while(isMemoryAvailable(maximumRAM)):
+            doc = parser.getContent()
+            if not doc:
+                runSPIMI = False
+                break
             indexer.createIndex(doc)
-            doc = parser.getDocument()
 
-        blockCounter += 1
-        persister.persist(                                  # fazer persist() no NewPersist
-            auxFile.format(blockCounter),
-            indexer.content
-        )
-        indexer.content.clear()
+        indexer.normalizeIndex
+        if persister.persist(
+            # ver as posiçoes !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                (indexer.index, indexer.positionIndex), auxFile.format(blockCounter)):
+            blockCounter += 1
+        indexer.clearVar()
+        gc.collect()
     # fazer mergeIndex() no NewPersist
-    persister.mergeIndex()
+    persister.mergeIndex([auxFile.format(x) for x in range(1, blockCounter)])
+
+
+process = psutil.Process(os.getpid())
 
 
 def isMemoryAvailable(maximumRAM):
-    global maxRAMused
-
-    if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
-        if process > maxRAMused:
-            maxRAMused = process
-        return False
+    # pass this verification because if it's to much its user error
+    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
+    #     return False
 
     # get memory being used by program
-    process = (psutil.Process(os.getpid())).memory_info().rss
-    if process >= maximumRAM:
-        if process > maxRAMused:
-            maxRAMused = process
+    processMemory = process.memory_info().rss
+    print(processMemory)
+    if processMemory >= maximumRAM:
         return False
 
     return True
