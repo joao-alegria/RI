@@ -6,4 +6,6 @@ test.gz
 out.txt
 simpleTokenizerOut.txt
 complexTokenizerOut.txt
+simpleOut.txt
+complexOut.txt
 __pycache__

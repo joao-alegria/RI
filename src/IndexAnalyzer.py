@@ -8,7 +8,9 @@ import sys
 content = {}
 highestFrequency = 0
 HIGHEST_ELEMENTS = 10
-docfreqdict = {} 
+termfreqdict = {}
+docfreq = []
+
 
 def buildDict(outputFileName):
     """
@@ -20,14 +22,15 @@ def buildDict(outputFileName):
     """
     global highestFrequency
     outputFile = open(outputFileName, "r")
-    for line in outputFile: 
+    for line in outputFile:
         elements = line.split(",")
         count = 0
         max_freq = 0
+        docfreq.append((len(elements[1:]), elements[0]))
         for e in elements[1:]:
             try:
                 aux = e.split(":")
-                docID,freq = aux[0],int(aux[1])
+                docID, freq = aux[0], int(aux[1])
                 count += freq
                 if max_freq < freq:
                     max_freq = freq
@@ -36,15 +39,13 @@ def buildDict(outputFileName):
                 sys.exit()
         content[elements[0]] = count
 
-        if max_freq in docfreqdict.keys():
-            docfreqdict[max_freq].append(elements[0])
+        if max_freq in termfreqdict.keys():
+            termfreqdict[max_freq].append(elements[0])
         else:
-            docfreqdict[max_freq] = [elements[0]]
+            termfreqdict[max_freq] = [elements[0]]
 
         if highestFrequency < count:
             highestFrequency = count
-        
-        
 
 
 def filterByOccur(n):
@@ -62,6 +63,7 @@ def filterByOccur(n):
         if content[key] == int(n):
             retdict[key] = content[key]
     return retdict
+
 
 def main(args):
     """
@@ -92,7 +94,7 @@ def main(args):
           str(documentFrequency) + " (ordered alphabetically):")
     print(firstTerms[0:10])  # print a maximum of 10 terms
 
-    l = list(set(content.values())) # [(term,{doc:n_occur})]   # []
+    l = list(set(content.values()))  # [(term,{doc:n_occur})]   # []
     l.sort()
     highestCollectionTerms = []
     # decrease auxFrequency as long as the list of terms with highest frequency isn't long enough (while possible)
@@ -107,13 +109,14 @@ def main(args):
               " terms with highest collection frequency:")
     else:
         print("\nThe 10 terms with highest collection frequency:")
-    print(highestCollectionTerms[0:HIGHEST_ELEMENTS])  # print a maximum of HIGHEST_ELEMENTS terms
+    # print a maximum of HIGHEST_ELEMENTS terms
+    print(highestCollectionTerms[0:HIGHEST_ELEMENTS])
 
-    l = sorted(docfreqdict.items())
+    l = sorted(termfreqdict.items())
     highestDocumentTerms = []
     count = 0
     while count < HIGHEST_ELEMENTS and l != []:
-        highestDocumentTerms += [(l[len(l)-1][1],l[len(l)-1][0])]
+        highestDocumentTerms += [(l[len(l)-1][1], l[len(l)-1][0])]
         count += len(l[len(l)-1][1])
         l = l[0:-1]
 
@@ -121,9 +124,13 @@ def main(args):
         print("\nThe " + count +
               " terms with highest document frequency:")
     else:
-        print("\nThe 10 terms with highest document frequency:")
+        print("\nThe 10 terms with highest term frequency:")
     print(highestDocumentTerms)
+    docfreq.sort()
+    print("\nThe 10 terms with highest document frequency:")
+    print(docfreq[-10:])
     print()
+
 
 if __name__ == "__main__":
     # bypassing the arguments of the script to the main function

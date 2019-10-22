@@ -22,11 +22,12 @@ class PersistIndex(ABC):
         """
         Class constructor
         """
+        super().__init__()
         if indexer:
             indexer.createIndex()
+            # content includes index and position-index
             self.content = indexer.normalizeIndex()
         self.filename = filename
-        super().__init__()
 
     @abstractmethod
     def persist(self, content=None, overrideFile=None):
@@ -34,7 +35,9 @@ class PersistIndex(ABC):
         Function that effectively persists the data.
         """
         if content:
+            # content includes index and position-index
             self.content = content
+            content = {}
         if overrideFile:
             self.currentFilename = overrideFile
         else:
@@ -43,10 +46,9 @@ class PersistIndex(ABC):
             return False
         print("Persisting...")
 
-    @abstractmethod
-    def mergeIndex(self, intermideiateIndex):
-        print("Merging...")
-        pass
+    @classmethod
+    def clearVar(self):
+        self.content = {}
 
 
 class PersistCSV(PersistIndex):
@@ -58,10 +60,13 @@ class PersistCSV(PersistIndex):
 
     def persist(self, content=None, overrideFile=None):
         super().persist(content, overrideFile)
-        self.content = sorted(self.content.items())
+        index = self.content[0]
+        if index == {}:
+            return False
+        index = sorted(index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
-        for token, freqs in self.content:
+        for token, freqs in index:
             currStr += token
             for docID, count in freqs.items():
                 currStr += ","+docID+":"+str(count)
@@ -71,18 +76,17 @@ class PersistCSV(PersistIndex):
         f.close()
         return True
 
-    def mergeIndex(self, intermidiateIndex):
-        # TODO
-        pass
-
 
 class PersistCSVWeighted(PersistIndex):
     def persist(self, content=None, overrideFile=None):
         super().persist(content, overrideFile)
-        self.content = sorted(self.content.items())
+        index = self.content[0]
+        if index == {}:
+            return False
+        index = sorted(index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
-        for token, freqs in self.content:
+        for token, freqs in index:
             currStr += token+":1"
             for docID, count in freqs.items():
                 currStr += ";"+docID+":"+str(count)
@@ -92,17 +96,37 @@ class PersistCSVWeighted(PersistIndex):
         f.close()
         return True
 
-    def mergeIndex(self, intermidiateIndex):
-        # TODO
-        pass
+
+class PersistCSVPosition(PersistIndex):
+    def persist(self, content=None, overrideFile=None):
+        super().persist(content, overrideFile)
+        index, positions = self.content
+        if index == {}:
+            return False
+        index = sorted(index.items())
+        f = open(self.currentFilename, "w")
+        currStr = ""
+        for token, freqs in index:
+            currStr += token
+            for docID, count in freqs.items():
+                currStr += ";"+docID+":" + \
+                    str(count)+":"+str(positions[token][docID][0])
+                for pos in positions[token][docID][1:]:
+                    currStr += ","+str(pos)
+            # batch-like writting, writting 1 token and its ocurrences at a time
+            f.write(currStr+"\n")
+            currStr = ""
+        f.close()
+        return True
 
 
 class PersistCSVWeightedPosition(PersistIndex):
+
     def persist(self, content=None, overrideFile=None):
         super().persist(content, overrideFile)
-        if self.content == ({}, {}):
-            return False
         index, positions = self.content
+        if index == {}:
+            return False
         index = sorted(index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
@@ -118,38 +142,3 @@ class PersistCSVWeightedPosition(PersistIndex):
             currStr = ""
         f.close()
         return True
-
-    def mergeIndex(self, intermidiateIndex):
-        # TODO: when reached ram total
-        safeIdx = 0
-        sortedTerms = []
-
-        files = [io.open(x, "r") for x in intermidiateIndex]
-        line = files[0].readline().strip().split(";")
-        currentTerm = line[0]
-
-        terms = {line[0]: line[1:]}
-        sortedTerms.append(line[0])
-        while files != []:
-            for f in files:
-                line = f.readline().strip().split(";")
-                if line == [""]:
-                    files.remove(f)
-                    continue
-                if line[0] in terms:
-                    terms[line[0]] += line[1:]
-                else:
-                    terms[line[0]] = line[1:]
-                    sortedTerms.append(line[0])
-                    sorted(sortedTerms)
-            safeIdx += 1
-
-        out = open(self.filename, "w")
-        auxString = ""
-        print(sortedTerms)
-        for t in sortedTerms:
-            auxString += t
-            for doc in terms[t]:
-                auxString += ";"+doc
-            out.write(auxString+"\n")
-            auxString = ""

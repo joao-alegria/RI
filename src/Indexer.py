@@ -27,12 +27,13 @@ class Indexer(ABC):
         """
         Class constructor
         """
+        super().__init__()
         self.tokenizer = tokenizer
         if fileParser:  # if fileParser != None
             self.docs = fileParser.getContent()
         self.fileParser = fileParser
         self.index = {}
-        super().__init__()
+        self.positionIndex = {}
 
     @abstractmethod
     def createIndex(self, content=None):
@@ -50,6 +51,7 @@ class Indexer(ABC):
 
     def clearVar(self):
         self.index = {}
+        self.positionIndex = {}
 
 
 class FileIndexer(Indexer):
@@ -68,49 +70,6 @@ class FileIndexer(Indexer):
         super().createIndex(content)
         for docID, docContent in self.docs.items():
             tokens = self.tokenizer.tokenize(docContent)
-            for t in tokens:
-                if t not in self.index:
-                    self.index[t] = {docID: 1}
-                elif docID not in self.index[t]:
-                    self.index[t][docID] = 1
-                else:
-                    self.index[t][docID] += 1
-
-    def normalizeIndex(self):
-        super().normalizeIndex()
-        return self.index
-
-
-class WeightedFileIndexer(FileIndexer):
-    def createIndex(self, content=None):
-        super().createIndex(content)
-        for token, postingList in self.index.items():
-            for docID, tf in postingList.items():
-                postingList[docID] = 1+math.log10(tf)
-            vectorNorme = math.sqrt(
-                sum([math.pow(x, 2) for x in postingList.values()]))
-            for docID, tf in postingList.items():
-                postingList[docID] = Decimal(
-                    postingList[docID])/Decimal(vectorNorme)
-
-    def normalizeIndex(self):
-        super().normalizeIndex()
-        return self.index
-
-
-class WeightedFilePositionIndexer(Indexer):
-    def __init__(self, tokenizer, fileParser=None):
-        super().__init__(tokenizer, fileParser)
-        self.positionIndex = {}
-
-    def clearVar(self):
-        self.index = {}
-        self.positionIndex = {}
-
-    def createIndex(self, content=None):
-        super().createIndex(content)
-        for docID, docContent in self.docs.items():
-            tokens = self.tokenizer.tokenize(docContent)
             for idx, t in enumerate(tokens):
                 if t not in self.index:
                     self.index[t] = {docID: 1}
@@ -122,12 +81,20 @@ class WeightedFilePositionIndexer(Indexer):
                     self.index[t][docID] += 1
                     self.positionIndex[t][docID].append(idx+1)
 
-        for token, postingList in self.index.items():
-            for docID, tf in postingList.items():
-                postingList[docID] = 1+math.log10(tf)
+    def normalizeIndex(self):
+        super().normalizeIndex()
+        return self.index, self.positionIndex
+
+
+class WeightedFileIndexer(FileIndexer):
+    def createIndex(self, content=None):
+        super().createIndex(content)
 
     def normalizeIndex(self):
         super().normalizeIndex()
+        for token, postingList in self.index.items():
+            for docID, tf in postingList.items():
+                postingList[docID] = 1+math.log10(tf)
         for token, postingList in self.index.items():
             vectorNorme = math.sqrt(
                 sum([math.pow(x, 2) for x in postingList.values()]))
