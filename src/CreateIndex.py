@@ -105,7 +105,7 @@ def main(argv):
                         outputFile, args, limit, weightCalc, positionCalc)
         else:
             assignment2(Tokenizer.ComplexTokenizer(), outputFile,
-                        inputFiles, limit, weightCalc, positionCalc, maximumRAM)
+                        args, limit, weightCalc, positionCalc, maximumRAM)
     return 0
 
 
@@ -156,7 +156,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
             persister.persist(indexer.normalizeIndex())
             return 0
         else:
-            if persister.persist(indexer.normalizeIndex(), auxFile.format(blockCounter)):
+            if persister.persist((indexer.index,indexer.positionIndex), auxFile.format(blockCounter)):
                 blockCounter += 1
         indexer.clearVar()
         gc.collect()
@@ -179,6 +179,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
                 runSPIMI = False
                 break
         print("writing")
+
         merger.writeIndex()
         gc.collect()
 
@@ -186,7 +187,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
 
 def isMemoryAvailable(maximumRAM):
-    # pass this verification because if it's to much its user error
+    # pass this verification because if it's to much it's user error
     # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
     #     return False
 
