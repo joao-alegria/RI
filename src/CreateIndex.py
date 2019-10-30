@@ -16,6 +16,8 @@ import PersistIndex
 import Indexer
 import Merger
 
+maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
+
 
 def main(argv):
     """
@@ -191,7 +193,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
 
 def isMemoryAvailable(maximumRAM):
-    # pass this verification because if it's to much its user error
+    # pass this verification because if it's to much it's user error
     # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
     #     return False
 
