@@ -94,12 +94,11 @@ class WeightedFileIndexer(FileIndexer):
         super().normalizeIndex()
         for token, postingList in self.index.items():
             for docID, tf in postingList.items():
-                postingList[docID] = 1+math.log10(tf)
+                postingList[docID] = 1+math.log10(int(tf))
         for token, postingList in self.index.items():
             vectorNorme = math.sqrt(
                 sum([math.pow(x, 2) for x in postingList.values()]))
             for docID, tf in postingList.items():
                 postingList[docID] = Decimal(
                     postingList[docID])/Decimal(vectorNorme)
-
         return self.index, self.positionIndex

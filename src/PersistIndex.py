@@ -141,4 +141,7 @@ class PersistCSVWeightedPosition(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        index = {}
+        positions = {}
+        self.content = {}
         return True

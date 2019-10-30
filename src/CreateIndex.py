@@ -27,7 +27,7 @@ def main(argv):
     """
 
     HELP = """USAGE:\n
-    python3 CreateIndex.py [-h] [-o outputFile] [-l limit] [-t tokenizer] [-r limitRAM] inputFile1 [inputFile2]+\n
+    python3 CreateIndex.py [-h] [-p] [-w] [-o outputFile] [-l limit] [-t tokenizer] [-r limitRAM] inputFile1 [inputFile2]+\n
         OPTIONS:
            h - shows this help
            o - define output file's name
@@ -104,7 +104,7 @@ def main(argv):
                         outputFile, args, limit, weightCalc, positionCalc)
         else:
             assignment2(Tokenizer.ComplexTokenizer(), outputFile,
-                        inputFiles, limit, weightCalc, positionCalc, maximumRAM)
+                        args, limit, weightCalc, positionCalc, maximumRAM)
     return 0
 
 
@@ -155,7 +155,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
             persister.persist(indexer.normalizeIndex())
             return 0
         else:
-            if persister.persist(indexer.normalizeIndex(), auxFile.format(blockCounter)):
+            if persister.persist((indexer.index, indexer.positionIndex), auxFile.format(blockCounter)):
                 blockCounter += 1
         indexer.clearVar()
         gc.collect()
@@ -167,17 +167,23 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     del persister
     gc.collect()
 
-    merger = Merger.Merger(
+    merger = Merger.PositionWeightMerger(
         outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
     runSPIMI = True
     allDone = False
+    print("Merging...")
     while(runSPIMI):
         while not allDone and isMemoryAvailable(maximumRAM):
             allDone = merger.mergeIndex()
             if allDone:
                 runSPIMI = False
+                merger.prepareIndex()
+                gc.collect()
+                merger.writeIndex()
+                gc.collect()
                 break
-        print("writing")
+        merger.prepareIndex()
+        gc.collect()
         merger.writeIndex()
         gc.collect()
 
@@ -191,8 +197,8 @@ def isMemoryAvailable(maximumRAM):
 
     # get program memory usage
     processMemory = process.memory_info().rss
-    print(processMemory)
-    if processMemory >= maximumRAM:
+    # print(processMemory)
+    if processMemory >= int(maximumRAM*0.92):
         return False
 
     return True
