@@ -10,7 +10,7 @@ class Merger(ABC):
     def __init__(self, filename, intermidiateIndex):
         self.out = open(filename, "w")
         self.files = [io.open(x, "r") for x in intermidiateIndex]
-        self.safeTerm = ""
+        self.terms = [x.readline().strip().split(";") for x in self.files]
         self.index = {}
 
     @abstractmethod
@@ -32,42 +32,46 @@ class PositionWeightMerger(Merger):
         self.positionIndex = {}
 
     def mergeIndex(self):
-        # TODO remove files
-        currentTerms = []
-        for f in self.files:
-            line = f.readline().strip().split(";")
-            term = line[0]
-            currentTerms.append(term)
-            if line == [""]:
-                self.files.remove(f)
-                continue
-            for docs in line[1:]:
-                docSplitted = docs.split(":")
-                if term in self.index:
-                    self.index[term][docSplitted[0]] = docSplitted[1]
-                    self.positionIndex[term][docSplitted[0]] = docSplitted[2]
-                else:
-                    self.index[term] = {docSplitted[0]: docSplitted[1]}
-                    self.positionIndex[term] = {
-                        docSplitted[0]: docSplitted[2]}
         if self.files == []:
-            self.safeTerm = ""
             return True
-        self.safeTerm = min(currentTerms)
+        if "" in self.terms:
+            line = self.files[self.terms.index(
+                "")].readline().strip().split(";")
+            if line == [""]:
+                self.files.remove(self.files[self.terms.index("")])
+                self.terms.remove(self.terms[self.terms.index("")])
+                return False
+            self.terms[self.terms.index("")] = line
+            return False
+
+        term = min(self.terms)[0]
+        docs = []
+        for idx, t in enumerate(self.terms):
+            if t[0] == term:
+                docs += t[1:]
+                self.terms[idx] = ""
+        for d in docs:
+            docSplitted = d.split(":")
+            if term in self.index:
+                self.index[term][docSplitted[0]] = docSplitted[1]
+                self.positionIndex[term][docSplitted[0]] = docSplitted[2]
+            else:
+                self.index[term] = {docSplitted[0]: docSplitted[1]}
+                self.positionIndex[term] = {
+                    docSplitted[0]: docSplitted[2]}
+        docs = []
         return False
 
     def prepareIndex(self):
         for token, postingList in self.index.items():
-            if token <= self.safeTerm:
-                for docID, tf in postingList.items():
-                    postingList[docID] = 1+math.log10(int(tf))
+            for docID, tf in postingList.items():
+                postingList[docID] = 1+math.log10(int(tf))
         for token, postingList in self.index.items():
-            if token <= self.safeTerm:
-                vectorNorme = math.sqrt(
-                    sum([math.pow(x, 2) for x in postingList.values()]))
-                for docID, tf in postingList.items():
-                    postingList[docID] = Decimal(
-                        postingList[docID])/Decimal(vectorNorme)
+            vectorNorme = math.sqrt(
+                sum([math.pow(x, 2) for x in postingList.values()]))
+            for docID, tf in postingList.items():
+                postingList[docID] = Decimal(
+                    postingList[docID])/Decimal(vectorNorme)
 
     def writeIndex(self):
         # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -75,8 +79,6 @@ class PositionWeightMerger(Merger):
         auxString = ""
         idx = 0
         for t, docs in self.index:
-            if t > self.safeTerm:
-                break
             auxString += t
             for doc, w in docs.items():
                 auxString += ";"+doc+":" + \
@@ -86,12 +88,7 @@ class PositionWeightMerger(Merger):
             self.positionIndex = {
                 x: self.positionIndex[x] for x in self.positionIndex if x != t}
             idx += 1
-        if len(self.index) >= idx+1:
-            self.safeTerm = self.index[idx][0]
-            self.index = dict(self.index[idx:])
-        else:
-            self.safeTerm = ""
-            self.index = {}
+        self.index = {}
 
 
 class WeightMerger(Merger):
@@ -99,39 +96,43 @@ class WeightMerger(Merger):
         super().__init__(filename, intermidiateIndex)
 
     def mergeIndex(self):
-        # TODO remove files
-        currentTerms = []
-        for f in self.files:
-            line = f.readline().strip().split(";")
-            term = line[0]
-            currentTerms.append(term)
-            if line == [""]:
-                self.files.remove(f)
-                continue
-            for docs in line[1:]:
-                docSplitted = docs.split(":")
-                if term in self.index:
-                    self.index[term][docSplitted[0]] = docSplitted[1]
-                else:
-                    self.index[term] = {docSplitted[0]: docSplitted[1]}
         if self.files == []:
-            self.safeTerm = ""
             return True
-        self.safeTerm = min(currentTerms)
+        if "" in self.terms:
+            line = self.files[self.terms.index(
+                "")].readline().strip().split(";")
+            if line == [""]:
+                self.files.remove(self.files[self.terms.index("")])
+                self.terms.remove(self.terms[self.terms.index("")])
+                return False
+            self.terms[self.terms.index("")] = line
+            return False
+
+        term = min(self.terms)[0]
+        docs = []
+        for idx, t in enumerate(self.terms):
+            if t[0] == term:
+                docs += t[1:]
+                self.terms[idx] = ""
+        for d in docs:
+            docSplitted = d.split(":")
+            if term in self.index:
+                self.index[term][docSplitted[0]] = docSplitted[1]
+            else:
+                self.index[term] = {docSplitted[0]: docSplitted[1]}
+        docs = []
         return False
 
     def prepareIndex(self):
         for token, postingList in self.index.items():
-            if token <= self.safeTerm:
-                for docID, tf in postingList.items():
-                    postingList[docID] = 1+math.log10(int(tf))
+            for docID, tf in postingList.items():
+                postingList[docID] = 1+math.log10(int(tf))
         for token, postingList in self.index.items():
-            if token <= self.safeTerm:
-                vectorNorme = math.sqrt(
-                    sum([math.pow(x, 2) for x in postingList.values()]))
-                for docID, tf in postingList.items():
-                    postingList[docID] = Decimal(
-                        postingList[docID])/Decimal(vectorNorme)
+            vectorNorme = math.sqrt(
+                sum([math.pow(x, 2) for x in postingList.values()]))
+            for docID, tf in postingList.items():
+                postingList[docID] = Decimal(
+                    postingList[docID])/Decimal(vectorNorme)
 
     def writeIndex(self):
         # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -139,20 +140,13 @@ class WeightMerger(Merger):
         auxString = ""
         idx = 0
         for t, docs in self.index:
-            if t > self.safeTerm:
-                break
             auxString += t
             for doc, w in docs.items():
                 auxString += ";"+doc+":" + str(w)
             self.out.write(auxString+"\n")
             auxString = ""
             idx += 1
-        if len(self.index) >= idx+1:
-            self.safeTerm = self.index[idx][0]
-            self.index = dict(self.index[idx:])
-        else:
-            self.safeTerm = ""
-            self.index = {}
+        self.index = {}
 
 
 class PositionMerger(Merger):
@@ -161,28 +155,34 @@ class PositionMerger(Merger):
         self.positionIndex = {}
 
     def mergeIndex(self):
-        # TODO remove files
-        currentTerms = []
-        for f in self.files:
-            line = f.readline().strip().split(";")
-            term = line[0]
-            currentTerms.append(term)
-            if line == [""]:
-                self.files.remove(f)
-                continue
-            for docs in line[1:]:
-                docSplitted = docs.split(":")
-                if term in self.index:
-                    self.index[term][docSplitted[0]] = docSplitted[1]
-                    self.positionIndex[term][docSplitted[0]] = docSplitted[2]
-                else:
-                    self.index[term] = {docSplitted[0]: docSplitted[1]}
-                    self.positionIndex[term] = {
-                        docSplitted[0]: docSplitted[2]}
         if self.files == []:
-            self.safeTerm = ""
             return True
-        self.safeTerm = min(currentTerms)
+        if "" in self.terms:
+            line = self.files[self.terms.index(
+                "")].readline().strip().split(";")
+            if line == [""]:
+                self.files.remove(self.files[self.terms.index("")])
+                self.terms.remove(self.terms[self.terms.index("")])
+                return False
+            self.terms[self.terms.index("")] = line
+            return False
+
+        term = min(self.terms)[0]
+        docs = []
+        for idx, t in enumerate(self.terms):
+            if t[0] == term:
+                docs += t[1:]
+                self.terms[idx] = ""
+        for d in docs:
+            docSplitted = d.split(":")
+            if term in self.index:
+                self.index[term][docSplitted[0]] = docSplitted[1]
+                self.positionIndex[term][docSplitted[0]] = docSplitted[2]
+            else:
+                self.index[term] = {docSplitted[0]: docSplitted[1]}
+                self.positionIndex[term] = {
+                    docSplitted[0]: docSplitted[2]}
+        docs = []
         return False
 
     def writeIndex(self):
@@ -191,8 +191,6 @@ class PositionMerger(Merger):
         auxString = ""
         idx = 0
         for t, docs in self.index:
-            if t > self.safeTerm:
-                break
             auxString += t
             for doc, w in docs.items():
                 auxString += ";"+doc+":" + \
@@ -202,12 +200,7 @@ class PositionMerger(Merger):
             self.positionIndex = {
                 x: self.positionIndex[x] for x in self.positionIndex if x != t}
             idx += 1
-        if len(self.index) >= idx+1:
-            self.safeTerm = self.index[idx][0]
-            self.index = dict(self.index[idx:])
-        else:
-            self.safeTerm = ""
-            self.index = {}
+        self.index = {}
 
 
 class SimpleMerger(Merger):
@@ -215,25 +208,31 @@ class SimpleMerger(Merger):
         super().__init__(filename, intermidiateIndex)
 
     def mergeIndex(self):
-        # TODO remove files
-        currentTerms = []
-        for f in self.files:
-            line = f.readline().strip().split(",")
-            term = line[0]
-            currentTerms.append(term)
-            if line == [""]:
-                self.files.remove(f)
-                continue
-            for docs in line[1:]:
-                docSplitted = docs.split(":")
-                if term in self.index:
-                    self.index[term][docSplitted[0]] = docSplitted[1]
-                else:
-                    self.index[term] = {docSplitted[0]: docSplitted[1]}
         if self.files == []:
-            self.safeTerm = ""
             return True
-        self.safeTerm = min(currentTerms)
+        if "" in self.terms:
+            line = self.files[self.terms.index(
+                "")].readline().strip().split(",")
+            if line == [""]:
+                self.files.remove(self.files[self.terms.index("")])
+                self.terms.remove(self.terms[self.terms.index("")])
+                return False
+            self.terms[self.terms.index("")] = line
+            return False
+
+        term = min(self.terms)[0]
+        docs = []
+        for idx, t in enumerate(self.terms):
+            if t[0] == term:
+                docs += t[1:]
+                self.terms[idx] = ""
+        for d in docs:
+            docSplitted = d.split(":")
+            if term in self.index:
+                self.index[term][docSplitted[0]] = docSplitted[1]
+            else:
+                self.index[term] = {docSplitted[0]: docSplitted[1]}
+        docs = []
         return False
 
     def writeIndex(self):
@@ -242,17 +241,10 @@ class SimpleMerger(Merger):
         auxString = ""
         idx = 0
         for t, docs in self.index:
-            if t > self.safeTerm:
-                break
             auxString += t
             for doc, w in docs.items():
                 auxString += ","+doc+":" + str(w)
             self.out.write(auxString+"\n")
             auxString = ""
             idx += 1
-        if len(self.index) >= idx+1:
-            self.safeTerm = self.index[idx][0]
-            self.index = dict(self.index[idx:])
-        else:
-            self.safeTerm = ""
-            self.index = {}
+        self.index = {}

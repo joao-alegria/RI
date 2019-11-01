@@ -15,6 +15,7 @@ import Tokenizer
 import PersistIndex
 import Indexer
 import Merger
+import IndexSplitter
 
 maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
 
@@ -107,21 +108,32 @@ def main(argv):
         else:
             assignment2(Tokenizer.ComplexTokenizer(), outputFile,
                         args, limit, weightCalc, positionCalc, maximumRAM)
+
+    # IndexSplitter.IndexSplitter(outputFile)
     return 0
 
 
 def assignment1(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc):
-    fileParser = FileParser.GZipFileParser(inputFiles, limit)
+    parser = FileParser.GZipFileParser(inputFiles, limit)
     indexer = Indexer.WeightedFileIndexer(
         tokenizer, fileParser) if weightCalc else Indexer.FileIndexer(tokenizer, fileParser)
     if weightCalc and positionCalc:
-        PersistIndex.PersistCSVWeightedPosition(outputFile, indexer).persist()
+        perister = PersistIndex.PersistCSVWeightedPosition(
+            outputFile, indexer).persist()
     elif weightCalc:
-        PersistIndex.PersistCSVWeighted(outputFile, indexer).persist()
+        perister = PersistIndex.PersistCSVWeighted(
+            outputFile, indexer).persist()
     elif positionCalc:
-        PersistIndex.PersistCSVPosition(outputFile, indexer).persist()
+        perister = PersistIndex.PersistCSVPosition(
+            outputFile, indexer).persist()
     else:
-        PersistIndex.PersistCSV(outputFile, indexer).persist()
+        perister = PersistIndex.PersistCSV(outputFile, indexer).persist()
+
+    del parser
+    del indexer
+    del tokenizer
+    del persister
+    gc.collect()
 
 
 def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc, maximumRAM):
@@ -189,7 +201,8 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
         merger.writeIndex()
         gc.collect()
 
-    return 0
+    del merger
+    gc.collect()
 
 
 def isMemoryAvailable(maximumRAM):
@@ -200,7 +213,7 @@ def isMemoryAvailable(maximumRAM):
     # get program memory usage
     processMemory = process.memory_info().rss
     # print(processMemory)
-    if processMemory >= int(maximumRAM*0.92):
+    if processMemory >= int(maximumRAM*0.90):
         return False
 
     return True
