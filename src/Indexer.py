@@ -1,7 +1,7 @@
 """
 .. module:: Indexer
     :noindex:
-.. moduleauthor:: Filipe Pires [85122] & João Alegria [85048]
+.. moduleauthor:: Filipe Pires [85122] & Joao Alegria [85048]
 """
 import re
 import math
