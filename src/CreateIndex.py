@@ -15,7 +15,6 @@ import Tokenizer
 import PersistIndex
 import Indexer
 import Merger
-import IndexSplitter
 
 maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
 

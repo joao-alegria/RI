@@ -167,16 +167,16 @@ The first update we made to our code was on the content of the index files
 produced by our indexer. Initially it would write to a text file a token
 per line followed by a comma (',') and all document IDs of the documents that
 contained the respective token, paired with the respective frequency (with
-a ':' between each docID and each frequency value).
+a ':' between each docID and frequency value).
 For this assignment, we altered this format in order to store the position
-of each occurrence and the weight and inverse document frequency (idf) of 
-each term, following the given format:
+of each occurrence and the term frequency weight (tfw) and inverse document 
+frequency (idf) of each term, following the given format:
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
 \begin{quote}
 \begin{verbatim}
-token:idf, docID:weight:pos1,...; docID:weight:pos1,...; ...
+token:idf, docID:tfw:pos1,pos2,...; docID:tfw:...; ...
 \end{verbatim}
 \end{quote}
 \endgroup
@@ -187,7 +187,7 @@ presentation of either the frequency or the weight and the presentation or
 not of the positions of the terms in each document.
 Although this was not specifically asked in the assignment instructions,
 it answers its requirements and gives the user a wider range of usage 
-alternatives.
+alternatives. 
 
 Regarding the structure of our abstract classes, a few changes had to be
 considered to better face the challenges of the second assignment.
@@ -210,33 +210,58 @@ Python library \cite{getopt}.
 
 The remaining of the report supposes that the reader has knowledge about what
 was presented on the first delivery. 
-This means that we will only explain the structure of new components not yet
-seen by the reader and the updates made on the class diagram.
-In this chapter we will also get into deeper detail on how is memory usage
-considered in this second version of our indexer, as well as on how were the 
-new attributes such as the term weights calculated and stored in the output 
-files.
+We will only explain the structure of new components not yet seen by the reader 
+and the updates made on the class diagram.
 
-// describe new classes/subclasses/methods
-
-// present class diagram
-
-// explain the implementation of SPIMI
+In this chapter we also get into deeper detail on how is memory usage
+considered, as well as on how are the new attributes such as the term weights 
+calculated and stored.
+Figure \ref{fig:classdiagram} shows the new class diagram, with a considerable
+increase in complexity compared to the initial version.
 
 \begin{figure}[h!]
-  \includegraphics[width=\linewidth]{ClassDiagram.png}
+  \includegraphics[width=\linewidth]{ClassDiagram_assign2.png}
   \caption{Program's class diagram.}
   \label{fig:classdiagram}
 \end{figure}
 
+First of all, we have the new class derived from \texttt{FileParser} with the
+name \texttt{LimitedRAM} \texttt{FileParser}. This class does the same as its 
+"sister" \texttt{GZipFileParser}, except that \textit{getContent()} is now 
+called 1 time per document and returns the information relative to that 
+document only. 
+Although this makes the reading process slower, it also drastically 
+reduces the amount of RAM required during execution.
+
+The \texttt{WeightedFileIndexer} is a new class derived from our \texttt{FileIndexer}.
+This class inherits the method \textit{createIndex()} from our previous implementation
+and makes use of the method \textit{normalizeIndex()} to calculate the term frequencies.
+....... ...... ........... ......... ........... ............. .............. ......
+
+The \texttt{Tokenizer} implementations were the only classes that suffered no changes nor
+recieved no new subclasses. 
+Our solution served perfectly for the tokenization process whether the program is executed
+with a memory limitation or not.
+
+For the \texttt{PersistIndex} class, we developed 4 new classes derived from it.
+...... .......... ............ ............ ............ .... ....... .........
+\newline
+
+
+// explain the implementation of SPIMI
+..............................
+
+\newpage
+\section*{3. Index Merging}
+
+
 // ..............................
 
 \newpage
-\section*{3. Discussion}
+\section*{4. Discussion}
 
 To test the capabilities of the developed software, we indexed the same
-2 large compressed files used on the previous deliver and made available 
-along with the assignment description that, with the names 
+2 large compressed files used on the previous deliver, with the names 
 \texttt{2004\_TREC\_ASCII\_MEDLINE\_1.gz} and 
 \texttt{2004\_TREC\_ASCII\_MEDLINE\_2.gz}.
 Their structure, as collections (corpus) of documents, remained the same.
