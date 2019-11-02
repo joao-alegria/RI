@@ -25,30 +25,31 @@ class PersistIndex(ABC):
         super().__init__()
         if indexer:
             indexer.createIndex()
-            # content includes index and position-index
-            self.content = indexer.normalizeIndex()
+            indexer.normalizeIndex()
+            self.index = indexer.index
+            self.positionIndex = indexer.positionIndex
         self.filename = filename
 
     @abstractmethod
-    def persist(self, content=None, overrideFile=None):
+    def persist(self, index=None, positionIndex=None, overrideFile=None):
         """
         Function that effectively persists the data.
         """
-        if content:
-            # content includes index and position-index
-            self.content = content
-            content = {}
+        if index:
+            self.index = index
+        if positionIndex:
+            self.positionIndex = positionIndex
         if overrideFile:
             self.currentFilename = overrideFile
         else:
             self.currentFilename = self.filename
-        if self.content == {}:
+        if self.index == {}:
             return False
         print("Persisting...")
 
-    @classmethod
     def clearVar(self):
-        self.content = {}
+        self.index = {}
+        self.positionIndex = {}
 
 
 class PersistCSV(PersistIndex):
@@ -58,15 +59,14 @@ class PersistCSV(PersistIndex):
         token2,docID1:numOcur,docID2:numOcur,...
     """
 
-    def persist(self, content=None, overrideFile=None):
-        super().persist(content, overrideFile)
-        index = self.content[0]
-        if index == {}:
+    def persist(self, index=None, positionIndex=None, overrideFile=None):
+        super().persist(index, positionIndex, overrideFile)
+        if self.index == {}:
             return False
-        index = sorted(index.items())
+        self.index = sorted(self.index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
-        for token, freqs in index:
+        for token, freqs in self.index:
             currStr += token
             for docID, count in freqs.items():
                 currStr += ","+docID+":"+str(count)
@@ -74,19 +74,24 @@ class PersistCSV(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        self.index = {}
+        self.positionIndex = {}
         return True
+
+    def clearVar(self):
+        self.index = {}
+        self.positionIndex = {}
 
 
 class PersistCSVWeighted(PersistIndex):
-    def persist(self, content=None, overrideFile=None):
-        super().persist(content, overrideFile)
-        index = self.content[0]
-        if index == {}:
+    def persist(self, index=None, positionIndex=None, overrideFile=None):
+        super().persist(index, positionIndex, overrideFile)
+        if self.index == {}:
             return False
-        index = sorted(index.items())
+        self.index = sorted(self.index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
-        for token, freqs in index:
+        for token, freqs in self.index:
             currStr += token+":1"
             for docID, count in freqs.items():
                 currStr += ";"+docID+":"+str(count)
@@ -94,54 +99,67 @@ class PersistCSVWeighted(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        self.index = {}
+        self.positionIndex = {}
         return True
+
+    def clearVar(self):
+        self.index = {}
+        self.positionIndex = {}
 
 
 class PersistCSVPosition(PersistIndex):
-    def persist(self, content=None, overrideFile=None):
-        super().persist(content, overrideFile)
-        index, positions = self.content
-        if index == {}:
+    def persist(self, index=None, positionIndex=None, overrideFile=None):
+        super().persist(index, positionIndex, overrideFile)
+        if self.index == {}:
             return False
-        index = sorted(index.items())
+        self.index = sorted(self.index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
-        for token, freqs in index:
+        for token, freqs in self.index:
             currStr += token
             for docID, count in freqs.items():
                 currStr += ";"+docID+":" + \
-                    str(count)+":"+str(positions[token][docID][0])
-                for pos in positions[token][docID][1:]:
+                    str(count)+":"+str(self.positionIndex[token][docID][0])
+                for pos in self.positionIndex[token][docID][1:]:
                     currStr += ","+str(pos)
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
             currStr = ""
         f.close()
+        self.index = {}
+        self.positionIndex = {}
         return True
+
+    def clearVar(self):
+        self.index = {}
+        self.positionIndex = {}
 
 
 class PersistCSVWeightedPosition(PersistIndex):
 
-    def persist(self, content=None, overrideFile=None):
-        super().persist(content, overrideFile)
-        index, positions = self.content
-        if index == {}:
+    def persist(self, index=None, positionIndex=None, overrideFile=None):
+        super().persist(index, positionIndex, overrideFile)
+        if self.index == {}:
             return False
-        index = sorted(index.items())
+        self.index = sorted(self.index.items())
         f = open(self.currentFilename, "w")
         currStr = ""
-        for token, freqs in index:
+        for token, freqs in self.index:
             currStr += token+":1"
             for docID, count in freqs.items():
                 currStr += ";"+docID+":" + \
-                    str(count)+":"+str(positions[token][docID][0])
-                for pos in positions[token][docID][1:]:
+                    str(count)+":"+str(self.positionIndex[token][docID][0])
+                for pos in self.positionIndex[token][docID][1:]:
                     currStr += ","+str(pos)
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
             currStr = ""
         f.close()
-        index = {}
-        positions = {}
-        self.content = {}
+        self.index = {}
+        self.positionIndex = {}
         return True
+
+    def clearVar(self):
+        self.index = {}
+        self.positionIndex = {}

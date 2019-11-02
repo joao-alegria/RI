@@ -30,6 +30,9 @@ class Tokenizer(ABC):
         """
         pass
 
+    def clearVar(self):
+        pass
+
 # Types of tokenizer classes
 
 
@@ -47,6 +50,10 @@ class SimpleTokenizer(Tokenizer):
     def tokenize(self, processText):
         tokens = self.regex2.split(self.regex1.sub(" ", processText.lower()))
         return [t for t in tokens if len(t) >= 3]
+
+    def clearVar(self):
+        self.regex1 = None
+        self.regex2 = None
 
 
 class ComplexTokenizer(Tokenizer):
@@ -81,4 +88,15 @@ class ComplexTokenizer(Tokenizer):
                 continue
             resultingTokens += additionalWords
 
-        return [t for t in self.stemmer.stemWords(resultingTokens) if t not in self.stopWords and len(t) > 2]
+        resultingTokens = [t for t in self.stemmer.stemWords(
+            resultingTokens) if t not in self.stopWords and len(t) > 2]
+        return resultingTokens
+
+    def clearVar(self):
+        self.regex1 = None
+        self.regex2 = None
+        self.regex3 = None
+        self.regex4 = None
+        self.regex5 = None
+        self.stopWords = None
+        self.stemmer = None

@@ -30,7 +30,8 @@ class Indexer(ABC):
         super().__init__()
         self.tokenizer = tokenizer
         if fileParser:  # if fileParser != None
-            self.docs = fileParser.getContent()
+            fileParser.getContent()
+            self.docs = fileParser.content
         self.fileParser = fileParser
         self.index = {}
         self.positionIndex = {}
@@ -45,7 +46,7 @@ class Indexer(ABC):
             self.docs = content
         # print("Indexing...")
 
-    @abstractmethod
+    @classmethod
     def normalizeIndex(self):
         print("Normalizing...")
 
@@ -81,9 +82,9 @@ class FileIndexer(Indexer):
                     self.index[t][docID] += 1
                     self.positionIndex[t][docID].append(idx+1)
 
-    def normalizeIndex(self):
-        super().normalizeIndex()
-        return self.index, self.positionIndex
+    def clearVar(self):
+        self.index = {}
+        self.positionIndex = {}
 
 
 class WeightedFileIndexer(FileIndexer):
@@ -101,4 +102,7 @@ class WeightedFileIndexer(FileIndexer):
             for docID, tf in postingList.items():
                 postingList[docID] = Decimal(
                     postingList[docID])/Decimal(vectorNorme)
-        return self.index, self.positionIndex
+
+    def clearVar(self):
+        self.index = {}
+        self.positionIndex = {}

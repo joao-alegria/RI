@@ -25,6 +25,9 @@ class Merger(ABC):
     def writeIndex(self):
         pass
 
+    def clearVar(self):
+        pass
+
 
 class PositionWeightMerger(Merger):
     def __init__(self, filename, intermidiateIndex):
