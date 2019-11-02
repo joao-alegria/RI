@@ -15,6 +15,7 @@ import Tokenizer
 import PersistIndex
 import Indexer
 import Merger
+#import IndexSplitter
 
 maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
 
@@ -115,18 +116,18 @@ def main(argv):
 def assignment1(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc):
     parser = FileParser.GZipFileParser(inputFiles, limit)
     indexer = Indexer.WeightedFileIndexer(
-        tokenizer, fileParser) if weightCalc else Indexer.FileIndexer(tokenizer, fileParser)
+        tokenizer, parser) if weightCalc else Indexer.FileIndexer(tokenizer, parser)
     if weightCalc and positionCalc:
-        perister = PersistIndex.PersistCSVWeightedPosition(
+        persister = PersistIndex.PersistCSVWeightedPosition(
             outputFile, indexer).persist()
     elif weightCalc:
-        perister = PersistIndex.PersistCSVWeighted(
+        persister = PersistIndex.PersistCSVWeighted(
             outputFile, indexer).persist()
     elif positionCalc:
-        perister = PersistIndex.PersistCSVPosition(
+        persister = PersistIndex.PersistCSVPosition(
             outputFile, indexer).persist()
     else:
-        perister = PersistIndex.PersistCSV(outputFile, indexer).persist()
+        persister = PersistIndex.PersistCSV(outputFile, indexer).persist()
 
     del parser
     del indexer
@@ -155,7 +156,6 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     # getContent() in this context(with LimitedParser) returns 1 document
     runSPIMI = True
     while(runSPIMI):
-
         while(isMemoryAvailable(maximumRAM)):
             doc = parser.getContent()
             if not doc:
@@ -165,23 +165,40 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
         # TODO: when writing ram usage jumps up
         if not runSPIMI and blockCounter == 1:
-            persister.persist(indexer.normalizeIndex())
+            indexer.normalizeIndex()
+            persister.persist(indexer.index, indexer.positionIndex)
             return 0
         else:
-            if persister.persist((indexer.index, indexer.positionIndex), auxFile.format(blockCounter)):
+            if persister.persist(indexer.index, indexer.positionIndex, auxFile.format(blockCounter)):
                 blockCounter += 1
         indexer.clearVar()
+        persister.clearVar()
         gc.collect()
 
     # merging intermidiateIndexes
+    tokenizer.clearVar()
+    parser.clearVar()
+    indexer.clearVar()
+    persister.clearVar()
     del parser
     del indexer
     del tokenizer
     del persister
     gc.collect()
 
-    merger = Merger.PositionWeightMerger(
-        outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+    if weightCalc and positionCalc:
+        merger = Merger.PositionWeightMerger(
+            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+    elif weightCalc:
+        merger = Merger.WeightMerger(
+            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+    elif positionCalc:
+        merger = Merger.PositionMerger(
+            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+    else:
+        merger = Merger.SimpleMerger(
+            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+
     runSPIMI = True
     allDone = False
     print("Merging...")

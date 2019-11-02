@@ -43,6 +43,12 @@ class FileParser(ABC):
         print("Reading...")
         pass
 
+    def clearVar(self):
+        self.content = None
+        self.files = None
+        self.docID = None
+        self.limit = None
+
 
 class GZipFileParser(FileParser):
     """
@@ -82,7 +88,11 @@ class GZipFileParser(FileParser):
 
             gz.close()
 
-        return self.content
+    def clearVar(self):
+        self.content = None
+        self.files = None
+        self.docID = None
+        self.limit = None
 
 
 class LimitedRamFileParser(FileParser):
@@ -117,3 +127,11 @@ class LimitedRamFileParser(FileParser):
             self.f = io.BufferedReader(self.gz)
         else:
             return None
+
+    def clearVar(self):
+        self.content = None
+        self.files = None
+        self.docID = None
+        self.limit = None
+        self.gz = None
+        self.f = None
