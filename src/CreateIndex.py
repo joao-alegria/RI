@@ -1,7 +1,7 @@
 """
 .. module:: CreateIndex
     :noindex:
-.. moduleauthor:: Filipe Pires [85122] & João Alegria [85048]
+.. moduleauthor:: Filipe Pires [85122] & Joao Alegria [85048]
 """
 
 import os
@@ -229,7 +229,7 @@ def isMemoryAvailable(maximumRAM):
     # get program memory usage
     processMemory = process.memory_info().rss
     # print(processMemory)
-    if processMemory >= int(maximumRAM*0.90):
+    if processMemory >= int(maximumRAM*0.80):
         return False
 
     return True
