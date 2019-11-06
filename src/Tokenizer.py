@@ -18,6 +18,7 @@ class Tokenizer(ABC):
         Class constructor
         """
         super().__init__()
+        self.tokens = []
 
     @abstractmethod
     def tokenize(self, porcessText):
@@ -48,10 +49,15 @@ class SimpleTokenizer(Tokenizer):
         self.regex2 = re.compile(" +")
 
     def tokenize(self, processText):
-        tokens = self.regex2.split(self.regex1.sub(" ", processText.lower()))
-        return [t for t in tokens if len(t) >= 3]
+        self.tokens = self.regex2.split(
+            self.regex1.sub(" ", processText.lower()))
+        self.tokens = [t for t in self.tokens if len(t) >= 3]
+
+    def clearTokens(self):
+        self.tokens = []
 
     def clearVar(self):
+        self.tokens = []
         self.regex1 = None
         self.regex2 = None
 
@@ -64,7 +70,7 @@ class ComplexTokenizer(Tokenizer):
     def __init__(self):
         super().__init__()
         # loading PorterStemmer
-        self.stemmer = Stemmer.Stemmer('english')
+        # self.stemmer = Stemmer.Stemmer('english')
         # fetching stopWords
         self.stopWords = []
         f = open("snowball_stopwords_EN.txt", "r")
@@ -78,19 +84,22 @@ class ComplexTokenizer(Tokenizer):
         self.regex5 = re.compile("^(-)?[0-9]")
 
     def tokenize(self, processText):
+        stemmer = Stemmer.Stemmer('english')
+        self.tokens = []
         intermidiateTokens = self.regex1.split(processText.lower())
-        resultingTokens = []
         for t in intermidiateTokens:
             t = self.regex2.sub(" ", t) if self.regex3.search(
                 t) else self.regex4.sub(" ", t)
             additionalWords = list(filter(None, self.regex1.split(t)))
             if len(additionalWords) == 0:
                 continue
-            resultingTokens += additionalWords
+            self.tokens += additionalWords
+        self.tokens = [t for t in stemmer.stemWords(
+            self.tokens) if t not in self.stopWords and len(t) > 2]
+        stemmer = None
 
-        resultingTokens = [t for t in self.stemmer.stemWords(
-            resultingTokens) if t not in self.stopWords and len(t) > 2]
-        return resultingTokens
+    def clearTokens(self):
+        self.tokens = []
 
     def clearVar(self):
         self.regex1 = None
@@ -98,5 +107,5 @@ class ComplexTokenizer(Tokenizer):
         self.regex3 = None
         self.regex4 = None
         self.regex5 = None
-        self.stopWords = None
-        self.stemmer = None
+        self.tokens = []
+        self.stopWords = []

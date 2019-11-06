@@ -28,7 +28,6 @@ class FileParser(ABC):
         self.content = {}
         self.files = files
         self.docID = 0
-        self.numDocs = 0
         if limit == None:
             # a number bigger than all the rest
             self.limit = float('inf')
@@ -78,9 +77,8 @@ class GZipFileParser(FileParser):
                 elif line.startswith("PG"):
                     self.content[str(self.docID)] = docContent
                     docContent = ""
-                    self.numDocs += 1
                     # if limit is non positive, the program will process always 1 document
-                    if self.numDocs >= self.limit:
+                    if self.docID >= self.limit:
                         break
                 else:
                     if docContent != "":
@@ -112,8 +110,8 @@ class LimitedRamFileParser(FileParser):
             elif line.startswith("TI"):
                 docContent = line[6:].strip()
             elif line.startswith("PG"):
-                self.numDocs += 1
-                if self.numDocs >= self.limit:
+                if self.docID >= self.limit:
+                    self.gz.close()
                     return None
                 return {str(self.docID): docContent}
             else:
