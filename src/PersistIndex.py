@@ -26,6 +26,9 @@ class PersistIndex(ABC):
         super().__init__()
         if not os.path.exists("index/"):
             os.makedirs("index/")
+        else:
+            for f in [f for f in os.listdir("index/")]:
+                os.remove("index/"+f)
         if indexer:
             indexer.createIndex()
             self.index = list(indexer.index.items())

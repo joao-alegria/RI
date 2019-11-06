@@ -13,6 +13,9 @@ class Merger(ABC):
         self.outDir = "index/"
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
+        else:
+            for f in [f for f in os.listdir("index/")]:
+                os.remove("index/"+f)
         self.files = [io.open(x, "r") for x in intermidiateIndex]
         self.index = []
         self.indexer = indexer

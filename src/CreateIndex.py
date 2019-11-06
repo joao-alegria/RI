@@ -235,7 +235,7 @@ def isMemoryAvailable(maximumRAM):
 
     # get program memory usage
     processMemory = process.memory_info().rss
-    if processMemory >= int(maximumRAM*0.9):
+    if processMemory >= int(maximumRAM*0.95):
         return False
 
     return True
