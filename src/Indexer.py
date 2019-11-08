@@ -23,18 +23,25 @@ class Indexer(ABC):
 
     """
 
-    def __init__(self, tokenizer, fileParser=None):
+    def __init__(self, tokenizer, fileParser=None, positions=False):
         """
         Class constructor
         """
         super().__init__()
         self.tokenizer = tokenizer
+        self.docs = {}
+        self.numDocs = 1
         if fileParser:  # if fileParser != None
             fileParser.getContent()
             self.docs = fileParser.content
-        self.fileParser = fileParser
+            fileParser.content = {}
+            self.numDocs = fileParser.docID
+        self.positions = positions
+        # when postions=True, index is only positions cuz the frequency is the position array length
         self.index = {}
-        self.positionIndex = {}
+
+    def setNumDocs(self, numDocs):
+        self.numDocs = numDocs
 
     @abstractmethod
     def createIndex(self, content=None):
@@ -42,17 +49,17 @@ class Indexer(ABC):
         Function that creates the entire index by iterating over the corpus content and with the help of the tokenizer process and create the token index
         """
         if content:
-            # overriding docs with recent content passed to the function
+            # overwriting docs with recent content passed to the function
             self.docs = content
         # print("Indexing...")
 
     @classmethod
-    def normalizeIndex(self):
-        print("Normalizing...")
+    def normalize(self):
+        pass
 
     def clearVar(self):
         self.index = {}
-        self.positionIndex = {}
+        self.doc = {}
 
 
 class FileIndexer(Indexer):
@@ -70,39 +77,48 @@ class FileIndexer(Indexer):
         """
         super().createIndex(content)
         for docID, docContent in self.docs.items():
-            tokens = self.tokenizer.tokenize(docContent)
-            for idx, t in enumerate(tokens):
+            self.tokenizer.tokenize(docContent)
+            for idx, t in enumerate(self.tokenizer.tokens):
                 if t not in self.index:
-                    self.index[t] = {docID: 1}
-                    self.positionIndex[t] = {docID: [idx+1]}
+                    if self.positions:
+                        self.index[t] = {docID: [idx+1]}
+                    else:
+                        self.index[t] = {docID: 1}
                 elif docID not in self.index[t]:
-                    self.index[t][docID] = 1
-                    self.positionIndex[t][docID] = [idx+1]
+                    if self.positions:
+                        self.index[t][docID] = [idx+1]
+                    else:
+                        self.index[t][docID] = 1
                 else:
-                    self.index[t][docID] += 1
-                    self.positionIndex[t][docID].append(idx+1)
+                    if self.positions:
+                        self.index[t][docID].append(idx+1)
+                    else:
+                        self.index[t][docID] += 1
+            self.tokenizer.tokens = []
 
     def clearVar(self):
         self.index = {}
-        self.positionIndex = {}
+        self.docs = {}
 
 
 class WeightedFileIndexer(FileIndexer):
     def createIndex(self, content=None):
         super().createIndex(content)
 
-    def normalizeIndex(self):
-        super().normalizeIndex()
-        for token, postingList in self.index.items():
-            for docID, tf in postingList.items():
-                postingList[docID] = 1+math.log10(int(tf))
-        for token, postingList in self.index.items():
-            vectorNorme = math.sqrt(
-                sum([math.pow(x, 2) for x in postingList.values()]))
-            for docID, tf in postingList.items():
-                postingList[docID] = Decimal(
-                    postingList[docID])/Decimal(vectorNorme)
+    # normaliza for 1 postingList -> operation called on persist index for more efficient use of time
+    # post list->{docId:tf, docID:tf, ...} if no positions
+    # or
+    # post list->{docId:[2,3,5], docID:[5,3,2], ...} if positions
+    def normalize(self, postingList):
+        if self.positions:
+            tfWeights = [1+math.log10(int(len(x)))
+                         for x in postingList.values()]
+        else:
+            tfWeights = [1+math.log10(int(x)) for x in postingList.values()]
+        norme = 1/math.sqrt(sum([math.pow(x, 2) for x in tfWeights]))
+        tfWeights = [round(x*norme, 2) for x in tfWeights]
+        return (round(math.log10(self.numDocs/len(tfWeights)), 2), tfWeights)
 
     def clearVar(self):
         self.index = {}
-        self.positionIndex = {}
+        self.docs = {}

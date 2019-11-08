@@ -116,19 +116,27 @@ def main(argv):
 def assignment1(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc):
     parser = FileParser.GZipFileParser(inputFiles, limit)
     indexer = Indexer.WeightedFileIndexer(
-        tokenizer, parser) if weightCalc else Indexer.FileIndexer(tokenizer, parser)
+        tokenizer, parser, positionCalc) if weightCalc else Indexer.FileIndexer(tokenizer, parser, positionCalc)
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
-            outputFile, indexer).persist()
+            outputFile, indexer)
+        persister.persist()
     elif weightCalc:
         persister = PersistIndex.PersistCSVWeighted(
-            outputFile, indexer).persist()
+            outputFile, indexer)
+        persister.persist()
     elif positionCalc:
         persister = PersistIndex.PersistCSVPosition(
-            outputFile, indexer).persist()
+            outputFile, indexer)
+        persister.persist()
     else:
-        persister = PersistIndex.PersistCSV(outputFile, indexer).persist()
+        persister = PersistIndex.PersistCSV(outputFile, indexer)
+        persister.persist()
 
+    tokenizer.clearVar()
+    parser.clearVar()
+    indexer.clearVar()
+    persister.clearVar()
     del parser
     del indexer
     del tokenizer
@@ -140,15 +148,16 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     parser = FileParser.LimitedRamFileParser(inputFiles, limit)
 
     indexer = Indexer.WeightedFileIndexer(
-        tokenizer) if weightCalc else Indexer.FileIndexer(tokenizer)
+        tokenizer, positions=positionCalc) if weightCalc else Indexer.FileIndexer(tokenizer, positions=positionCalc)
     if weightCalc and positionCalc:
-        persister = PersistIndex.PersistCSVWeightedPosition(outputFile)
+        persister = PersistIndex.PersistCSVWeightedPosition(
+            outputFile, indexer)
     elif weightCalc:
-        persister = PersistIndex.PersistCSVWeighted(outputFile)
+        persister = PersistIndex.PersistCSVWeighted(outputFile, indexer)
     elif positionCalc:
-        persister = PersistIndex.PersistCSVPosition(outputFile)
+        persister = PersistIndex.PersistCSVPosition(outputFile, indexer)
     else:
-        persister = PersistIndex.PersistCSV(outputFile)
+        persister = PersistIndex.PersistCSV(outputFile, indexer)
 
     auxFile = "intermediate_index_{0}.txt"
     blockCounter = 1
@@ -165,15 +174,18 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
         # TODO: when writing ram usage jumps up
         if not runSPIMI and blockCounter == 1:
-            indexer.normalizeIndex()
-            persister.persist(indexer.index, indexer.positionIndex)
+            indexer.setNumDocs(parser.docID)
+            persister.persist(indexer.index)
             return 0
         else:
-            if persister.persist(indexer.index, indexer.positionIndex, auxFile.format(blockCounter)):
+            if persister.persist(indexer.index, auxFile.format(blockCounter)):
                 blockCounter += 1
         indexer.clearVar()
         persister.clearVar()
+        tokenizer.clearTokens()
         gc.collect()
+
+    indexer.setNumDocs(parser.docID)
 
     # merging intermidiateIndexes
     tokenizer.clearVar()
@@ -181,23 +193,22 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     indexer.clearVar()
     persister.clearVar()
     del parser
-    del indexer
     del tokenizer
     del persister
     gc.collect()
 
     if weightCalc and positionCalc:
         merger = Merger.PositionWeightMerger(
-            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+            [auxFile.format(x) for x in range(1, blockCounter)], indexer)
     elif weightCalc:
         merger = Merger.WeightMerger(
-            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+            [auxFile.format(x) for x in range(1, blockCounter)], indexer)
     elif positionCalc:
         merger = Merger.PositionMerger(
-            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+            [auxFile.format(x) for x in range(1, blockCounter)], indexer)
     else:
         merger = Merger.SimpleMerger(
-            outputFile, [auxFile.format(x) for x in range(1, blockCounter)])
+            [auxFile.format(x) for x in range(1, blockCounter)], indexer)
 
     runSPIMI = True
     allDone = False
@@ -207,13 +218,9 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
             allDone = merger.mergeIndex()
             if allDone:
                 runSPIMI = False
-                merger.prepareIndex()
-                gc.collect()
                 merger.writeIndex()
                 gc.collect()
                 break
-        merger.prepareIndex()
-        gc.collect()
         merger.writeIndex()
         gc.collect()
 
@@ -228,8 +235,7 @@ def isMemoryAvailable(maximumRAM):
 
     # get program memory usage
     processMemory = process.memory_info().rss
-    # print(processMemory)
-    if processMemory >= int(maximumRAM*0.80):
+    if processMemory >= int(maximumRAM*0.95):
         return False
 
     return True

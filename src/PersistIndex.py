@@ -5,6 +5,7 @@
 """
 import re
 import io
+import os
 from abc import ABC, abstractmethod
 
 
@@ -23,33 +24,34 @@ class PersistIndex(ABC):
         Class constructor
         """
         super().__init__()
+        if not os.path.exists("index/"):
+            os.makedirs("index/")
+        else:
+            for f in [f for f in os.listdir("index/")]:
+                os.remove("index/"+f)
         if indexer:
             indexer.createIndex()
-            indexer.normalizeIndex()
-            self.index = indexer.index
-            self.positionIndex = indexer.positionIndex
-        self.filename = filename
+            self.index = list(indexer.index.items())
+            self.indexer = indexer
+        self.filename = "index/"+filename
 
     @abstractmethod
-    def persist(self, index=None, positionIndex=None, overrideFile=None):
+    def persist(self, index=None, overrideFile=None):
         """
         Function that effectively persists the data.
         """
         if index:
-            self.index = index
-        if positionIndex:
-            self.positionIndex = positionIndex
+            self.index = list(index.items())
         if overrideFile:
             self.currentFilename = overrideFile
         else:
             self.currentFilename = self.filename
-        if self.index == {}:
+        if self.index == []:
             return False
         print("Persisting...")
 
     def clearVar(self):
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
 
 
 class PersistCSV(PersistIndex):
@@ -59,11 +61,11 @@ class PersistCSV(PersistIndex):
         token2,docID1:numOcur,docID2:numOcur,...
     """
 
-    def persist(self, index=None, positionIndex=None, overrideFile=None):
-        super().persist(index, positionIndex, overrideFile)
-        if self.index == {}:
+    def persist(self, index=None, overrideFile=None):
+        super().persist(index, overrideFile)
+        if self.index == []:
             return False
-        self.index = sorted(self.index.items())
+        self.index.sort(key=lambda tup: tup[0])
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
@@ -74,92 +76,87 @@ class PersistCSV(PersistIndex):
             f.write(currStr+"\n")
             currStr = ""
         f.close()
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
         return True
 
     def clearVar(self):
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
 
 
 class PersistCSVWeighted(PersistIndex):
-    def persist(self, index=None, positionIndex=None, overrideFile=None):
-        super().persist(index, positionIndex, overrideFile)
-        if self.index == {}:
+    def persist(self, index=None, overrideFile=None):
+        super().persist(index, overrideFile)
+        if self.index == []:
             return False
-        self.index = sorted(self.index.items())
+        self.index.sort(key=lambda tup: tup[0])
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
-            currStr += token+":1"
-            for docID, count in freqs.items():
-                currStr += ";"+docID+":"+str(count)
+            idf, w = self.indexer.normalize(freqs)
+            currStr += token+":"+str(idf)
+            for docID, fr in freqs.items():
+                currStr += ";"+docID+":"+str(fr if overrideFile else w[0])
+                w = w[1:]
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
             currStr = ""
         f.close()
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
         return True
 
     def clearVar(self):
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
 
 
 class PersistCSVPosition(PersistIndex):
-    def persist(self, index=None, positionIndex=None, overrideFile=None):
-        super().persist(index, positionIndex, overrideFile)
-        if self.index == {}:
+    def persist(self, index=None, overrideFile=None):
+        super().persist(index, overrideFile)
+        if self.index == []:
             return False
-        self.index = sorted(self.index.items())
+        self.index.sort(key=lambda tup: tup[0])
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
             currStr += token
-            for docID, count in freqs.items():
+            for docID, pos in freqs.items():
                 currStr += ";"+docID+":" + \
-                    str(count)+":"+str(self.positionIndex[token][docID][0])
-                for pos in self.positionIndex[token][docID][1:]:
-                    currStr += ","+str(pos)
+                    str(len(pos))+":"+str(pos[0]) + \
+                    "".join(","+str(x) for x in pos[1:])
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
             currStr = ""
         f.close()
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
         return True
 
     def clearVar(self):
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
 
 
 class PersistCSVWeightedPosition(PersistIndex):
 
-    def persist(self, index=None, positionIndex=None, overrideFile=None):
-        super().persist(index, positionIndex, overrideFile)
-        if self.index == {}:
+    def persist(self, index=None, overrideFile=None):
+        super().persist(index, overrideFile)
+        if self.index == []:
             return False
-        self.index = sorted(self.index.items())
+        self.index.sort(key=lambda tup: tup[0])
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
-            currStr += token+":1"
-            for docID, count in freqs.items():
+            idf, w = self.indexer.normalize(freqs)
+            currStr += token+":"+str(idf)
+            for docID, pos in freqs.items():
                 currStr += ";"+docID+":" + \
-                    str(count)+":"+str(self.positionIndex[token][docID][0])
-                for pos in self.positionIndex[token][docID][1:]:
-                    currStr += ","+str(pos)
+                    str(len(pos) if overrideFile else w[0])+":"+str(pos[0]) + "".join(","+str(x)
+                                                                                      for x in pos[1:])
+                w = w[1:]
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
             currStr = ""
         f.close()
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
+
         return True
 
     def clearVar(self):
-        self.index = {}
-        self.positionIndex = {}
+        self.index = []
