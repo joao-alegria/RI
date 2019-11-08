@@ -51,17 +51,23 @@ class PersistIndex(ABC):
         print("Persisting...")
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.index = []
 
 
 class PersistCSV(PersistIndex):
     """
-    Implementation of the index persister dedicated to the current context of RI. This instance persists the index in a text file, following a csv-like format, such as:
+    Implementation of the index persister dedicated to first assignment. This instance persists the index in a text file, following a CSV format, such as:
         token1,docID1:numOcur,docID2:numOcur,...
         token2,docID1:numOcur,docID2:numOcur,...
     """
 
     def persist(self, index=None, overrideFile=None):
+        """
+        Function that effectively persists the data in a CSV format.
+        """
         super().persist(index, overrideFile)
         if self.index == []:
             return False
@@ -80,10 +86,20 @@ class PersistCSV(PersistIndex):
         return True
 
     def clearVar(self):
-        self.index = []
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
+        #self.index = []
+        super().clearVar()
 
 
 class PersistCSVWeighted(PersistIndex):
+    """
+    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV format, such as:
+        token1:idf1, docID1:tfw1:numOcur, docID2:tfw2:numOcur,...
+        token2:idf2, docID1:tfw1:numOcur, docID2:tfw2:numOcur,...
+    """
+
     def persist(self, index=None, overrideFile=None):
         super().persist(index, overrideFile)
         if self.index == []:
@@ -105,10 +121,20 @@ class PersistCSVWeighted(PersistIndex):
         return True
 
     def clearVar(self):
-        self.index = []
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
+        #self.index = []
+        super().clearVar()
 
 
 class PersistCSVPosition(PersistIndex):
+    """
+    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV format, such as:
+        token1,docID1:pos1,pos2,...; docID2:pos1,pos2,...; ...
+        token2,docID1:pos1,pos2,...; docID2:pos1,pos2,...; ...
+    """
+
     def persist(self, index=None, overrideFile=None):
         super().persist(index, overrideFile)
         if self.index == []:
@@ -130,10 +156,19 @@ class PersistCSVPosition(PersistIndex):
         return True
 
     def clearVar(self):
-        self.index = []
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
+        #self.index = []
+        super().clearVar()
 
 
 class PersistCSVWeightedPosition(PersistIndex):
+    """
+    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV format, such as:
+        token1:idf1, docID1:tfw1:pos1,pos2,...; docID2:tfw2:...; ...
+        token2:idf2, docID1:tfw1:pos1,pos2,...; docID2:tfw2:...; ...
+    """
 
     def persist(self, index=None, overrideFile=None):
         super().persist(index, overrideFile)
@@ -159,4 +194,8 @@ class PersistCSVWeightedPosition(PersistIndex):
         return True
 
     def clearVar(self):
-        self.index = []
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
+        #self.index = []
+        super().clearVar()

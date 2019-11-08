@@ -1,3 +1,8 @@
+"""
+.. module:: Merger
+    :noindex:
+.. moduleauthor:: Filipe Pires [85122] & Joao Alegria [85048]
+"""
 import io
 import os
 import math
@@ -8,7 +13,19 @@ getcontext().prec = 2
 
 
 class Merger(ABC):
-    def __init__(self, intermidiateIndex, indexer):
+    """
+    Abstract class and interface for several types of index merging implementations, due to file format or processing method
+
+    :param intermediateIndex: list of the names of the intermedia indexes to be merged into one
+    :type intermediateIndex: list<str>
+    :param indexer: instance of the indexer used in the context to create the corpus index
+    :type indexer: Indexer
+    """
+
+    def __init__(self, intermediateIndex, indexer):
+        """
+        Class constructor
+        """
         # self.out = open(filename, "w")
         self.outDir = "index/"
         if not os.path.exists(self.outDir):
@@ -16,28 +33,45 @@ class Merger(ABC):
         else:
             for f in [f for f in os.listdir("index/")]:
                 os.remove("index/"+f)
-        self.files = [io.open(x, "r") for x in intermidiateIndex]
+        self.files = [io.open(x, "r") for x in intermediateIndex]
         self.index = []
         self.indexer = indexer
 
     @abstractmethod
     def mergeIndex(self):
+        """
+        Function that merges the intermediate indexes (or blocks of them) into one final index according to our memory-intelligent strategy.
+        """
         return True
 
     @abstractmethod
     def writeIndex(self):
+        """
+        Function that writes the final index (or blocks of it) to disk according to our memory-intelligent strategy.
+        """
         pass
 
+    '''
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         pass
+    '''
 
 
 class PositionWeightMerger(Merger):
-    def __init__(self, intermidiateIndex, indexer):
-        super().__init__(intermidiateIndex, indexer)
+    def __init__(self, intermediateIndex, indexer):
+        """
+        Class constructor
+        """
+        super().__init__(intermediateIndex, indexer)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
+        """
+        Variation of the merge function adapted to the positions and weights format.
+        """
         if self.files == []:
             return True
         if "" in self.terms:
@@ -66,6 +100,9 @@ class PositionWeightMerger(Merger):
         return False
 
     def writeIndex(self):
+        """
+        Variation of the write function adapted to the positions and weights format.
+        """
         # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
@@ -87,11 +124,17 @@ class PositionWeightMerger(Merger):
 
 
 class WeightMerger(Merger):
-    def __init__(self, intermidiateIndex, indexer):
-        super().__init__(intermidiateIndex, indexer)
+    def __init__(self, intermediateIndex, indexer):
+        """
+        Class constructor
+        """
+        super().__init__(intermediateIndex, indexer)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
+        """
+        Variation of the merge function adapted to the weights format.
+        """
         if self.files == []:
             return True
         if "" in self.terms:
@@ -119,6 +162,9 @@ class WeightMerger(Merger):
         return False
 
     def writeIndex(self):
+        """
+        Variation of the write function adapted to the weights format.
+        """
         # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
@@ -138,12 +184,18 @@ class WeightMerger(Merger):
 
 
 class PositionMerger(Merger):
-    def __init__(self, intermidiateIndex, indexer):
-        super().__init__(intermidiateIndex, indexer)
+    def __init__(self, intermediateIndex, indexer):
+        """
+        Class constructor
+        """
+        super().__init__(intermediateIndex, indexer)
         self.positionIndex = {}
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
+        """
+        Variation of the merge function adapted to the positions format.
+        """
         if self.files == []:
             return True
         if "" in self.terms:
@@ -172,6 +224,9 @@ class PositionMerger(Merger):
         return False
 
     def writeIndex(self):
+        """
+        Variation of the write function adapted to the positions format.
+        """
         # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
@@ -191,11 +246,17 @@ class PositionMerger(Merger):
 
 
 class SimpleMerger(Merger):
-    def __init__(self, intermidiateIndex, indexer):
-        super().__init__(intermidiateIndex, indexer)
+    def __init__(self, intermediateIndex, indexer):
+        """
+        Class constructor
+        """
+        super().__init__(intermediateIndex, indexer)
         self.terms = [x.readline().strip().split(",") for x in self.files]
 
     def mergeIndex(self):
+        """
+        Variation of the merge function adapted to the assignment's 1 format.
+        """
         if self.files == []:
             return True
         if "" in self.terms:
@@ -223,6 +284,9 @@ class SimpleMerger(Merger):
         return False
 
     def writeIndex(self):
+        """
+        Variation of the write function adapted to the assignment's 1 format.
+        """
         # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return

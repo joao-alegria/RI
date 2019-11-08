@@ -41,6 +41,12 @@ class Indexer(ABC):
         self.index = {}
 
     def setNumDocs(self, numDocs):
+        """
+        Setter function for the variable numDocs.
+
+        :param: numDocs: number of documents to be processed.
+        :type numDocs: int
+        """
         self.numDocs = numDocs
 
     @abstractmethod
@@ -55,16 +61,22 @@ class Indexer(ABC):
 
     @classmethod
     def normalize(self):
+        """
+        Function that normalizes the index according to a set of rules. Used in the second assignment.
+        """
         pass
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.index = {}
         self.doc = {}
 
 
 class FileIndexer(Indexer):
     """
-    Implementation of a indexer dedicated to the current context of RI.
+    Implementation of a indexer dedicated to the first assignment.
     """
 
     def createIndex(self, content=None):
@@ -97,12 +109,26 @@ class FileIndexer(Indexer):
             self.tokenizer.tokens = []
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.index = {}
         self.docs = {}
 
 
 class WeightedFileIndexer(FileIndexer):
+    """
+    Specialization of the FileIndexer class dedicated to the second assignment.
+    """
+
     def createIndex(self, content=None):
+        """
+        Creates the index the same way as its parent class and returns it.
+
+        :returns: dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index
+        :rtype: map<str, map<str, str>>
+
+        """
         super().createIndex(content)
 
     # normaliza for 1 postingList -> operation called on persist index for more efficient use of time
@@ -110,6 +136,9 @@ class WeightedFileIndexer(FileIndexer):
     # or
     # post list->{docId:[2,3,5], docID:[5,3,2], ...} if positions
     def normalize(self, postingList):
+        """
+        Implementation of the function defined by the abstract class. Normalizes the index by calculating the term weights and updating it with the results.
+        """
         if self.positions:
             tfWeights = [1+math.log10(int(len(x)))
                          for x in postingList.values()]
@@ -120,5 +149,8 @@ class WeightedFileIndexer(FileIndexer):
         return (round(math.log10(self.numDocs/len(tfWeights)), 2), tfWeights)
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.index = {}
         self.docs = {}

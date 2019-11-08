@@ -32,6 +32,9 @@ class Tokenizer(ABC):
         pass
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         pass
 
 # Types of tokenizer classes
@@ -39,24 +42,40 @@ class Tokenizer(ABC):
 
 class SimpleTokenizer(Tokenizer):
     """
-    Implementation of a tokenizer dedicated to the current context of RI. This instance is the simple implementation porposed in 2.1, spliting by " " and eliminating all non-alphabetic characters.
+    Implementation of a tokenizer dedicated to the first assignment. This instance is the simple implementation, spliting by " " and eliminating all non-alphabetic characters.
     """
 
     def __init__(self):
+        """
+        Class constructor
+        """
         super().__init__()
         # storing usefull regex
         self.regex1 = re.compile("[^a-z]+")
         self.regex2 = re.compile(" +")
 
     def tokenize(self, processText):
+        """
+        Implementation of the simple tokenization process.
+
+        :param processText: text that will be tokenized
+        :type processText: str
+
+        """
         self.tokens = self.regex2.split(
             self.regex1.sub(" ", processText.lower()))
         self.tokens = [t for t in self.tokens if len(t) >= 3]
 
     def clearTokens(self):
+        """
+        Function that frees memory by emptying the tokens list.
+        """
         self.tokens = []
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.tokens = []
         self.regex1 = None
         self.regex2 = None
@@ -68,6 +87,9 @@ class ComplexTokenizer(Tokenizer):
     """
 
     def __init__(self):
+        """
+        Class constructor
+        """
         super().__init__()
         # loading PorterStemmer
         # self.stemmer = Stemmer.Stemmer('english')
@@ -84,6 +106,13 @@ class ComplexTokenizer(Tokenizer):
         self.regex5 = re.compile("^(-)?[0-9]")
 
     def tokenize(self, processText):
+        """
+        Implementation of the more complex tokenization process, with the use of a Stemmer and list of stop words.
+
+        :param processText: text that will be tokenized
+        :type processText: str
+
+        """
         stemmer = Stemmer.Stemmer('english')
         self.tokens = []
         intermidiateTokens = self.regex1.split(processText.lower())
@@ -99,9 +128,15 @@ class ComplexTokenizer(Tokenizer):
         stemmer = None
 
     def clearTokens(self):
+        """
+        Function that frees memory by emptying the tokens list.
+        """
         self.tokens = []
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.regex1 = None
         self.regex2 = None
         self.regex3 = None

@@ -22,7 +22,7 @@ maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
 
 def main(argv):
     """
-    Main script for Project 1. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.
+    Main script for all of the discipline's assignments. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.
 
     :param args: receives the arguments passed to the program during execution
     :type args: list<str>
@@ -114,6 +114,24 @@ def main(argv):
 
 
 def assignment1(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc):
+    """
+    Follows the execution flow specific for the first assignment.
+
+    :param: tokenizer: class instance to be used in the tokenization process
+    :type tokenizer: Tokenizer
+    :param: outputFile: name of the file where the final index will be written to
+    :type outputFile: str
+    :param: inputFiles: list of the names of the files containing the textual information to be indexed
+    :type inputFiles: list<str>
+    :param: limit: limit number of documents to have in consideration, None if no limit
+    :type limit: int
+    :param: weightCalc: True if the term weights are to be calculated, False if not
+    :type weightCalc: bool
+    :param: positionCalc: True if the term positions are to be calculated, False if not
+    :type positionCalc: bool
+
+    """
+
     parser = FileParser.GZipFileParser(inputFiles, limit)
     indexer = Indexer.WeightedFileIndexer(
         tokenizer, parser, positionCalc) if weightCalc else Indexer.FileIndexer(tokenizer, parser, positionCalc)
@@ -145,6 +163,26 @@ def assignment1(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
 
 def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc, maximumRAM):
+    """
+    Follows the execution flow specific for the second assignment.
+
+    :param: tokenizer: class instance to be used in the tokenization process
+    :type tokenizer: Tokenizer
+    :param: outputFile: name of the file where the final index will be written to
+    :type outputFile: str
+    :param: inputFiles: list of the names of the files containing the textual information to be indexed
+    :type inputFiles: list<str>
+    :param: limit: limit number of documents to have in consideration, None if no limit
+    :type limit: int
+    :param: weightCalc: True if the term weights are to be calculated, False if not
+    :type weightCalc: bool
+    :param: positionCalc: True if the term positions are to be calculated, False if not
+    :type positionCalc: bool
+    :param: maximumRAM: maximum amount of RAM (in Mb) allowed for the program execution
+    :type maximumRAM: int
+
+    """
+
     parser = FileParser.LimitedRamFileParser(inputFiles, limit)
 
     indexer = Indexer.WeightedFileIndexer(
@@ -187,7 +225,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
     indexer.setNumDocs(parser.docID)
 
-    # merging intermidiateIndexes
+    # merging intermediateIndexes
     tokenizer.clearVar()
     parser.clearVar()
     indexer.clearVar()
@@ -229,6 +267,15 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
 
 def isMemoryAvailable(maximumRAM):
+    """
+    Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
+    
+    :param: maximumRAM: maximum amount of RAM (in Mb) allowed for the program execution
+    :type maximumRAM: int
+    returns: True if the memory usage is under 95% of the maximum RAM allowed, false if not
+    :rtype: bool
+
+    """
     # pass this verification because if it's to much it's user error
     # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
     #     return False
