@@ -195,7 +195,6 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     del parser
     del tokenizer
     del persister
-    gc.collect()
 
     if weightCalc and positionCalc:
         merger = Merger.PositionWeightMerger(
@@ -219,13 +218,11 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
             if allDone:
                 runSPIMI = False
                 merger.writeIndex()
-                gc.collect()
                 break
         merger.writeIndex()
         gc.collect()
 
     del merger
-    gc.collect()
 
 
 def isMemoryAvailable(maximumRAM):
@@ -235,6 +232,7 @@ def isMemoryAvailable(maximumRAM):
 
     # get program memory usage
     processMemory = process.memory_info().rss
+    # print(processMemory)
     if processMemory >= int(maximumRAM*0.95):
         return False
 

@@ -103,6 +103,7 @@ class LimitedRamFileParser(FileParser):
 
     def getContent(self):
         docContent = ""
+
         for line in self.f:
             line = line.decode("ISO-8859-1")
             if line.startswith("PMID"):
@@ -113,6 +114,8 @@ class LimitedRamFileParser(FileParser):
                 if self.docID >= self.limit:
                     self.gz.close()
                     return None
+                if docContent == "":
+                    break
                 return {str(self.docID): docContent}
             else:
                 if docContent != "":
@@ -123,6 +126,7 @@ class LimitedRamFileParser(FileParser):
         if self.files != []:
             self.gz = gzip.open(self.files.pop(0), "rb")
             self.f = io.BufferedReader(self.gz)
+            return self.getContent()
         else:
             return None
 
