@@ -43,6 +43,9 @@ class FileParser(ABC):
         pass
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.content = None
         self.files = None
         self.docID = None
@@ -87,6 +90,9 @@ class GZipFileParser(FileParser):
             gz.close()
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.content = None
         self.files = None
         self.docID = None
@@ -96,12 +102,23 @@ class GZipFileParser(FileParser):
 class LimitedRamFileParser(FileParser):
 
     def __init__(self, files, limit):
+        """
+        Class constructor
+        """
         super().__init__(files, limit)
         if self.files != []:
             self.gz = gzip.open(self.files.pop(0), "rb")
             self.f = io.BufferedReader(self.gz)
 
     def getContent(self):
+        """
+        Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
+        Differs from the implementation in GZipFileParser as it reads each line in the input file separately for memory usage reduction purposes.
+
+        :returns: dictionary where the key is the PMID of the document and the value the TI
+        :rtype: map<str, str>
+
+        """
         docContent = ""
 
         for line in self.f:
@@ -131,6 +148,9 @@ class LimitedRamFileParser(FileParser):
             return None
 
     def clearVar(self):
+        """
+        Function that frees the memory currently in use by emptying all class variables.
+        """
         self.content = None
         self.files = None
         self.docID = None
