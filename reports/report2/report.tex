@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{enumitem}
+\usepackage{amsmath}
 
 \topmargin -1.5cm
 \oddsidemargin 0.0cm
@@ -48,10 +49,10 @@ Information Retrieval\\
 
 \section*{Introduction}
 
-This report follows the work delivered for the first assignment of the 
-discipline of 'Information Retrieval' and describes both the updates made
-on the initial solution and the development of new features related to the
-indexing of text corpus.
+This report was written as a follow-up work of the delivery of the first 
+assignment for the discipline of 'Information Retrieval' and describes both
+the updates made on the initial solution and the development of new features 
+related to the indexing of text corpus.
 
 We include the updates done on each class developed and on the respective
 methods, as well as the redesign of our class diagram.
@@ -63,14 +64,14 @@ Changes to the output file (the actual index) format are also explained.
 
 Along with the description of the solution, we also answer to a few questions
 proposed for the assignment \cite{assign2}.
-All code and documentation is present in our public GitHub at 
-\newline \url{https://github.com/joao-alegria/RI}. 
+All code and documentation is present in our public GitHub project at 
+\url{https://github.com/joao-alegria/RI}. 
 
 \newpage
 \section*{1. Updates to Assignment 1}
 
 Once concluded the period of time dedicated for the development of the work 
-proposed for the first assignment, a few problems with our delivery were
+proposed for the first assignment, some mistakes on our delivery were
 detected and we found that their solution, although simple, was important to
 be presented in this next assignment.
 
@@ -137,6 +138,7 @@ Terms: ['alpha'] (11), ['eta','nov','sarcosin','sorbitan'] (10),
 \end{quote}
 \endgroup
 
+\newpage
 The 10 terms with highest collection frequency (for both tokenizers) are the 
 following:
 
@@ -187,7 +189,7 @@ presentation of either the frequency or the weight and the presentation or
 not of the positions of the terms in each document.
 Although this was not specifically asked in the assignment instructions,
 it answers its requirements and gives the user a wider range of usage 
-alternatives. 
+alternatives.
 
 Regarding the structure of our abstract classes, a few changes had to be
 considered to better face the challenges of the second assignment.
@@ -220,9 +222,9 @@ Figure \ref{fig:classdiagram} shows the new class diagram, with a considerable
 increase in complexity compared to the initial version.
 
 \begin{figure}[h!]
-  \includegraphics[width=\linewidth]{ClassDiagram_assign2.png}
-  \caption{Program's class diagram.}
-  \label{fig:classdiagram}
+\includegraphics[width=\linewidth]{ClassDiagram_assign2.png}
+\caption{Program's class diagram.}
+\label{fig:classdiagram}
 \end{figure}
 
 First of all, we have the new class derived from \texttt{FileParser} with the
@@ -233,47 +235,94 @@ document only.
 Although this makes the reading process slower, it also drastically 
 reduces the amount of RAM required during execution.
 
-The \texttt{WeightedFileIndexer} is a new class derived from our \texttt{FileIndexer}.
-This class inherits the method \textit{createIndex()} from our previous implementation
-and makes use of the method \textit{normalizeIndex()} to calculate the term frequencies.
-We call it a normalization as it is a transformation of the produced index to standardize
-its values according to a set of rules.
-We calculate the term frequencies following the logarithmic formula and the process of 
-normalization is based on the cosine formula, both presented bellow.
+The \texttt{WeightedFileIndexer} is a new class derived from our 
+\texttt{FileIndexer}.
+This class inherits the method \textit{createIndex()} from our previous 
+implementation and makes use of the method \textit{normalizeIndex()} to calculate 
+the term frequencies. 
+We call it a normalization as it is a transformation of the produced index to
+standardize its values according to a set of rules.
+We calculate the term frequencies following the logarithmic formula variant and 
+the process of normalization is based on the cosine formula variant, both 
+presented bellow.
 
-....... ...... ........... ......... ........... ............. .............. ......
+\begin{equation*}
+tf_{t,d} = 1 + log(tf_{t,d}) \>\>\>\>\>
+\>\>\>\>\> W = \frac{1}{\sqrt{w_1^2 + w_2^2 + ... + w_M^2}}
+\end{equation*}
 
-The \texttt{Tokenizer} implementations were the only classes that suffered no changes nor
-recieved no new subclasses. 
-Our solution served perfectly for the tokenization process whether the program is executed
-with a memory limitation or not.
+The \texttt{Tokenizer} implementations were the only classes that suffered no
+changes nor recieved no new subclasses. 
+Our solution served perfectly for the tokenization process whether the program 
+is executed with a memory limitation or not.
 
-For the \texttt{PersistIndex} class, we developed 3 new classes derived from it - one for
-each new output format. 
-Following are small portions of indexes generated by our solution in the formats supported
-by the program, for analysis purposes.
+For the \texttt{PersistIndex} class, we developed 3 new classes derived from 
+it - one for each new output format. 
+Following are small portions of indexes generated by our solution in the formats
+supported by the program, for analysis purposes.
 
 ...... .......... ............ ............ ............ .... ....... .........
 
-We now proceed to explaining how was the memory considered in this second assignment and,
-more specifically, what is the SPIMI strategy already mentioned in this document.
+We now proceed to explaining how was the memory considered in this second 
+assignment and, more specifically, what is the SPIMI strategy already 
+mentioned in this document.
+SPIMI stands for Single-Pass In-Memory Indexing, and its key ideas are 
+that several pseudo-indexes (index approximations) are generated, one per 
+block of information (where, in our case, a block represents the amount 
+of information capable of being stored in memory alone), accumulating 
+postings (details about each term) in postings lists as they occur. 
+Then, these block-indexes are merged with a n-way merge, for efficiency 
+purposes, into a unique index.
+This final index, however, is stored in one or more output files, 
+according to the memory restrictions applied to the program.
 
-// explain the implementation of SPIMI
-while memory available:
-  fileparser le document
-  indexer recebe-o e adiciona index interno (com ajuda do tokenizer)
-  if memory limit
-    indexer normaliza index
-    persister recebe index e posicao (posicao de ocorrencia dos termos)
-    persister escreve n1 ficheiro temporario (intermediate\_index\_x)
-    clear memory
-..............................
+Our solution has the following execution flow: while there is still memory 
+available, the program parses one document, tokenizes it and adds it to an
+internal index; if the memory limit is reached, this internal index is then 
+normalized and persisted to disk according to the chosen format, and finally 
+the memory is cleared and the cicle continues.
+Once the entire corpus has been processed, if needed, the merger is created 
+and the n-way merge is executed to produce the final index. 
+The memory used by the process responsible for the program's execution is 
+assured never to exceed the memory limitation applied by the user.
 
 \newpage
 \section*{3. Index Merging}
 
+We have not yet talked about the \texttt{Merger} class, although it has 
+already been mentioned that a merging process takes place in this second 
+assignment.
+This chapter is dedicated to this new module of our solution and the 
+decisions made during its implementation.
 
-// ..............................
+How exactly does the n-way merge work? 
+The most straightforward solution would be to merge index files in pairs, 
+by directly comparing each line and merging each into one. This process 
+would repeat until all files were reduced to one.
+The problem with this alternative is that, after each pair merging process, 
+the newly created index file will have to be processed again - this adds a 
+redundancy that severly slows the execution.
+This is where the n-way merging fits in.
+To solve the redundancy problem, we iterate over all index files (n means 
+the number of files) simultaneously. 
+This way, we guarantee that each line is only processed once.
+
+The way we implemented the n-way merge works as follows.
+With the aid of a temporary array, we store the latest line of each index 
+file, one at a time; when this occurs for all files, we calculate the 
+minimum term by finding the minimum (alphabetically) of the auxiliary array. 
+If the minimum term appears more than once in the array, the merging of the 
+respective postings lists happens, followed by storing those values in an 
+internal (in-memory) index.
+The positions in the temporary array where the merging of the term occurred
+are replaced by an empty value.
+New lines are only inserted where the array contains these empty values and 
+they are fetched from the respective index file.
+Now the process repeats itself, constantly merging the terms that occur in 
+more than one index file, and storing the merged term in the internal index.
+Once this in-memory index reaches a point where there is no more free memory 
+available, its content is then written to disk and the memory is freed so 
+that the process can continue with the remaining terms.
 
 \newpage
 \section*{4. Discussion}
@@ -290,7 +339,84 @@ a) What is the total indexing time and final index size on disk?
 
 b) What is the maximum amount of memory used during indexing?
 
-// ................................
+Although running the program works very similarly to the previous version, we
+present here the updated format.
+The file \texttt{CreateIndex.py} serves as the command to be executed in order to 
+indexing all documents passed as arguments, and it has the following format:
+
+\begingroup
+\addtolength\leftmargini{-0.4in}
+\addtolength\baselineskip{-0.05in}
+\begin{quote}
+\begin{verbatim}
+$ python3 CreateIndex.py [-h] [-p] [-w] [-o outputFile] 
+  [-l limit] [-t tokenizer] [-r limitRAM] inputFolder
+\end{verbatim}
+\end{quote}
+\endgroup
+
+Here, \texttt{-h} is the option that presents the manual for the command usage.
+Options \texttt{-p} and \texttt{-w}, if present, tell the program to process the
+positions and weights of the terms in the index.
+Options \texttt{-o} and \texttt{-l} allow the definition of the output file's 
+name and of the limit for the number of lines to be processed in each input file.
+Option \texttt{-t} makes possible for the user to choose the type of tokenizer
+to be used, and the alternatives are: 'simple' for the use of the 
+\texttt{SimpleTokenizer} class, and 'complex' for the \texttt{ComplexTokenizer} class.
+Option \texttt{-r} allows the user to define the maximum amount of memory that can
+be used by the process running the program.
+The previous arguments are all optional and the actual values for these arguments
+must appear right after the respective options.
+The final argument of the command must be the name of the folder that contains the
+files to be indexed. This argument was changed since last assignment as we considered
+more user-friendly to identify the target folder rather than each one of the input files
+(this is more noticeable as the number of files increases).
+
+The final version of our solution was executed according to the following format,
+as requested on the assignment instructions (the input folder contained the compressed
+files previously mentioned):
+
+\begingroup
+\addtolength\leftmargini{-0.4in}
+\addtolength\baselineskip{-0.05in}
+\begin{quote}
+\begin{verbatim}
+$ command time -v python3 CreateIndex.py -w -t complex
+  -r 0.5 ../input
+\end{verbatim}
+\end{quote}
+\endgroup
+
+The results are here presented. The total indexing time, given by the command
+"command time -v" was of ................... . 
+The final index size on disk is calculated by summing the size on disk of the 
+various sub-indexes generated by the merger. 
+The result was of ........................ .
+The answer to b) was also given by the "command time -v" addition and had a 
+value of .................. , meaning that the memory limit given of 500Mb was 
+indeed not surpassed.
+
+Taking a closer look at the results, the first fact that is more visible is the
+execution time.
+When we compare it to the initial solution (of the first assignment), we see an
+increase in time of ............ \%.
+This is explained by the fact that, not only the reading process becomes slower
+as the number of accesses done to the input files are increased, but also the 
+number of writes to disk also increase as well as the number of files we write to.
+All these I/O interactions, i.e. accesses to disk, are very time consuming and 
+are a good example of the well-known bottleneck problem of high resource-demanding tasks.
+The advantage of these interactions lies on the reduction of other resource usages - 
+more specifically, of RAM usage. 
+By indexing large files with this method, we guarantee that the program can process
+corpus that far exceed the hardware resources available.
+The user now gains power to balance resource usage according to his / her needs and
+available hardware.
+
+The second observation we find important to refer regards the final index storage 
+strategy. We decided to store the outcome in several partial index files since we
+took into account that, in the future, the aim will be to retrieve information from
+them through queries and so these partial index files will allow for a faster retrieval
+of results.
 
 \newpage
 \section*{Conclusions}
@@ -299,7 +425,29 @@ After completing the assignment, we drew a few conclusions regarding our
 solutions and the whole concept of memory management and its balancing with
 good efficiency.
 
-// ...................................
+The biggest challenge we faced was definetly the merging process.
+As we wished to come up with a solution of our own, rather than using external code or 
+libraries, the planning and execution took a considerable amount of time and effort.
+In addition, testing was also not very much straightforward, as the results needed to
+be manually checked.
+The delivered code, although time consuming during its execution, ensures that no term
+is lost, no attribute wrongly calculated and the results are exactly the same compared
+to the outcome of the execution without memory limitation (i.e. without the merging of
+intermediate indexes).
+
+From this assignment, we take the importance of being able to control the tradeoff 
+between indexing time and memory usage.
+Although execution times greatly increases once memory restrictions are considered, we
+saw a great value in being able to constrain the resources consumed by the process 
+in order to allow for the operating system to still offer sufficient memory for other
+tasks.
+
+When it comes to teamwork, we follow a balanced work distribution, usually dedicating
+the time for the assignment in compatible schedules. This helps keeping up-to-date with 
+what each is doing and speeds up problem solving. 
+For this assignment, due to external factors, the impact weight of each team element
+differs a bit, with an estimated effort distribution of 60\% to João Alegria and 40\%
+to Filipe Pires.
 
 \begin{thebibliography}{9}
   \bibliographystyle{Science}

@@ -30,7 +30,7 @@ def main(argv):
     """
 
     HELP = """USAGE:\n
-    python3 CreateIndex.py [-h] [-p] [-w] [-o outputFile] [-l limit] [-t tokenizer] [-r limitRAM] inputFile1 [inputFile2]+\n
+    python3 CreateIndex.py [-h] [-p] [-w] [-o outputFile] [-l limit] [-t tokenizer] [-r limitRAM] inputFolder\n
         OPTIONS:
            h - shows this help
            o - define output file's name
@@ -44,7 +44,7 @@ def main(argv):
            limit - value for the number of lines limit
            tokenizer - must be simple(for the simple 2.1 tokenizer) or complex(for the more advanced 2.2 tokenizer)
            limitRAM - maximum RAM used in the indexing process (if equals to 0, the program uses the maximum RAM capacity available)
-           inputFile - names of the input files to be processed"""
+           inputFolder - name of the folder that contains the input files to be processed"""
 
     # default variables
     outputFile = "out.txt"
@@ -162,7 +162,7 @@ def assignment1(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     gc.collect()
 
 
-def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCalc, maximumRAM):
+def assignment2(tokenizer, outputFile, inputFolder, limit, weightCalc, positionCalc, maximumRAM):
     """
     Follows the execution flow specific for the second assignment.
 
@@ -170,8 +170,8 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
     :type tokenizer: Tokenizer
     :param: outputFile: name of the file where the final index will be written to
     :type outputFile: str
-    :param: inputFiles: list of the names of the files containing the textual information to be indexed
-    :type inputFiles: list<str>
+    :param: inputFolder: list of one element representing the name of the folder that contains the files with the textual information to be indexed
+    :type inputFolder: list<str>
     :param: limit: limit number of documents to have in consideration, None if no limit
     :type limit: int
     :param: weightCalc: True if the term weights are to be calculated, False if not
@@ -183,6 +183,7 @@ def assignment2(tokenizer, outputFile, inputFiles, limit, weightCalc, positionCa
 
     """
 
+    inputFiles = os.listdir(inputFolder[0])
     parser = FileParser.LimitedRamFileParser(inputFiles, limit)
 
     indexer = Indexer.WeightedFileIndexer(
