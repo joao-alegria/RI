@@ -13,27 +13,27 @@ class PersistIndex(ABC):
     """
     Abstract class and interface for several types of index persistance implementations, due to file format or processing method
 
-    :param filename: name of the file were the information should be written too
-    :type filename: str
+    :param outputFolder: name of the folder were the information should be written too
+    :type outputFolder: str
     :param indexer: instance of the indexer used in the context to create the corpus index
     :type indexer: Indexer
     """
 
-    def __init__(self, filename, indexer=None):
+    def __init__(self, outputFolder, indexer=None):
         """
         Class constructor
         """
         super().__init__()
-        if not os.path.exists("index/"):
-            os.makedirs("index/")
+        if not os.path.exists(outputFolder):
+            os.makedirs(outputFolder)
         else:
-            for f in [f for f in os.listdir("index/")]:
-                os.remove("index/"+f)
+            for f in [f for f in os.listdir(outputFolder)]:
+                os.remove(outputFolder+"/"+f)
         if indexer:
             indexer.createIndex()
             self.index = list(indexer.index.items())
             self.indexer = indexer
-        self.filename = "index/"+filename
+        self.outputFolder = outputFolder
 
     @abstractmethod
     def persist(self, index=None, overrideFile=None):
@@ -45,7 +45,7 @@ class PersistIndex(ABC):
         if overrideFile:
             self.currentFilename = overrideFile
         else:
-            self.currentFilename = self.filename
+            self.currentFilename = self.outputFolder
         if self.index == []:
             return False
         print("Persisting...")
@@ -59,7 +59,7 @@ class PersistIndex(ABC):
 
 class PersistCSV(PersistIndex):
     """
-    Implementation of the index persister dedicated to first assignment. This instance persists the index in a text file, following a CSV format, such as:
+    Implementation of the index persister dedicated to first assignment. This instance persists the index in a text file, following a CSV-like format, such as:
         token1,docID1:numOcur,docID2:numOcur,...
         token2,docID1:numOcur,docID2:numOcur,...
     """
@@ -72,6 +72,9 @@ class PersistCSV(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        if not overrideFile:
+            self.currentFilename = self.currentFilename + \
+                "/"+self.index[0][0]+"_"+self.index[-1][0]
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
@@ -89,15 +92,14 @@ class PersistCSV(PersistIndex):
         """
         Function that frees the memory currently in use by emptying all class variables.
         """
-        #self.index = []
-        super().clearVar()
+        self.index = []
 
 
 class PersistCSVWeighted(PersistIndex):
     """
-    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV format, such as:
-        token1:idf1, docID1:tfw1:numOcur, docID2:tfw2:numOcur,...
-        token2:idf2, docID1:tfw1:numOcur, docID2:tfw2:numOcur,...
+    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV-like format, such as:
+        token1:idf1; docID1:tfw1; docID2:tfw2;...
+        token2:idf2; docID1:tfw1; docID2:tfw2;...
     """
 
     def persist(self, index=None, overrideFile=None):
@@ -105,6 +107,9 @@ class PersistCSVWeighted(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        if not overrideFile:
+            self.currentFilename = self.currentFilename + \
+                "/"+self.index[0][0]+"_"+self.index[-1][0]
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
@@ -124,15 +129,14 @@ class PersistCSVWeighted(PersistIndex):
         """
         Function that frees the memory currently in use by emptying all class variables.
         """
-        #self.index = []
-        super().clearVar()
+        self.index = []
 
 
 class PersistCSVPosition(PersistIndex):
     """
-    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV format, such as:
-        token1,docID1:pos1,pos2,...; docID2:pos1,pos2,...; ...
-        token2,docID1:pos1,pos2,...; docID2:pos1,pos2,...; ...
+    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV-like format, such as:
+        token1,docID1:docFreq1:pos1,pos2,...; docID2:docFreq2:pos1,pos2,...; ...
+        token2,docID1:docFreq1:pos1,pos2,...; docID2:docFreq1:pos1,pos2,...; ...
     """
 
     def persist(self, index=None, overrideFile=None):
@@ -140,6 +144,9 @@ class PersistCSVPosition(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        if not overrideFile:
+            self.currentFilename = self.currentFilename + \
+                "/"+self.index[0][0]+"_"+self.index[-1][0]
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
@@ -159,15 +166,14 @@ class PersistCSVPosition(PersistIndex):
         """
         Function that frees the memory currently in use by emptying all class variables.
         """
-        #self.index = []
-        super().clearVar()
+        self.index = []
 
 
 class PersistCSVWeightedPosition(PersistIndex):
     """
-    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV format, such as:
-        token1:idf1, docID1:tfw1:pos1,pos2,...; docID2:tfw2:...; ...
-        token2:idf2, docID1:tfw1:pos1,pos2,...; docID2:tfw2:...; ...
+    Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV-like format, such as:
+        token1:idf1; docID1:tfw1:pos1,pos2,...; docID2:tfw2:...; ...
+        token2:idf2; docID1:tfw1:pos1,pos2,...; docID2:tfw2:...; ...
     """
 
     def persist(self, index=None, overrideFile=None):
@@ -175,6 +181,9 @@ class PersistCSVWeightedPosition(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        if not overrideFile:
+            self.currentFilename = self.currentFilename + \
+                "/"+self.index[0][0]+"_"+self.index[-1][0]
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
@@ -197,5 +206,4 @@ class PersistCSVWeightedPosition(PersistIndex):
         """
         Function that frees the memory currently in use by emptying all class variables.
         """
-        #self.index = []
-        super().clearVar()
+        self.index = []

@@ -8,6 +8,7 @@ import re
 from abc import ABC, abstractmethod
 import gzip
 import io
+import os
 
 
 class FileParser(ABC):
@@ -21,12 +22,15 @@ class FileParser(ABC):
 
     """
 
-    def __init__(self, files, limit=None):
+    def __init__(self, inputFolder, limit=None):
         """
         Class constructor
         """
         self.content = {}
-        self.files = files
+        self.files = []
+        inputFiles = os.listdir(inputFolder)
+        for f in inputFiles:
+            self.files.append(inputFolder+"/"+f)
         self.docID = 0
         if limit == None:
             # a number bigger than all the rest
@@ -61,7 +65,7 @@ class GZipFileParser(FileParser):
         """
         Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
 
-        :returns: dictionary where the key is the PMID of the document and the value the TI
+        :returns: dictionary where the key is the sequencial ID of the document and the value the TI
         :rtype: map<str, str>
 
         """
@@ -115,7 +119,7 @@ class LimitedRamFileParser(FileParser):
         Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
         Differs from the implementation in GZipFileParser as it reads each line in the input file separately for memory usage reduction purposes.
 
-        :returns: dictionary where the key is the PMID of the document and the value the TI
+        :returns: dictionary where the key is the sequential ID of the document and the value the TI
         :rtype: map<str, str>
 
         """

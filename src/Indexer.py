@@ -20,6 +20,8 @@ class Indexer(ABC):
     :type fileParser: FileParser
     :param tokenizer: instance of the tokenizer used in the context to process the content of the corpus
     :type tokenizer: Tokenizer
+    :param tokenizer: flag that indicates if it's necessary process positions
+    :type tokenizer: boolean
 
     """
 
@@ -81,11 +83,7 @@ class FileIndexer(Indexer):
 
     def createIndex(self, content=None):
         """
-        Implementation of the function defined by the abstract class. Creates the index and returns it.
-
-        :returns: dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index
-        :rtype: map<str, map<str, str>>
-
+        Implementation of the function defined by the abstract class.
         """
         super().createIndex(content)
         for docID, docContent in self.docs.items():
@@ -123,21 +121,18 @@ class WeightedFileIndexer(FileIndexer):
 
     def createIndex(self, content=None):
         """
-        Creates the index the same way as its parent class and returns it.
-
-        :returns: dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index
-        :rtype: map<str, map<str, str>>
+        Creates the index the same way as its parent class.
 
         """
         super().createIndex(content)
 
-    # normaliza for 1 postingList -> operation called on persist index for more efficient use of time
+    # normalize for 1 postingList -> operation called on persist index for more efficient use of time
     # post list->{docId:tf, docID:tf, ...} if no positions
     # or
     # post list->{docId:[2,3,5], docID:[5,3,2], ...} if positions
     def normalize(self, postingList):
         """
-        Implementation of the function defined by the abstract class. Normalizes the index by calculating the term weights and updating it with the results.
+        Implementation of the function defined by the abstract class. Normalizes the postingList passed by calculating the term weights and the inverse term frequency.
         """
         if self.positions:
             tfWeights = [1+math.log10(int(len(x)))

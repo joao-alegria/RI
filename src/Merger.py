@@ -20,19 +20,21 @@ class Merger(ABC):
     :type intermediateIndex: list<str>
     :param indexer: instance of the indexer used in the context to create the corpus index
     :type indexer: Indexer
+    :param outputFolder: name of the folder where to store the final index
+    :type outputFolder: str
     """
 
-    def __init__(self, intermediateIndex, indexer):
+    def __init__(self, intermediateIndex, indexer, outputFolder):
         """
         Class constructor
         """
         # self.out = open(filename, "w")
-        self.outDir = "index/"
+        self.outDir = outputFolder
         if not os.path.exists(self.outDir):
             os.makedirs(self.outDir)
         else:
-            for f in [f for f in os.listdir("index/")]:
-                os.remove("index/"+f)
+            for f in [f for f in os.listdir(self.outDir)]:
+                os.remove(self.outDir+"/"+f)
         self.files = [io.open(x, "r") for x in intermediateIndex]
         self.index = []
         self.indexer = indexer
@@ -61,11 +63,11 @@ class Merger(ABC):
 
 
 class PositionWeightMerger(Merger):
-    def __init__(self, intermediateIndex, indexer):
+    def __init__(self, intermediateIndex, indexer, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer)
+        super().__init__(intermediateIndex, indexer, outputFolder)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
@@ -103,11 +105,10 @@ class PositionWeightMerger(Merger):
         """
         Variation of the write function adapted to the positions and weights format.
         """
-        # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             idf, w2 = self.indexer.normalize(docs)
@@ -124,11 +125,11 @@ class PositionWeightMerger(Merger):
 
 
 class WeightMerger(Merger):
-    def __init__(self, intermediateIndex, indexer):
+    def __init__(self, intermediateIndex, indexer, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer)
+        super().__init__(intermediateIndex, indexer, outputFolder)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
@@ -165,11 +166,10 @@ class WeightMerger(Merger):
         """
         Variation of the write function adapted to the weights format.
         """
-        # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             idf, w2 = self.indexer.normalize(docs)
@@ -184,11 +184,11 @@ class WeightMerger(Merger):
 
 
 class PositionMerger(Merger):
-    def __init__(self, intermediateIndex, indexer):
+    def __init__(self, intermediateIndex, indexer, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer)
+        super().__init__(intermediateIndex, indexer, outputFolder)
         self.positionIndex = {}
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
@@ -227,11 +227,10 @@ class PositionMerger(Merger):
         """
         Variation of the write function adapted to the positions format.
         """
-        # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             auxString += t
@@ -246,11 +245,11 @@ class PositionMerger(Merger):
 
 
 class SimpleMerger(Merger):
-    def __init__(self, intermediateIndex, indexer):
+    def __init__(self, intermediateIndex, indexer, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer)
+        super().__init__(intermediateIndex, indexer, outputFolder)
         self.terms = [x.readline().strip().split(",") for x in self.files]
 
     def mergeIndex(self):
@@ -287,11 +286,10 @@ class SimpleMerger(Merger):
         """
         Variation of the write function adapted to the assignment's 1 format.
         """
-        # TODO: maybe losing info!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             auxString += t
