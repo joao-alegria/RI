@@ -32,24 +32,24 @@ class Indexer(ABC):
         super().__init__()
         self.tokenizer = tokenizer
         self.docs = {}
-        self.numDocs = 1
+        self.totalNumDocs = 1
         if fileParser:  # if fileParser != None
             fileParser.getContent()
             self.docs = fileParser.content
             fileParser.content = {}
-            self.numDocs = fileParser.docID
+            self.totalNumDocs = fileParser.docID
         self.positions = positions
         # when postions=True, index is only positions cuz the frequency is the position array length
         self.index = {}
 
-    def setNumDocs(self, numDocs):
+    def setTotalNumDocs(self, totalNumDocs):
         """
-        Setter function for the variable numDocs.
+        Setter function for the variable totalNumDocs.
 
-        :param: numDocs: number of documents to be processed.
-        :type numDocs: int
+        :param: totalNumDocs: number of documents to be processed.
+        :type totalNumDocs: int
         """
-        self.numDocs = numDocs
+        self.totalNumDocs = totalNumDocs
 
     @abstractmethod
     def createIndex(self, content=None):
@@ -141,7 +141,7 @@ class WeightedFileIndexer(FileIndexer):
             tfWeights = [1+math.log10(int(x)) for x in postingList.values()]
         norme = 1/math.sqrt(sum([math.pow(x, 2) for x in tfWeights]))
         tfWeights = [round(x*norme, 2) for x in tfWeights]
-        return (round(math.log10(self.numDocs/len(tfWeights)), 2), tfWeights)
+        return (round(math.log10(self.totalNumDocs/len(tfWeights)), 2), tfWeights)
 
     def clearVar(self):
         """

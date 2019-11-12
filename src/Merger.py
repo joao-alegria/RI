@@ -29,12 +29,12 @@ class Merger(ABC):
         Class constructor
         """
         # self.out = open(filename, "w")
-        self.outDir = outputFolder
-        if not os.path.exists(self.outDir):
-            os.makedirs(self.outDir)
+        self.outFolder = outputFolder
+        if not os.path.exists(self.outFolder):
+            os.makedirs(self.outFolder)
         else:
-            for f in [f for f in os.listdir(self.outDir)]:
-                os.remove(self.outDir+"/"+f)
+            for f in [f for f in os.listdir(self.outFolder)]:
+                os.remove(self.outFolder+"/"+f)
         self.files = [io.open(x, "r") for x in intermediateIndex]
         self.index = []
         self.indexer = indexer
@@ -108,7 +108,8 @@ class PositionWeightMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outFolder+"/" +
+                   self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             idf, w2 = self.indexer.normalize(docs)
@@ -169,7 +170,8 @@ class WeightMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outFolder+"/" +
+                   self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             idf, w2 = self.indexer.normalize(docs)
@@ -230,7 +232,8 @@ class PositionMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outFolder+"/" +
+                   self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             auxString += t
@@ -289,7 +292,8 @@ class SimpleMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outDir+"/"+self.index[0][0]+"_"+self.index[-1][0], "w")
+        out = open(self.outFolder+"/" +
+                   self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
         for t, docs in self.index:
             auxString += t

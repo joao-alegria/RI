@@ -211,7 +211,7 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
         # TODO: when writing ram usage jumps up
         if not runSPIMI and blockCounter == 1:
-            indexer.setNumDocs(parser.docID)
+            indexer.setTotalNumDocs(parser.docID)
             persister.persist(indexer.index)
             return 0
         else:
@@ -222,7 +222,7 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
         tokenizer.clearTokens()
         gc.collect()
 
-    indexer.setNumDocs(parser.docID)
+    indexer.setTotalNumDocs(parser.docID)
 
     # merging intermediateIndexes
     tokenizer.clearVar()
