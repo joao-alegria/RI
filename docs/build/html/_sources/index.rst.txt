@@ -61,6 +61,14 @@ Tokenizer Module
    :undoc-members:
    :show-inheritance:
 
+Merger Module
+------------------------------
+
+.. automodule:: Merger
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 
 Indices and tables

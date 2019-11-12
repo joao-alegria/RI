@@ -116,38 +116,38 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
     """
     Follows the execution flow specific for the first assignment.
 
-    :param: tokenizer: class instance to be used in the tokenization process
+    :param tokenizer: class instance to be used in the tokenization process
     :type tokenizer: Tokenizer
-    :param: outputFolder: name of the folder where the final index will be written to
+    :param outputFolder: name of the folder where the final index will be written to
     :type outputFolder: str
-    :param: inputFiles: list of the names of the files containing the textual information to be indexed
+    :param inputFiles: list of the names of the files containing the textual information to be indexed
     :type inputFiles: list<str>
-    :param: limit: limit number of documents to have in consideration, None if no limit
+    :param limit: limit number of documents to have in consideration, None if no limit
     :type limit: int
-    :param: weightCalc: True if the term weights are to be calculated, False if not
+    :param weightCalc: True if the term weights are to be calculated, False if not
     :type weightCalc: bool
-    :param: positionCalc: True if the term positions are to be calculated, False if not
+    :param positionCalc: True if the term positions are to be calculated, False if not
     :type positionCalc: bool
 
     """
 
     parser = FileParser.GZipFileParser(inputFolder, limit)
-    indexer = Indexer.WeightedFileIndexer(
-        tokenizer, parser, positionCalc) if weightCalc else Indexer.FileIndexer(tokenizer, parser, positionCalc)
+    indexer = Indexer.FileIndexer(tokenizer, positionCalc, parser)
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
-            outputFolder, indexer)
+            outputFolder, indexer, parser.docID)
         persister.persist()
     elif weightCalc:
         persister = PersistIndex.PersistCSVWeighted(
-            outputFolder, indexer)
+            outputFolder, indexer, parser.docID)
         persister.persist()
     elif positionCalc:
         persister = PersistIndex.PersistCSVPosition(
-            outputFolder, indexer)
+            outputFolder, indexer, parser.docID)
         persister.persist()
     else:
-        persister = PersistIndex.PersistCSV(outputFolder, indexer)
+        persister = PersistIndex.PersistCSV(
+            outputFolder, indexer, parser.docID)
         persister.persist()
 
     tokenizer.clearVar()
@@ -165,27 +165,26 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
     """
     Follows the execution flow specific for the second assignment.
 
-    :param: tokenizer: class instance to be used in the tokenization process
+    :param tokenizer: class instance to be used in the tokenization process
     :type tokenizer: Tokenizer
-    :param: outputFolder: name of the folder where the final index will be written to
+    :param outputFolder: name of the folder where the final index will be written to
     :type outputFolder: str
-    :param: inputFolder: list of one element representing the name of the folder that contains the files with the textual information to be indexed
+    :param inputFolder: list of one element representing the name of the folder that contains the files with the textual information to be indexed
     :type inputFolder: list<str>
-    :param: limit: limit number of documents to have in consideration, None if no limit
+    :param limit: limit number of documents to have in consideration, None if no limit
     :type limit: int
-    :param: weightCalc: True if the term weights are to be calculated, False if not
+    :param weightCalc: True if the term weights are to be calculated, False if not
     :type weightCalc: bool
-    :param: positionCalc: True if the term positions are to be calculated, False if not
+    :param positionCalc: True if the term positions are to be calculated, False if not
     :type positionCalc: bool
-    :param: maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
+    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
     :type maximumRAM: int
 
     """
 
     parser = FileParser.LimitedRamFileParser(inputFolder, limit)
 
-    indexer = Indexer.WeightedFileIndexer(
-        tokenizer, positions=positionCalc) if weightCalc else Indexer.FileIndexer(tokenizer, positions=positionCalc)
+    indexer = Indexer.FileIndexer(tokenizer, positionCalc)
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
             outputFolder, indexer)
@@ -211,10 +210,11 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
         # TODO: when writing ram usage jumps up
         if not runSPIMI and blockCounter == 1:
-            indexer.setTotalNumDocs(parser.docID)
+            persister.setTotalNumDocs(parser.docID)
             persister.persist(indexer.index)
             return 0
         else:
+            persister.setTotalNumDocs(parser.docID)
             if persister.persist(indexer.index, auxFile.format(blockCounter)):
                 blockCounter += 1
         indexer.clearVar()
@@ -222,7 +222,18 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
         tokenizer.clearTokens()
         gc.collect()
 
-    indexer.setTotalNumDocs(parser.docID)
+    if weightCalc and positionCalc:
+        merger = Merger.PositionWeightMerger(
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+    elif weightCalc:
+        merger = Merger.WeightMerger(
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+    elif positionCalc:
+        merger = Merger.PositionMerger(
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+    else:
+        merger = Merger.SimpleMerger(
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
 
     # merging intermediateIndexes
     tokenizer.clearVar()
@@ -232,19 +243,6 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
     del parser
     del tokenizer
     del persister
-
-    if weightCalc and positionCalc:
-        merger = Merger.PositionWeightMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], indexer, outputFolder)
-    elif weightCalc:
-        merger = Merger.WeightMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], indexer, outputFolder)
-    elif positionCalc:
-        merger = Merger.PositionMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], indexer, outputFolder)
-    else:
-        merger = Merger.SimpleMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], indexer, outputFolder)
 
     runSPIMI = True
     allDone = False
@@ -266,9 +264,9 @@ def isMemoryAvailable(maximumRAM):
     """
     Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
 
-    :param: maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
+    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
     :type maximumRAM: int
-    returns: True if the memory usage is under 85% of the maximum RAM allowed, false if not
+    :returns: True if the memory usage is under 85% of the maximum RAM allowed, false if not
     :rtype: bool
 
     """

@@ -16,7 +16,7 @@ class Merger(ABC):
     """
     Abstract class and interface for several types of index merging implementations, due to file format or processing method
 
-    :param intermediateIndex: list of the names of the intermedia indexes to be merged into one
+    :param intermediateIndex: list of the names of the intermedia indexes to be merged
     :type intermediateIndex: list<str>
     :param indexer: instance of the indexer used in the context to create the corpus index
     :type indexer: Indexer
@@ -24,7 +24,7 @@ class Merger(ABC):
     :type outputFolder: str
     """
 
-    def __init__(self, intermediateIndex, indexer, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
         """
         Class constructor
         """
@@ -37,7 +37,7 @@ class Merger(ABC):
                 os.remove(self.outFolder+"/"+f)
         self.files = [io.open(x, "r") for x in intermediateIndex]
         self.index = []
-        self.indexer = indexer
+        self.totalNumDocs = totalNumDocs
 
     @abstractmethod
     def mergeIndex(self):
@@ -63,11 +63,11 @@ class Merger(ABC):
 
 
 class PositionWeightMerger(Merger):
-    def __init__(self, intermediateIndex, indexer, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
@@ -94,10 +94,12 @@ class PositionWeightMerger(Merger):
                 docs += t[1:]
                 self.terms[idx] = ""
 
-        self.index.append((term, {}))
+        self.index.append([term, {}, 0])
         for d in docs:
-            self.index[-1][1][d.split(":")
-                              [0]] = d.split(":")[2].split(",")
+            tfw = 1+math.log10(int(len(d.split(":")[2].split(","))))
+            self.index[-1][1][(d.split(":")
+                               [0], tfw)] = d.split(":")[2].split(",")
+            self.index[-1][2] += tfw**2
         docs = []
         return False
 
@@ -111,14 +113,13 @@ class PositionWeightMerger(Merger):
         out = open(self.outFolder+"/" +
                    self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
-        for t, docs in self.index:
-            idf, w2 = self.indexer.normalize(docs)
-            auxString += t+":"+str(idf)
+        for t, docs, norme in self.index:
+            auxString += t+":" + \
+                str(round(math.log10(self.totalNumDocs/len(docs)), 2))
             for doc, w in docs.items():
-                auxString += ";"+doc+":" + \
-                    str(w2[0])+":" + \
+                auxString += ";"+doc[0]+":" + \
+                    str(round(doc[1]*(1/math.sqrt(norme)), 2))+":" + \
                     str(w[0])+"".join(","+str(x) for x in w[1:])
-                w2 = w2[1:]
             out.write(auxString+"\n")
             auxString = ""
         self.index = []
@@ -126,11 +127,11 @@ class PositionWeightMerger(Merger):
 
 
 class WeightMerger(Merger):
-    def __init__(self, intermediateIndex, indexer, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
@@ -157,9 +158,11 @@ class WeightMerger(Merger):
                 docs += t[1:]
                 self.terms[idx] = ""
 
-        self.index.append((term, {}))
+        self.index.append([term, {}, 0])
         for d in docs:
-            self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
+            tfw = 1+math.log10(int(d.split(":")[1]))
+            self.index[-1][1][d.split(":")[0]] = tfw
+            self.index[-1][2] += tfw**2
         docs = []
         return False
 
@@ -173,12 +176,12 @@ class WeightMerger(Merger):
         out = open(self.outFolder+"/" +
                    self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
-        for t, docs in self.index:
-            idf, w2 = self.indexer.normalize(docs)
-            auxString += t+":"+str(idf)
+        for t, docs, norme in self.index:
+            auxString += t+":" + \
+                str(round(math.log10(self.totalNumDocs/len(docs)), 2))
             for doc, w in docs.items():
-                auxString += ";"+doc+":" + str(w2[0])
-                w2 = w2[1:]
+                auxString += ";"+doc+":" + \
+                    str(round(w*(1/math.sqrt(norme)), 2))
             out.write(auxString+"\n")
             auxString = ""
         self.index = []
@@ -186,11 +189,11 @@ class WeightMerger(Merger):
 
 
 class PositionMerger(Merger):
-    def __init__(self, intermediateIndex, indexer, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
         self.positionIndex = {}
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
@@ -218,7 +221,7 @@ class PositionMerger(Merger):
                 docs += t[1:]
                 self.terms[idx] = ""
 
-        self.index.append((term, {}))
+        self.index.append([term, {}])
         for d in docs:
             self.index[-1][1][d.split(":")
                               [0]] = d.split(":")[2].split(",")
@@ -248,11 +251,11 @@ class PositionMerger(Merger):
 
 
 class SimpleMerger(Merger):
-    def __init__(self, intermediateIndex, indexer, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, indexer, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
         self.terms = [x.readline().strip().split(",") for x in self.files]
 
     def mergeIndex(self):
@@ -279,7 +282,7 @@ class SimpleMerger(Merger):
                 docs += t[1:]
                 self.terms[idx] = ""
 
-        self.index.append((term, {}))
+        self.index.append([term, {}])
         for d in docs:
             self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
         docs = []

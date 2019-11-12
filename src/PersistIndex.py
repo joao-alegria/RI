@@ -6,6 +6,7 @@
 import re
 import io
 import os
+import math
 from abc import ABC, abstractmethod
 
 
@@ -19,7 +20,7 @@ class PersistIndex(ABC):
     :type indexer: Indexer
     """
 
-    def __init__(self, outputFolder, indexer=None):
+    def __init__(self, outputFolder, indexer=None, totalNumDocs=1):
         """
         Class constructor
         """
@@ -32,8 +33,18 @@ class PersistIndex(ABC):
         if indexer:
             indexer.createIndex()
             self.index = list(indexer.index.items())
-            self.indexer = indexer
+        self.totalNumDocs = totalNumDocs
         self.outputFolder = outputFolder
+
+    @classmethod
+    def setTotalNumDocs(self, totalNumDocs):
+        """
+        Setter function for the variable totalNumDocs.
+
+        :param: totalNumDocs: number of documents to be processed.
+        :type totalNumDocs: int
+        """
+        self.totalNumDocs = totalNumDocs
 
     @abstractmethod
     def persist(self, index=None, overrideFile=None):
@@ -113,10 +124,18 @@ class PersistCSVWeighted(PersistIndex):
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
-            idf, w = self.indexer.normalize(freqs)
-            currStr += token+":"+str(idf)
+            w = []
+            norme = 0
+            for x in freqs.values():
+                tfw = 1+math.log10(int(x))
+                w.append(tfw)
+                norme += tfw
+            currStr += token+":" + \
+                str(round(math.log10(self.totalNumDocs/len(freqs)), 2))
             for docID, fr in freqs.items():
-                currStr += ";"+docID+":"+str(fr if overrideFile else w[0])
+                currStr += ";"+docID+":" + \
+                    str(fr if overrideFile else round(
+                        w[0]*(1/math.sqrt(norme)), 2))
                 w = w[1:]
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
@@ -187,12 +206,19 @@ class PersistCSVWeightedPosition(PersistIndex):
         f = open(self.currentFilename, "w")
         currStr = ""
         for token, freqs in self.index:
-            idf, w = self.indexer.normalize(freqs)
-            currStr += token+":"+str(idf)
+            w = []
+            norme = 0
+            for x in freqs.values():
+                tfw = 1+math.log10(int(len(x)))
+                w.append(tfw)
+                norme += tfw
+            currStr += token+":" + \
+                str(round(math.log10(self.totalNumDocs/len(freqs)), 2))
             for docID, pos in freqs.items():
                 currStr += ";"+docID+":" + \
-                    str(len(pos) if overrideFile else w[0])+":"+str(pos[0]) + "".join(","+str(x)
-                                                                                      for x in pos[1:])
+                    str(len(pos) if overrideFile else round(
+                        w[0]*(1/math.sqrt(norme)), 2))+":"+str(pos[0]) + "".join(","+str(x)
+                                                                                 for x in pos[1:])
                 w = w[1:]
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")

@@ -40,12 +40,66 @@
 <div class="section" id="module-CreateIndex">
 <span id="index-creator-script"></span><h2>Index Creator Script<a class="headerlink" href="#module-CreateIndex" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="CreateIndex.main">
-<code class="sig-prename descclassname">CreateIndex.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#CreateIndex.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>Main script for Project 1. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.</p>
+<dt id="CreateIndex.assignment1">
+<code class="sig-prename descclassname">CreateIndex.</code><code class="sig-name descname">assignment1</code><span class="sig-paren">(</span><em class="sig-param">tokenizer</em>, <em class="sig-param">outputFolder</em>, <em class="sig-param">inputFolder</em>, <em class="sig-param">limit</em>, <em class="sig-param">weightCalc</em>, <em class="sig-param">positionCalc</em><span class="sig-paren">)</span><a class="headerlink" href="#CreateIndex.assignment1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Follows the execution flow specific for the first assignment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>args</strong> (<em>list&lt;str&gt;</em>) – receives the arguments passed to the program during execution</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokenizer</strong> (<a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><em>Tokenizer</em></a>) – class instance to be used in the tokenization process</p></li>
+<li><p><strong>outputFolder</strong> (<em>str</em>) – name of the folder where the final index will be written to</p></li>
+<li><p><strong>inputFiles</strong> (<em>list&lt;str&gt;</em>) – list of the names of the files containing the textual information to be indexed</p></li>
+<li><p><strong>limit</strong> (<em>int</em>) – limit number of documents to have in consideration, None if no limit</p></li>
+<li><p><strong>weightCalc</strong> (<em>bool</em>) – True if the term weights are to be calculated, False if not</p></li>
+<li><p><strong>positionCalc</strong> (<em>bool</em>) – True if the term positions are to be calculated, False if not</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="CreateIndex.assignment2">
+<code class="sig-prename descclassname">CreateIndex.</code><code class="sig-name descname">assignment2</code><span class="sig-paren">(</span><em class="sig-param">tokenizer</em>, <em class="sig-param">outputFolder</em>, <em class="sig-param">inputFolder</em>, <em class="sig-param">limit</em>, <em class="sig-param">weightCalc</em>, <em class="sig-param">positionCalc</em>, <em class="sig-param">maximumRAM</em><span class="sig-paren">)</span><a class="headerlink" href="#CreateIndex.assignment2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Follows the execution flow specific for the second assignment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokenizer</strong> (<a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><em>Tokenizer</em></a>) – class instance to be used in the tokenization process</p></li>
+<li><p><strong>outputFolder</strong> (<em>str</em>) – name of the folder where the final index will be written to</p></li>
+<li><p><strong>inputFolder</strong> (<em>list&lt;str&gt;</em>) – list of one element representing the name of the folder that contains the files with the textual information to be indexed</p></li>
+<li><p><strong>limit</strong> (<em>int</em>) – limit number of documents to have in consideration, None if no limit</p></li>
+<li><p><strong>weightCalc</strong> (<em>bool</em>) – True if the term weights are to be calculated, False if not</p></li>
+<li><p><strong>positionCalc</strong> (<em>bool</em>) – True if the term positions are to be calculated, False if not</p></li>
+<li><p><strong>maximumRAM</strong> (<em>int</em>) – maximum amount of RAM (in Gb) allowed for the program execution</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="CreateIndex.isMemoryAvailable">
+<code class="sig-prename descclassname">CreateIndex.</code><code class="sig-name descname">isMemoryAvailable</code><span class="sig-paren">(</span><em class="sig-param">maximumRAM</em><span class="sig-paren">)</span><a class="headerlink" href="#CreateIndex.isMemoryAvailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>maximumRAM</strong> (<em>int</em>) – maximum amount of RAM (in Gb) allowed for the program execution</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the memory usage is under 85% of the maximum RAM allowed, false if not</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="CreateIndex.main">
+<code class="sig-prename descclassname">CreateIndex.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">argv</em><span class="sig-paren">)</span><a class="headerlink" href="#CreateIndex.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main script for all of the discipline’s assignments. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>argv</strong> (<em>list&lt;str&gt;</em>) – receives the arguments passed to the program during execution</p>
 </dd>
 </dl>
 </dd></dl>
@@ -55,7 +109,7 @@
 <span id="file-parser-module"></span><h2>File Parser Module<a class="headerlink" href="#module-FileParser" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="FileParser.FileParser">
-<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">FileParser</code><span class="sig-paren">(</span><em class="sig-param">files</em>, <em class="sig-param">limit</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.FileParser" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">FileParser</code><span class="sig-paren">(</span><em class="sig-param">inputFolder</em>, <em class="sig-param">limit=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.FileParser" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Abstract class that serves as template and interface for future instances and implementations.</p>
 <dl class="field-list simple">
@@ -67,6 +121,12 @@
 </dd>
 </dl>
 <dl class="method">
+<dt id="FileParser.FileParser.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.FileParser.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="FileParser.FileParser.getContent">
 <em class="property">abstract </em><code class="sig-name descname">getContent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.FileParser.getContent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that processes the files passed to the object during it’s creation.</p>
@@ -76,16 +136,49 @@
 
 <dl class="class">
 <dt id="FileParser.GZipFileParser">
-<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">GZipFileParser</code><span class="sig-paren">(</span><em class="sig-param">files</em>, <em class="sig-param">limit</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.GZipFileParser" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">GZipFileParser</code><span class="sig-paren">(</span><em class="sig-param">inputFolder</em>, <em class="sig-param">limit=None</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.GZipFileParser" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#FileParser.FileParser" title="FileParser.FileParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileParser.FileParser</span></code></a></p>
 <p>Implementation of a file parser dedicated to the current context of RI. Processing of one or varios zip files.</p>
+<dl class="method">
+<dt id="FileParser.GZipFileParser.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.GZipFileParser.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="FileParser.GZipFileParser.getContent">
 <code class="sig-name descname">getContent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.GZipFileParser.getContent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implementation of the function defined by the abstract class. Fetches the PMID and the TI.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dictionary where the key is the PMID of the document and the value the TI</p>
+<dd class="field-odd"><p>dictionary where the key is the sequencial ID of the document and the value the TI</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>map&lt;str, str&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="FileParser.LimitedRamFileParser">
+<em class="property">class </em><code class="sig-prename descclassname">FileParser.</code><code class="sig-name descname">LimitedRamFileParser</code><span class="sig-paren">(</span><em class="sig-param">files</em>, <em class="sig-param">limit</em><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.LimitedRamFileParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#FileParser.FileParser" title="FileParser.FileParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileParser.FileParser</span></code></a></p>
+<dl class="method">
+<dt id="FileParser.LimitedRamFileParser.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.LimitedRamFileParser.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="FileParser.LimitedRamFileParser.getContent">
+<code class="sig-name descname">getContent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#FileParser.LimitedRamFileParser.getContent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
+Differs from the implementation in GZipFileParser as it reads each line in the input file separately for memory usage reduction purposes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dictionary where the key is the sequential ID of the document and the value the TI</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>map&lt;str, str&gt;</p>
@@ -129,7 +222,7 @@
 <dl class="function">
 <dt id="IndexAnalyzer.main">
 <code class="sig-prename descclassname">IndexAnalyzer.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">args</em><span class="sig-paren">)</span><a class="headerlink" href="#IndexAnalyzer.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that answerers to some of the assignment’s questions. Function that creates the data flow for the auxiliar script.</p>
+<dd><p>Function that answers to some of the assignments’ questions by calculating some properties of the output files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Param</dt>
 <dd class="field-odd"><p>args: the list of arguments passed to the script when executed</p>
@@ -142,41 +235,46 @@
 <span id="indexer-module"></span><h2>Indexer Module<a class="headerlink" href="#module-Indexer" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Indexer.FileIndexer">
-<em class="property">class </em><code class="sig-prename descclassname">Indexer.</code><code class="sig-name descname">FileIndexer</code><span class="sig-paren">(</span><em class="sig-param">fileParser</em>, <em class="sig-param">tokenizer</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Indexer.</code><code class="sig-name descname">FileIndexer</code><span class="sig-paren">(</span><em class="sig-param">tokenizer</em>, <em class="sig-param">positions</em>, <em class="sig-param">fileParser=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#Indexer.Indexer" title="Indexer.Indexer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Indexer.Indexer</span></code></a></p>
-<p>Implementation of a indexer dedicated to the current context of RI.</p>
+<p>Implementation of a indexer dedicated to the first assignment.</p>
+<dl class="method">
+<dt id="Indexer.FileIndexer.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="Indexer.FileIndexer.createIndex">
-<code class="sig-name descname">createIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer.createIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implementation of the function defined by the abstract class. Creates the index and returns it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dictionary where the key is the token and the value is a dictionary were the key is the docId and the value the number of occurences of that token in that document, i.e., the index</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>map&lt;str, map&lt;str, str&gt;&gt;</p>
-</dd>
-</dl>
+<code class="sig-name descname">createIndex</code><span class="sig-paren">(</span><em class="sig-param">content=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.FileIndexer.createIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the function defined by the abstract class.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="Indexer.Indexer">
-<em class="property">class </em><code class="sig-prename descclassname">Indexer.</code><code class="sig-name descname">Indexer</code><span class="sig-paren">(</span><em class="sig-param">fileParser</em>, <em class="sig-param">tokenizer</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">Indexer.</code><code class="sig-name descname">Indexer</code><span class="sig-paren">(</span><em class="sig-param">tokenizer</em>, <em class="sig-param">positions</em>, <em class="sig-param">fileParser=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Abstract class and interface for several types of index persistances implementations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fileParser</strong> (<a class="reference internal" href="#FileParser.FileParser" title="FileParser.FileParser"><em>FileParser</em></a>) – instance of the file parser used in the context to retrieve the data from the corpus</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><em>Tokenizer</em></a>) – instance of the tokenizer used in the context to process the content of the corpus</p></li>
+<li><p><strong>tokenizer</strong> (<em>boolean</em>) – instance of the tokenizer used in the context to process the content of the corpus</p></li>
+<li><p><strong>tokenizer</strong> – flag that indicates if it’s necessary process positions</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
+<dt id="Indexer.Indexer.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="Indexer.Indexer.createIndex">
-<em class="property">abstract </em><code class="sig-name descname">createIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer.createIndex" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">createIndex</code><span class="sig-paren">(</span><em class="sig-param">content=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Indexer.Indexer.createIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that creates the entire index by iterating over the corpus content and with the help of the tokenizer process and create the token index</p>
 </dd></dl>
 
@@ -187,16 +285,91 @@
 <span id="index-persistance-module"></span><h2>Index Persistance Module<a class="headerlink" href="#module-PersistIndex" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="PersistIndex.PersistCSV">
-<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistCSV</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">indexer</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistCSV</code><span class="sig-paren">(</span><em class="sig-param">outputFolder</em>, <em class="sig-param">indexer=None</em>, <em class="sig-param">totalNumDocs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#PersistIndex.PersistIndex" title="PersistIndex.PersistIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">PersistIndex.PersistIndex</span></code></a></p>
 <dl class="simple">
-<dt>Implementation of the index persister dedicated to the current context of RI. This instance persists the index in a text file, following a csv-like format, such as:</dt><dd><p>token1,docID1:numOcur,docID2:numOcur,…
+<dt>Implementation of the index persister dedicated to first assignment. This instance persists the index in a text file, following a CSV-like format, such as:</dt><dd><p>token1,docID1:numOcur,docID2:numOcur,…
 token2,docID1:numOcur,docID2:numOcur,…</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="PersistIndex.PersistCSV.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="PersistIndex.PersistCSV.persist">
-<code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV.persist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">persist</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">overrideFile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSV.persist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that effectively persists the data in a CSV format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="PersistIndex.PersistCSVPosition">
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistCSVPosition</code><span class="sig-paren">(</span><em class="sig-param">outputFolder</em>, <em class="sig-param">indexer=None</em>, <em class="sig-param">totalNumDocs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVPosition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#PersistIndex.PersistIndex" title="PersistIndex.PersistIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">PersistIndex.PersistIndex</span></code></a></p>
+<dl class="simple">
+<dt>Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV-like format, such as:</dt><dd><p>token1,docID1:docFreq1:pos1,pos2,…; docID2:docFreq2:pos1,pos2,…; …
+token2,docID1:docFreq1:pos1,pos2,…; docID2:docFreq1:pos1,pos2,…; …</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="PersistIndex.PersistCSVPosition.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVPosition.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PersistIndex.PersistCSVPosition.persist">
+<code class="sig-name descname">persist</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">overrideFile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVPosition.persist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that effectively persists the data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="PersistIndex.PersistCSVWeighted">
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistCSVWeighted</code><span class="sig-paren">(</span><em class="sig-param">outputFolder</em>, <em class="sig-param">indexer=None</em>, <em class="sig-param">totalNumDocs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVWeighted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#PersistIndex.PersistIndex" title="PersistIndex.PersistIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">PersistIndex.PersistIndex</span></code></a></p>
+<dl class="simple">
+<dt>Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV-like format, such as:</dt><dd><p>token1:idf1; docID1:tfw1; docID2:tfw2;…
+token2:idf2; docID1:tfw1; docID2:tfw2;…</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="PersistIndex.PersistCSVWeighted.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVWeighted.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PersistIndex.PersistCSVWeighted.persist">
+<code class="sig-name descname">persist</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">overrideFile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVWeighted.persist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that effectively persists the data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="PersistIndex.PersistCSVWeightedPosition">
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistCSVWeightedPosition</code><span class="sig-paren">(</span><em class="sig-param">outputFolder</em>, <em class="sig-param">indexer=None</em>, <em class="sig-param">totalNumDocs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVWeightedPosition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#PersistIndex.PersistIndex" title="PersistIndex.PersistIndex"><code class="xref py py-class docutils literal notranslate"><span class="pre">PersistIndex.PersistIndex</span></code></a></p>
+<dl class="simple">
+<dt>Implementation of the index persister dedicated to the second assignment. This instance persists the index in a text file, following a CSV-like format, such as:</dt><dd><p>token1:idf1; docID1:tfw1:pos1,pos2,…; docID2:tfw2:…; …
+token2:idf2; docID1:tfw1:pos1,pos2,…; docID2:tfw2:…; …</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="PersistIndex.PersistCSVWeightedPosition.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVWeightedPosition.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PersistIndex.PersistCSVWeightedPosition.persist">
+<code class="sig-name descname">persist</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">overrideFile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistCSVWeightedPosition.persist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that effectively persists the data.</p>
 </dd></dl>
 
@@ -204,21 +377,38 @@ token2,docID1:numOcur,docID2:numOcur,…</p>
 
 <dl class="class">
 <dt id="PersistIndex.PersistIndex">
-<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistIndex</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">indexer</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">PersistIndex.</code><code class="sig-name descname">PersistIndex</code><span class="sig-paren">(</span><em class="sig-param">outputFolder</em>, <em class="sig-param">indexer=None</em>, <em class="sig-param">totalNumDocs=1</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Abstract class and interface for several types of index persistance implementations, due to file format or processing method</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> (<em>str</em>) – name of the file were the information should be written too</p></li>
+<li><p><strong>outputFolder</strong> (<em>str</em>) – name of the folder were the information should be written too</p></li>
 <li><p><strong>indexer</strong> (<a class="reference internal" href="#Indexer.Indexer" title="Indexer.Indexer"><em>Indexer</em></a>) – instance of the indexer used in the context to create the corpus index</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
+<dt id="PersistIndex.PersistIndex.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="PersistIndex.PersistIndex.persist">
-<em class="property">abstract </em><code class="sig-name descname">persist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex.persist" title="Permalink to this definition">¶</a></dt>
+<em class="property">abstract </em><code class="sig-name descname">persist</code><span class="sig-paren">(</span><em class="sig-param">index=None</em>, <em class="sig-param">overrideFile=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex.persist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that effectively persists the data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PersistIndex.PersistIndex.setTotalNumDocs">
+<em class="property">classmethod </em><code class="sig-name descname">setTotalNumDocs</code><span class="sig-paren">(</span><em class="sig-param">totalNumDocs</em><span class="sig-paren">)</span><a class="headerlink" href="#PersistIndex.PersistIndex.setTotalNumDocs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter function for the variable totalNumDocs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Param</dt>
+<dd class="field-odd"><p>totalNumDocs: number of documents to be processed.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -232,9 +422,21 @@ token2,docID1:numOcur,docID2:numOcur,…</p>
 <dd><p>Bases: <a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer.Tokenizer</span></code></a></p>
 <p>Implementation of a tokenizer dedicated to the current context of RI. This instance is the complex implementation porposed in 2.2. This version uses the PorterStemmer, eliminates stop words and implements some personal rules in relation to special characters(split by [ -_], keeps dates, emails, money, digits, … ; eliminates majority of the punctuantion)</p>
 <dl class="method">
+<dt id="Tokenizer.ComplexTokenizer.clearTokens">
+<code class="sig-name descname">clearTokens</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.ComplexTokenizer.clearTokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees memory by emptying the tokens list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tokenizer.ComplexTokenizer.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.ComplexTokenizer.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="Tokenizer.ComplexTokenizer.tokenize">
 <code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">processText</em><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.ComplexTokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that receives a string and tokenizes it, applying as many rules as implemented by the user.</p>
+<dd><p>Implementation of the more complex tokenization process, with the use of a Stemmer and list of stop words.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>processText</strong> (<em>str</em>) – text that will be tokenized</p>
@@ -248,11 +450,23 @@ token2,docID1:numOcur,docID2:numOcur,…</p>
 <dt id="Tokenizer.SimpleTokenizer">
 <em class="property">class </em><code class="sig-prename descclassname">Tokenizer.</code><code class="sig-name descname">SimpleTokenizer</code><a class="headerlink" href="#Tokenizer.SimpleTokenizer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#Tokenizer.Tokenizer" title="Tokenizer.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer.Tokenizer</span></code></a></p>
-<p>Implementation of a tokenizer dedicated to the current context of RI. This instance is the simple implementation porposed in 2.1, spliting by ” ” and eliminating all non-alphabetic characters.</p>
+<p>Implementation of a tokenizer dedicated to the first assignment. This instance is the simple implementation, spliting by ” ” and eliminating all non-alphabetic characters.</p>
+<dl class="method">
+<dt id="Tokenizer.SimpleTokenizer.clearTokens">
+<code class="sig-name descname">clearTokens</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.SimpleTokenizer.clearTokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees memory by emptying the tokens list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Tokenizer.SimpleTokenizer.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.SimpleTokenizer.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="Tokenizer.SimpleTokenizer.tokenize">
 <code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">processText</em><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.SimpleTokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that receives a string and tokenizes it, applying as many rules as implemented by the user.</p>
+<dd><p>Implementation of the simple tokenization process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>processText</strong> (<em>str</em>) – text that will be tokenized</p>
@@ -268,6 +482,12 @@ token2,docID1:numOcur,docID2:numOcur,…</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Abstract class and interface for the various possible implementations of tokenizers</p>
 <dl class="method">
+<dt id="Tokenizer.Tokenizer.clearVar">
+<code class="sig-name descname">clearVar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.Tokenizer.clearVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that frees the memory currently in use by emptying all class variables.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="Tokenizer.Tokenizer.tokenize">
 <em class="property">abstract </em><code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">porcessText</em><span class="sig-paren">)</span><a class="headerlink" href="#Tokenizer.Tokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that receives a string and tokenizes it, applying as many rules as implemented by the user.</p>
@@ -276,6 +496,109 @@ token2,docID1:numOcur,docID2:numOcur,…</p>
 <dd class="field-odd"><p><strong>processText</strong> (<em>str</em>) – text that will be tokenized</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-Merger">
+<span id="merger-module"></span><h2>Merger Module<a class="headerlink" href="#module-Merger" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Merger.Merger">
+<em class="property">class </em><code class="sig-prename descclassname">Merger.</code><code class="sig-name descname">Merger</code><span class="sig-paren">(</span><em class="sig-param">intermediateIndex</em>, <em class="sig-param">totalNumDocs</em>, <em class="sig-param">outputFolder</em><span class="sig-paren">)</span><a class="headerlink" href="#Merger.Merger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract class and interface for several types of index merging implementations, due to file format or processing method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>intermediateIndex</strong> (<em>list&lt;str&gt;</em>) – list of the names of the intermedia indexes to be merged</p></li>
+<li><p><strong>indexer</strong> (<a class="reference internal" href="#Indexer.Indexer" title="Indexer.Indexer"><em>Indexer</em></a>) – instance of the indexer used in the context to create the corpus index</p></li>
+<li><p><strong>outputFolder</strong> (<em>str</em>) – name of the folder where to store the final index</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="Merger.Merger.mergeIndex">
+<em class="property">abstract </em><code class="sig-name descname">mergeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.Merger.mergeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that merges the intermediate indexes (or blocks of them) into one final index according to our memory-intelligent strategy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Merger.Merger.writeIndex">
+<em class="property">abstract </em><code class="sig-name descname">writeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.Merger.writeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that writes the final index (or blocks of it) to disk according to our memory-intelligent strategy.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Merger.PositionMerger">
+<em class="property">class </em><code class="sig-prename descclassname">Merger.</code><code class="sig-name descname">PositionMerger</code><span class="sig-paren">(</span><em class="sig-param">intermediateIndex</em>, <em class="sig-param">totalNumDocs</em>, <em class="sig-param">outputFolder</em><span class="sig-paren">)</span><a class="headerlink" href="#Merger.PositionMerger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Merger.Merger" title="Merger.Merger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Merger.Merger</span></code></a></p>
+<dl class="method">
+<dt id="Merger.PositionMerger.mergeIndex">
+<code class="sig-name descname">mergeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.PositionMerger.mergeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the merge function adapted to the positions format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Merger.PositionMerger.writeIndex">
+<code class="sig-name descname">writeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.PositionMerger.writeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the write function adapted to the positions format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Merger.PositionWeightMerger">
+<em class="property">class </em><code class="sig-prename descclassname">Merger.</code><code class="sig-name descname">PositionWeightMerger</code><span class="sig-paren">(</span><em class="sig-param">intermediateIndex</em>, <em class="sig-param">totalNumDocs</em>, <em class="sig-param">outputFolder</em><span class="sig-paren">)</span><a class="headerlink" href="#Merger.PositionWeightMerger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Merger.Merger" title="Merger.Merger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Merger.Merger</span></code></a></p>
+<dl class="method">
+<dt id="Merger.PositionWeightMerger.mergeIndex">
+<code class="sig-name descname">mergeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.PositionWeightMerger.mergeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the merge function adapted to the positions and weights format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Merger.PositionWeightMerger.writeIndex">
+<code class="sig-name descname">writeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.PositionWeightMerger.writeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the write function adapted to the positions and weights format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Merger.SimpleMerger">
+<em class="property">class </em><code class="sig-prename descclassname">Merger.</code><code class="sig-name descname">SimpleMerger</code><span class="sig-paren">(</span><em class="sig-param">intermediateIndex</em>, <em class="sig-param">totalNumDocs</em>, <em class="sig-param">outputFolder</em><span class="sig-paren">)</span><a class="headerlink" href="#Merger.SimpleMerger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Merger.Merger" title="Merger.Merger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Merger.Merger</span></code></a></p>
+<dl class="method">
+<dt id="Merger.SimpleMerger.mergeIndex">
+<code class="sig-name descname">mergeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.SimpleMerger.mergeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the merge function adapted to the assignment’s 1 format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Merger.SimpleMerger.writeIndex">
+<code class="sig-name descname">writeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.SimpleMerger.writeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the write function adapted to the assignment’s 1 format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Merger.WeightMerger">
+<em class="property">class </em><code class="sig-prename descclassname">Merger.</code><code class="sig-name descname">WeightMerger</code><span class="sig-paren">(</span><em class="sig-param">intermediateIndex</em>, <em class="sig-param">totalNumDocs</em>, <em class="sig-param">outputFolder</em><span class="sig-paren">)</span><a class="headerlink" href="#Merger.WeightMerger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Merger.Merger" title="Merger.Merger"><code class="xref py py-class docutils literal notranslate"><span class="pre">Merger.Merger</span></code></a></p>
+<dl class="method">
+<dt id="Merger.WeightMerger.mergeIndex">
+<code class="sig-name descname">mergeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.WeightMerger.mergeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the merge function adapted to the weights format.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Merger.WeightMerger.writeIndex">
+<code class="sig-name descname">writeIndex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Merger.WeightMerger.writeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variation of the write function adapted to the weights format.</p>
 </dd></dl>
 
 </dd></dl>

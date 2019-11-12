@@ -25,31 +25,20 @@ class Indexer(ABC):
 
     """
 
-    def __init__(self, tokenizer, fileParser=None, positions=False):
+    def __init__(self, tokenizer, positions, fileParser=None):
         """
         Class constructor
         """
         super().__init__()
         self.tokenizer = tokenizer
         self.docs = {}
-        self.totalNumDocs = 1
         if fileParser:  # if fileParser != None
             fileParser.getContent()
             self.docs = fileParser.content
             fileParser.content = {}
-            self.totalNumDocs = fileParser.docID
-        self.positions = positions
         # when postions=True, index is only positions cuz the frequency is the position array length
+        self.positions = positions
         self.index = {}
-
-    def setTotalNumDocs(self, totalNumDocs):
-        """
-        Setter function for the variable totalNumDocs.
-
-        :param: totalNumDocs: number of documents to be processed.
-        :type totalNumDocs: int
-        """
-        self.totalNumDocs = totalNumDocs
 
     @abstractmethod
     def createIndex(self, content=None):
@@ -61,19 +50,12 @@ class Indexer(ABC):
             self.docs = content
         # print("Indexing...")
 
-    @classmethod
-    def normalize(self):
-        """
-        Function that normalizes the index according to a set of rules. Used in the second assignment.
-        """
-        pass
-
     def clearVar(self):
         """
         Function that frees the memory currently in use by emptying all class variables.
         """
         self.index = {}
-        self.doc = {}
+        self.docs = {}
 
 
 class FileIndexer(Indexer):
@@ -105,43 +87,6 @@ class FileIndexer(Indexer):
                     else:
                         self.index[t][docID] += 1
             self.tokenizer.tokens = []
-
-    def clearVar(self):
-        """
-        Function that frees the memory currently in use by emptying all class variables.
-        """
-        self.index = {}
-        self.docs = {}
-
-
-class WeightedFileIndexer(FileIndexer):
-    """
-    Specialization of the FileIndexer class dedicated to the second assignment.
-    """
-
-    def createIndex(self, content=None):
-        """
-        Creates the index the same way as its parent class.
-
-        """
-        super().createIndex(content)
-
-    # normalize for 1 postingList -> operation called on persist index for more efficient use of time
-    # post list->{docId:tf, docID:tf, ...} if no positions
-    # or
-    # post list->{docId:[2,3,5], docID:[5,3,2], ...} if positions
-    def normalize(self, postingList):
-        """
-        Implementation of the function defined by the abstract class. Normalizes the postingList passed by calculating the term weights and the inverse term frequency.
-        """
-        if self.positions:
-            tfWeights = [1+math.log10(int(len(x)))
-                         for x in postingList.values()]
-        else:
-            tfWeights = [1+math.log10(int(x)) for x in postingList.values()]
-        norme = 1/math.sqrt(sum([math.pow(x, 2) for x in tfWeights]))
-        tfWeights = [round(x*norme, 2) for x in tfWeights]
-        return (round(math.log10(self.totalNumDocs/len(tfWeights)), 2), tfWeights)
 
     def clearVar(self):
         """
