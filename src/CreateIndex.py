@@ -131,8 +131,17 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
     """
 
-    parser = FileParser.GZipFileParser(inputFolder, limit)
-    indexer = Indexer.FileIndexer(tokenizer, positionCalc, parser)
+    parser = FileParser.LimitedRamFileParser(inputFolder, limit)
+    indexer = Indexer.FileIndexer(tokenizer, positionCalc, weightCalc, parser)
+
+    run = True
+    while(run):
+        doc = parser.getContent()
+        if not doc:
+            run = False
+            break
+        indexer.createIndex(doc)
+
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
             outputFolder, indexer, parser.docID)
@@ -184,7 +193,7 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
     parser = FileParser.LimitedRamFileParser(inputFolder, limit)
 
-    indexer = Indexer.FileIndexer(tokenizer, positionCalc)
+    indexer = Indexer.FileIndexer(tokenizer, positionCalc, weightCalc)
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
             outputFolder, indexer)
