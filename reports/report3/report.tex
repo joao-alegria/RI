@@ -1,0 +1,124 @@
+
+\documentclass[12pt]{article}
+
+\usepackage{scicite}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{amsmath}
+
+\topmargin -1.5cm
+\oddsidemargin 0.0cm
+\textwidth 16cm 
+\textheight 23.5cm
+\footskip 1.0cm
+
+\newenvironment{sciabstract}{%
+\begin{quote} \bf}
+{\end{quote}} 
+
+\newcounter{lastnote}
+\newenvironment{scilastnote}{%
+  \setcounter{lastnote}{\value{enumiv}}%
+  \addtocounter{lastnote}{+1}%
+  \begin{list}%
+  {\arabic{lastnote}.}
+  {\setlength{\leftmargin}{.22in}}
+  {\setlength{\labelsep}{.5em}}
+}
+{\end{list}}
+
+\title{Assignment 3} 
+
+\author
+{Filipe Pires [85122], João Alegria [85048]\\
+\\
+Information Retrieval\\
+\normalsize{Department of Electronics, Telecommunications and Informatics}\\
+\normalsize{University of Aveiro}\\
+} 
+
+\date{\today{}}
+
+%%%%%%%%%%%%%%%%% END OF PREAMBLE %%%%%%%%%%%%%%%%
+
+\begin{document} 
+\baselineskip18pt
+\maketitle 
+
+\section*{Introduction}
+
+This report was written for the discipline of 'Information Retrieval' and 
+describes the implementation and evaluation of a ranked retrieval method that 
+uses the indexes created with the solutions developed for the previous assignments.
+
+We include the correction of design flaws of the delivery done prior to this one
+and the updates applied both to the text corpus indexation and to our class diagram.
+We also provide the instructions on how to run our code.
+
+Along with the description of the solution, we also present the results of our
+calculations to evaluate the solution and determine its efficiency according to 
+the metrics proposed for this last assignment \cite{assign3}.
+All code and documentation is present in our public GitHub project at 
+\url{https://github.com/joao-alegria/RI}. 
+
+\newpage
+\section*{1. Re-Indexing the Corpus}
+
+The first step to index the document corpus with the format intented was to 
+consider not only the title of each document but now also 
+
+\section*{2. Ranked Retrieval of Relevant Documents}
+
+....................
+
+\section*{3. Evaluation and Results Discussion}
+
+....................
+
+\section*{Conclusions}
+
+After completing the assignment, we drew a few conclusions regarding our
+solutions and the whole concept of ...........
+
+The biggest challenge we faced was .........
+
+From this assignment, we take ........
+
+The overall perspective of our performance regarding the project is ..........
+
+\begin{thebibliography}{9}
+  \bibliographystyle{Science}
+
+  \bibitem{assign3}
+    S. Matos,
+    \textit{IR: Assignment 3},
+    University of Aveiro,
+    2019/20.
+  
+\end{thebibliography}
+
+\clearpage
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
