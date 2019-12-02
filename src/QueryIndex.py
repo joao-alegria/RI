@@ -26,9 +26,10 @@ def main(argv):
     """
 
     HELP = """USAGE:\n
-    python3 QueryIndex.py [-h] [-o outputFile] [-t tokenizer] [-r limitRAM] queryFile indexFolder\n
+    python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] [-r limitRAM] queryFile indexFolder\n
         OPTIONS:
            h - shows this help
+           p - tells if indexes have positions calculated
            o - define output file's name
            t - define the tokenizer used for the program
            r - limit program execution to defined RAM capacity
@@ -40,12 +41,13 @@ def main(argv):
            indexFolder - name of the folder that contains the indexes"""
 
     # default variables
-    outputFile = "queryResults"
+    outputFile = "../queryResults/results"
+    positionCalc = False
     tokenizer = "simple"
     maximumRAM = None
 
     try:
-        opts, args = getopt.getopt(argv, "h:o:t:r:")
+        opts, args = getopt.getopt(argv, "hpo:t:r:")
     except getopt.GetoptError:
         print(HELP)
         return 1
@@ -61,6 +63,8 @@ def main(argv):
             return 3
         elif opt == "-o":
             outputFile = arg
+        elif opt == "-p":
+            positionCalc = True
         elif opt == "-t":
             assert arg in ("simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
             tokenizer = arg
@@ -76,14 +80,14 @@ def main(argv):
 
     # taking in account the choosen tokenizer, the respective data flow is created
     if tokenizer == "simple":
-        assignment3(Tokenizer.SimpleTokenizer(), outputFile, args[0], args[1], maximumRAM)
+        assignment3(Tokenizer.SimpleTokenizer(), outputFile, args[0], args[1], positionCalc, maximumRAM)
     else:  # 'complex' = default tokenizer
-        assignment3(Tokenizer.ComplexTokenizer(), outputFile, args[0], args[1], maximumRAM)
+        assignment3(Tokenizer.ComplexTokenizer(), outputFile, args[0], args[1], positionCalc, maximumRAM)
 
     return 0
 
 
-def assignment3(tokenizer, outputFile, queryFile, inputFolder, maximumRAM):
+def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, maximumRAM):
     """
     Follows the execution flow specific for the third assignment.
 
@@ -100,7 +104,7 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, maximumRAM):
 
     """
 
-    searcher = Searcher.IndexSearcher(inputFolder,tokenizer,maximumRAM)
+    searcher = Searcher.IndexSearcher(inputFolder, tokenizer, positionCalc, maximumRAM)
 
     try:
         f = open(queryFile,"r")

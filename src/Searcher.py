@@ -21,7 +21,7 @@ class Searcher(ABC):
 
     """
 
-    def __init__(self, inputFolder, tokenizer, maximumRAM=None):
+    def __init__(self, inputFolder, tokenizer, positionCalc, maximumRAM=None):
         """
         Class constructor
         """
@@ -33,6 +33,7 @@ class Searcher(ABC):
             self.files.append(inputFolder+"/"+f)
         
         self.tokenizer = tokenizer
+        self.positionCalc = positionCalc
         self.maximumRAM = maximumRAM
 
     @abstractmethod
@@ -54,11 +55,11 @@ class Searcher(ABC):
 
 class IndexSearcher(Searcher):
 
-    def __init__(self, inputFolder, tokenizer, maximumRAM):
+    def __init__(self, inputFolder, tokenizer, positionCalc, maximumRAM=None):
         """
         Class constructor
         """
-        super().__init__(inputFolder, tokenizer, maximumRAM)
+        super().__init__(inputFolder, tokenizer, positionCalc, maximumRAM)
         #if self.files != []:
             # ......
         pass
@@ -69,42 +70,107 @@ class IndexSearcher(Searcher):
         """
         super().processQuery(query,outputFile)
 
-        self.tokenizer.tokenize(query)
+        # {(term,idf):{docid:(weight,[pos1,pos2])}}    
+        # term:idf;docid:weight:pos1,pos2;docid:weight:pos1,pos2;
+        # term:idf;docid:weight;docid:weight;
+        # term;docid:tf:pos1,pos2;docid:tf:pos1,pos2;
+        # term,docid:tf,docid:tf,
 
+        # tokenize query
+        self.tokenizer.tokenize(query.strip())
+
+        # start calculating weights of each token in the query
         weights = {}
         for t in self.tokenizer.tokens: # here weights is actually tfs
             if t not in weights.keys():
                 weights[t] = 1
             else:
                 weights[t] += 1
+
+        # find the index files required
+        requiredFiles = []
+        for file in self.files:
+            aux = file.split("_")
+            for t in weights.keys():
+                if t>aux[0] and t<aux[1]:
+                    requiredFiles.append(file)
+                    break
+
+        # check if index files are in the correct format
+        f = open(requiredFiles[0])
+        for line in f:
+            assert(":" in line.split(";")[0]) # if not, then index is in the wrong format
+            break
         
+        # retrieve the desired postings lists
+        postingsLists = {}
+        for file in requiredFiles:
+            f = open(file,"r")
+            for line in f:
+                aux = line.split(";")
+                curTerm = aux[0].split(":")[0]
+                for t in weights.keys():
+                    if curTerm == t:
+                        curIdf = float(aux[0].split(":")[1])
+                        content = {}
+                        if self.positionCalc:
+                            for c in aux[1:]:
+                                document = c.split(":")
+                                docID = int(document[0])
+                                weight = float(document[1])
+                                positions = []
+                                if "," in document[2]:
+                                    strPos = document[2].split(",")
+                                    for s in strPos:
+                                        positions.append(int(s))
+                                else:
+                                    positions.append(document[2])
+                                content[docID] = (weight,positions)
+                        else:
+                            for c in aux[1:]:
+                                document = c.split(":")
+                                docID = document[0]
+                                weight = document[1]
+                                content[docID] = weight
+                        postingsLists[(t,curIdf)] = content
+
+        # finish calculating weights of each token in the query and normalize them
         norm = 0
         for t in weights.keys(): # now tfs are transformed and normalized
-            weights[t] = 1 + math.log10(weights[t]) # * idf                     # ???
+            idf = 0
+            for key in postingsLists.keys():
+                if key[0] == t:
+                    idf = key[1]
+            weights[t] = 1 + math.log10(weights[t]) * idf 
             norm += weights[t]**2
 
         for t in weights.keys(): # finally we have the term weights of the query
             weights[t] = weights[t]/math.sqrt(norm)
 
-        scores = []
-        length = []
-
-        requiredFiles = []
-        for f in self.files:
-            aux = f.split("_")
-            for t in weights.keys():
-                if t>aux[0] and t<aux[1]:
-                    requiredFiles.append(f)
-                    break
+        # calculate the score of each document
+        Scores = {}
+        for key in postingsLists.keys():
+            for docID in postingsLists[key].keys():
+                if self.positionCalc:
+                    if docID not in Scores.keys():
+                        Scores[docID] = postingsLists[key][docID][0] * weights[key[0]]
+                    else:
+                        Scores[docID] += postingsLists[key][docID][0] * weights[key[0]]
+                else:
+                    if docID not in Scores.keys():
+                        Scores[docID] = postingsLists[key][docID] * weights[key[0]]
+                    else:
+                        Scores[docID] += postingsLists[key][docID] * weights[key[0]]
         
+        # sort results and write them 
+        Scores = sorted(Scores.items(), key=lambda kv: kv[1],reverse=True)
+        outputFile = open(outputFile,"w")
+        for (docID,score) in Scores:
+            outputFile.write(str(docID) + ", " + str(score) + "\n")
+        outputFile.close()
         
-        # to do .........
-            # fetch postings list for t
+        return
 
-            #for d,tf in postings list:
-            #    scores[d] += Wt,d * Wt,q
-
-        pass
 
     def clearVar(self):
         """
