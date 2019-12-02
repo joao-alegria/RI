@@ -94,12 +94,10 @@ class PositionWeightMerger(Merger):
                 docs += t[1:]
                 self.terms[idx] = ""
 
-        self.index.append([term, {}, 0])
+        self.index.append([term, {}])
         for d in docs:
-            tfw = 1+math.log10(int(len(d.split(":")[2].split(","))))
-            self.index[-1][1][(d.split(":")
-                               [0], tfw)] = d.split(":")[2].split(",")
-            self.index[-1][2] += tfw**2
+            self.index[-1][1][d.split(":")[0]] = [d.split(":")
+                                                  [1], d.split(":")[2].split(",")]
         docs = []
         return False
 
@@ -113,13 +111,12 @@ class PositionWeightMerger(Merger):
         out = open(self.outFolder+"/" +
                    self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
-        for t, docs, norme in self.index:
+        for t, docs in self.index:
             auxString += t+":" + \
                 str(round(math.log10(self.totalNumDocs/len(docs)), 2))
             for doc, w in docs.items():
-                auxString += ";"+doc[0]+":" + \
-                    str(round(doc[1]*(1/math.sqrt(norme)), 2))+":" + \
-                    str(w[0])+"".join(","+str(x) for x in w[1:])
+                auxString += ";"+doc+":" + w[0] + ":" + \
+                    str(w[1][0])+"".join(","+x for x in w[1][1:])
             out.write(auxString+"\n")
             auxString = ""
         self.index = []
@@ -158,11 +155,9 @@ class WeightMerger(Merger):
                 docs += t[1:]
                 self.terms[idx] = ""
 
-        self.index.append([term, {}, 0])
+        self.index.append([term, {}])
         for d in docs:
-            tfw = 1+math.log10(int(d.split(":")[1]))
-            self.index[-1][1][d.split(":")[0]] = tfw
-            self.index[-1][2] += tfw**2
+            self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
         docs = []
         return False
 
@@ -176,12 +171,11 @@ class WeightMerger(Merger):
         out = open(self.outFolder+"/" +
                    self.index[0][0]+"_"+self.index[-1][0], "w")
         auxString = ""
-        for t, docs, norme in self.index:
+        for t, docs in self.index:
             auxString += t+":" + \
                 str(round(math.log10(self.totalNumDocs/len(docs)), 2))
             for doc, w in docs.items():
-                auxString += ";"+doc+":" + \
-                    str(round(w*(1/math.sqrt(norme)), 2))
+                auxString += ";"+doc+":" + w
             out.write(auxString+"\n")
             auxString = ""
         self.index = []
@@ -224,7 +218,7 @@ class PositionMerger(Merger):
         self.index.append([term, {}])
         for d in docs:
             self.index[-1][1][d.split(":")
-                              [0]] = d.split(":")[2].split(",")
+                              [0]] = [d.split(":")[1], d.split(":")[2].split(",")]
         docs = []
         return False
 
@@ -242,8 +236,8 @@ class PositionMerger(Merger):
             auxString += t
             for doc, w in docs.items():
                 auxString += ";"+doc+":" + \
-                    str(len(w))+":" + \
-                    str(w[0])+"".join(","+str(x) for x in w[1:])
+                    str(w[0])+":" + \
+                    str(w[1][0])+"".join(","+str(x) for x in w[1][1:])
             out.write(auxString+"\n")
             auxString = ""
         self.index = []

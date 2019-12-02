@@ -99,6 +99,7 @@ class ComplexTokenizer(Tokenizer):
         for line in f:
             self.stopWords.append(line.strip())
         # storing usefull regex
+        self.regex0 = re.compile(" +")
         self.regex1 = re.compile(" +| *_+ *| *-+ *")
         self.regex2 = re.compile("([,;.:?!\(\)\[\]\{\}\"\|#])")
         self.regex3 = re.compile("[0-9]+(/)[0-9]+(/)[0-9]+")
@@ -115,16 +116,14 @@ class ComplexTokenizer(Tokenizer):
         """
         stemmer = Stemmer.Stemmer('english')
         self.tokens = []
-        intermidiateTokens = self.regex1.split(processText.lower())
+        intermidiateTokens = [t for t in self.regex0.split(
+            processText.lower()) if t not in self.stopWords]
         for t in intermidiateTokens:
             t = self.regex2.sub(" ", t) if self.regex3.search(
                 t) else self.regex4.sub(" ", t)
             additionalWords = list(filter(None, self.regex1.split(t)))
-            if len(additionalWords) == 0:
-                continue
             self.tokens += additionalWords
-        self.tokens = [t for t in stemmer.stemWords(
-            self.tokens) if t not in self.stopWords and len(t) > 2]
+        self.tokens = [t for t in stemmer.stemWords(self.tokens)if len(t) > 2]
         stemmer = None
 
     def clearTokens(self):

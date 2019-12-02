@@ -57,62 +57,60 @@ class FileParser(ABC):
         self.limit = None
 
 
-class GZipFileParser(FileParser):
-    """
-    Implementation of a file parser dedicated to the current context of RI. Processing of one or varios zip files.
-    """
+# class GZipFileParser(FileParser):
+#     """
+#     Implementation of a file parser dedicated to the current context of RI. Processing of one or varios zip files.
+#     """
 
-    def getContent(self):
-        """
-        Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
+#     def getContent(self):
+#         """
+#         Implementation of the function defined by the abstract class. Fetches the PMID and the TI.
 
-        :returns: dictionary where the key is the sequencial ID of the document and the value the TI
-        :rtype: map<str, str>
+#         :returns: dictionary where the key is the sequencial ID of the document and the value the TI
+#         :rtype: map<str, str>
 
-        """
-        super().getContent()
-        for filename in self.files:
-            gz = gzip.open(filename, "rb")
-            f = io.BufferedReader(gz)
-            docContent = ""
-            for line in f:
-                line = line.decode("ISO-8859-1")
-                if line.startswith("PMID"):
-                    # docID = line[6:].strip()
-                    self.docID += 1
-                elif line.startswith("TI"):
-                    docContent = line[6:].strip()
-                elif line.startswith("PG"):
-                    continue
-                elif line.startswith("AD"):
-                    self.content[str(self.docID)] = docContent
-                    docContent = ""
-                    # if limit is non positive, the program will process always 1 document
-                    if self.docID >= self.limit:
-                        break
-                else:
-                    if docContent != "":
-                        docContent += " "+line[6:].strip()
+#         """
+#         super().getContent()
+#         for filename in self.files:
+#             gz = gzip.open(filename, "rb")
+#             f = io.BufferedReader(gz)
+#             docContent = ""
+#             for line in f:
+#                 line = line.decode("ISO-8859-1")
+#                 if line.startswith("PMID"):
+#                     # docID = line[6:].strip()
+#                     self.docID += 1
+#                 elif line.startswith("TI"):
+#                     docContent = line[6:].strip()
+#                 elif line.startswith("PG"):
+#                     self.content[str(self.docID)] = docContent
+#                     docContent = ""
+#                     # if limit is non positive, the program will process always 1 document
+#                     if self.docID >= self.limit:
+#                         break
+#                 else:
+#                     if docContent != "":
+#                         docContent += " "+line[6:].strip()
 
-            gz.close()
+#             gz.close()
 
-    def clearVar(self):
-        """
-        Function that frees the memory currently in use by emptying all class variables.
-        """
-        self.content = None
-        self.files = None
-        self.docID = None
-        self.limit = None
+#     def clearVar(self):
+#         """
+#         Function that frees the memory currently in use by emptying all class variables.
+#         """
+#         self.content = None
+#         self.files = None
+#         self.docID = None
+#         self.limit = None
 
 
 class LimitedRamFileParser(FileParser):
 
-    def __init__(self, files, limit):
+    def __init__(self, inputFolder, limit):
         """
         Class constructor
         """
-        super().__init__(files, limit)
+        super().__init__(inputFolder, limit)
         if self.files != []:
             self.gz = gzip.open(self.files.pop(0), "rb")
             self.f = io.BufferedReader(self.gz)
