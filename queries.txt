@@ -1,0 +1,50 @@
+1	Ferroportin-1 in humans
+2	Generating transgenic mice
+3	Time course for gene expression in mouse kidney
+4	Gene expression profiles for kidney in mice
+5	Protocols for isolating cell nuclei
+6	FancD2
+7	DNA repair and oxidative stress
+8	Correlation between DNA repair pathways and skin cancer
+9	mutY
+10	NEIL1
+11	Carcinogenesis and hairless mice
+12	Genes regulated by Smad4
+13	Role of TGFB in angiogenesis in skin
+14	Expression or Regulation of TGFB in HNSCC cancers
+15	ATPase and apoptosis
+16	AAA proteins
+17	DO1 antibody
+18	Gis4
+19	Comparison of Promoters of GAL1 and SUC1
+20	Substrate modification by ubiquitin
+21	Role of p63 and p73 in relation to DNA damage
+22	Relative response of p53 family members to agents causing single-stranded versus double-stranded DNA breaks
+23	Saccharomyces cerevisiae proteins involved in ubiquitin system
+24	Mouse peptidoglycan recognition proteins (PGRP)
+25	Cause of scleroderma
+26	Function of BUB2/BFA1 in the process of cytokinesis
+27	Role of autophagy in apoptosis
+28	Proteases that function in both apoptosis and autophagy cell death
+29	Phenotypes of gyrA mutations
+30	Regulatory targets of the Nkx gene family members
+31	TOR signaling in neurofibromatosis
+32	Xenograft animal models of tumorogenesis
+33	Mice, mutant strains, and Histoplasmosis
+34	Gene products of Cryptococcus important to fungal survival
+35	WD40 repeat-containing proteins
+36	RAB3A
+37	PAM
+38	Risk factors for stroke
+39	Hypertension
+40	Antigens expressed by lung epithelial cells
+41	Mutations in the Cystic Fibrosis conductance regulator gene
+42	Genes altered by chromosome translocations
+43	Sleeping Beauty
+44	Proteins involved in the nerve growth factor pathway
+45	Mental Health Wellness-1
+46	RSK2
+47	Human gene BCL-2 antagonists and inhibitors
+48	Human homologues of C. elegans UNC genes
+49	Glyphosate tolerance gene sequence
+50	Low temperature protein expression in E. coli

@@ -20,8 +20,6 @@ class Indexer(ABC):
     :type fileParser: FileParser
     :param tokenizer: instance of the tokenizer used in the context to process the content of the corpus
     :type tokenizer: Tokenizer
-    :param tokenizer: flag that indicates if it's necessary process positions
-    :type tokenizer: boolean
 
     """
 

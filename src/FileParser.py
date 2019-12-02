@@ -15,8 +15,8 @@ class FileParser(ABC):
     """
     Abstract class that serves as template and interface for future instances and implementations.
 
-    :param files: list of file names to be processed
-    :type name: list<str>
+    :param inputFolder: name of the folder containing the files to be used as input
+    :type inputFolder: str
     :param limit: limit number of documents to have in consideration, None if no limit
     :type limit: int
 
@@ -26,6 +26,7 @@ class FileParser(ABC):
         """
         Class constructor
         """
+        super().__init__()
         self.content = {}
         self.files = []
         inputFiles = os.listdir(inputFolder)
@@ -82,6 +83,8 @@ class GZipFileParser(FileParser):
                 elif line.startswith("TI"):
                     docContent = line[6:].strip()
                 elif line.startswith("PG"):
+                    continue
+                elif line.startswith("AD"):
                     self.content[str(self.docID)] = docContent
                     docContent = ""
                     # if limit is non positive, the program will process always 1 document
@@ -132,6 +135,8 @@ class LimitedRamFileParser(FileParser):
             elif line.startswith("TI"):
                 docContent = line[6:].strip()
             elif line.startswith("PG"):
+                    continue
+            elif line.startswith("AD"):
                 if self.docID >= self.limit:
                     self.gz.close()
                     return None

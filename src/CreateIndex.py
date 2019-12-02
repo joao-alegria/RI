@@ -22,7 +22,7 @@ maxRAMused = (psutil.Process(os.getpid())).memory_info().rss
 
 def main(argv):
     """
-    Main script for all of the discipline's assignments. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.
+    Main script for the discipline's assignments 1 and 2. This script is responsable for calling the correct classes and for creating the data flow necessary for the index to be created and persisted.
 
     :param argv: receives the arguments passed to the program during execution
     :type argv: list<str>
