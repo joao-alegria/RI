@@ -88,17 +88,14 @@ class PositionWeightMerger(Merger):
             return False
 
         term = min([x[0][:x[0].find(":")] for x in self.terms])
-        docs = []
+        self.index.append([term, {}])
         for idx, t in enumerate(self.terms):
             if term == t[0][:t[0].find(":")]:
-                docs += t[1:]
+                for d in t[1:]:
+                    self.index[-1][1][d.split(":")[0]] = [d.split(":")
+                                                          [1], d.split(":")[2].split(",")]
                 self.terms[idx] = ""
 
-        self.index.append([term, {}])
-        for d in docs:
-            self.index[-1][1][d.split(":")[0]] = [d.split(":")
-                                                  [1], d.split(":")[2].split(",")]
-        docs = []
         return False
 
     def writeIndex(self):
@@ -114,7 +111,7 @@ class PositionWeightMerger(Merger):
         for t, docs in self.index:
             auxString += t+":" + \
                 str(round(math.log10(self.totalNumDocs/len(docs)), 2))
-            for doc, w in docs.items():
+            for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ";"+doc+":" + w[0] + ":" + \
                     str(w[1][0])+"".join(","+x for x in w[1][1:])
             out.write(auxString+"\n")
@@ -149,16 +146,13 @@ class WeightMerger(Merger):
             return False
 
         term = min([x[0][:x[0].find(":")] for x in self.terms])
-        docs = []
+        self.index.append([term, {}])
         for idx, t in enumerate(self.terms):
             if term == t[0][:t[0].find(":")]:
-                docs += t[1:]
+                for d in t[1:]:
+                    self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
                 self.terms[idx] = ""
 
-        self.index.append([term, {}])
-        for d in docs:
-            self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
-        docs = []
         return False
 
     def writeIndex(self):
@@ -174,7 +168,7 @@ class WeightMerger(Merger):
         for t, docs in self.index:
             auxString += t+":" + \
                 str(round(math.log10(self.totalNumDocs/len(docs)), 2))
-            for doc, w in docs.items():
+            for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ";"+doc+":" + w
             out.write(auxString+"\n")
             auxString = ""
@@ -209,17 +203,14 @@ class PositionMerger(Merger):
             return False
 
         term = min([x[0] for x in self.terms])
-        docs = []
+        self.index.append([term, {}])
         for idx, t in enumerate(self.terms):
             if t[0] == term:
-                docs += t[1:]
+                for d in t[1:]:
+                    self.index[-1][1][d.split(":")
+                                      [0]] = [d.split(":")[1], d.split(":")[2].split(",")]
                 self.terms[idx] = ""
 
-        self.index.append([term, {}])
-        for d in docs:
-            self.index[-1][1][d.split(":")
-                              [0]] = [d.split(":")[1], d.split(":")[2].split(",")]
-        docs = []
         return False
 
     def writeIndex(self):
@@ -234,7 +225,7 @@ class PositionMerger(Merger):
         auxString = ""
         for t, docs in self.index:
             auxString += t
-            for doc, w in docs.items():
+            for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ";"+doc+":" + \
                     str(w[0])+":" + \
                     str(w[1][0])+"".join(","+str(x) for x in w[1][1:])
@@ -270,16 +261,13 @@ class SimpleMerger(Merger):
             return False
 
         term = min([x[0] for x in self.terms])
-        docs = []
+        self.index.append([term, {}])
         for idx, t in enumerate(self.terms):
             if t[0] == term:
-                docs += t[1:]
+                for d in t[1:]:
+                    self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
                 self.terms[idx] = ""
 
-        self.index.append([term, {}])
-        for d in docs:
-            self.index[-1][1][d.split(":")[0]] = d.split(":")[1]
-        docs = []
         return False
 
     def writeIndex(self):
@@ -294,7 +282,7 @@ class SimpleMerger(Merger):
         auxString = ""
         for t, docs in self.index:
             auxString += t
-            for doc, w in docs.items():
+            for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ","+doc+":" + str(w)
             out.write(auxString+"\n")
             auxString = ""

@@ -22,7 +22,7 @@ def loadOurResults(ourQuery):
     ourResults = []
 
     for line in f:
-        processedLine = line.strip()
+        processedLine = line.strip().split(",")[0]
         if processedLine not in ourResults:
             ourResults.append(processedLine)
 
@@ -42,8 +42,8 @@ def calculateP_R_F1(truth, prediction):
     for t in truth:
         fn += 1
 
-    P = tp/(tp+fp)
-    R = tp/(tp+fn)
+    P = tp/(tp+fp) if (tp+fp) != 0 else 0.0
+    R = tp/(tp+fn) if (tp+fn) != 0 else 0.0
     F1 = (2*R*P)/(R+P) if (R+P) != 0 else 0.0
 
     return P, R, F1
@@ -69,6 +69,7 @@ def main(argv):
         print("""USAGE:
         python3 QueryAnalyzer.py queryTruth queryResultFolder
         """)
+        sys.exit(0)
     queryTruth = argv[0]
     ourResultsFolder = argv[1]
 
@@ -83,6 +84,7 @@ def main(argv):
         P, R, F1 = calculateP_R_F1(trueDocs, results)
         MPat10 = calculateMPatK(trueDocs, results, 10)
         meanPs.append(calculateMPatK(trueDocs, results, len(results)))
+        print(f, P, R, F1, MPat10)
     meanAP = calculateMAP(meanPs)
 
 

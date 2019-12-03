@@ -2,10 +2,9 @@
 2004_TREC_ASCII_MEDLINE_2.gz
 2004_TREC_ASCII_MEDLINE_1
 2004_TREC_ASCII_MEDLINE_2
-test.gz
-out.txt
 simpleTokenizerOut.txt
 complexTokenizerOut.txt
 simpleOut.txt
 complexOut.txt
 __pycache__
+index

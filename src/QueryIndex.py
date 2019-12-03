@@ -26,10 +26,9 @@ def main(argv):
     """
 
     HELP = """USAGE:\n
-    python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] [-r limitRAM] queryFile indexFolder\n
+    python3 QueryIndex.py [-h] [-o outputFile] [-t tokenizer] [-r limitRAM] queryFile indexFolder\n
         OPTIONS:
            h - shows this help
-           p - tells if indexes have positions calculated
            o - define output file's name
            t - define the tokenizer used for the program
            r - limit program execution to defined RAM capacity
@@ -41,13 +40,12 @@ def main(argv):
            indexFolder - name of the folder that contains the indexes"""
 
     # default variables
-    outputFile = "../queryResults/results"
-    positionCalc = False
+    outputFile = "../queryResults/"
     tokenizer = "simple"
     maximumRAM = None
 
     try:
-        opts, args = getopt.getopt(argv, "hpo:t:r:")
+        opts, args = getopt.getopt(argv, "ho:t:r:")
     except getopt.GetoptError:
         print(HELP)
         return 1
@@ -63,10 +61,9 @@ def main(argv):
             return 3
         elif opt == "-o":
             outputFile = arg
-        elif opt == "-p":
-            positionCalc = True
         elif opt == "-t":
-            assert arg in ("simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
+            assert arg in (
+                "simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
             tokenizer = arg
         elif opt == "-r":
             maxM = psutil.virtual_memory().free
@@ -76,18 +73,21 @@ def main(argv):
                 maximumRAM = maxM
             if maximumRAM > maxM:
                 maximumRAM = maxM
-                print("Warning: Memory available is less than the asked value, maximumRAM set to " + str(int(maximumRAM/1000000000)) + "Gb.")
+                print("Warning: Memory available is less than the asked value, maximumRAM set to " +
+                      str(int(maximumRAM/1000000000)) + "Gb.")
 
     # taking in account the choosen tokenizer, the respective data flow is created
     if tokenizer == "simple":
-        assignment3(Tokenizer.SimpleTokenizer(), outputFile, args[0], args[1], positionCalc, maximumRAM)
+        assignment3(Tokenizer.SimpleTokenizer(), outputFile,
+                    args[0], args[1], maximumRAM)
     else:  # 'complex' = default tokenizer
-        assignment3(Tokenizer.ComplexTokenizer(), outputFile, args[0], args[1], positionCalc, maximumRAM)
+        assignment3(Tokenizer.ComplexTokenizer(), outputFile,
+                    args[0], args[1], maximumRAM)
 
     return 0
 
 
-def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, maximumRAM):
+def assignment3(tokenizer, outputFile, queryFile, inputFolder, maximumRAM):
     """
     Follows the execution flow specific for the third assignment.
 
@@ -104,39 +104,13 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, max
 
     """
 
-    searcher = Searcher.IndexSearcher(inputFolder, tokenizer, positionCalc, maximumRAM)
+    searcher = Searcher.IndexSearcher(inputFolder, tokenizer, maximumRAM)
 
-    try:
-        f = open(queryFile,"r")
-        for line in f:
-            content = line.split("\t")
-            searcher.processQuery(content[-1],outputFile+"_"+content[0])
-    except:
-        exit(1)
+    f = open(queryFile, "r")
+    for line in f:
+        content = line.split("\t")
+        searcher.processQuery(content[-1], outputFile+content[0])
     return
-
-
-def isMemoryAvailable(maximumRAM):
-    """
-    Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
-
-    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
-    :type maximumRAM: int
-    :returns: True if the memory usage is under 85% of the maximum RAM allowed, false if not
-    :rtype: bool
-
-    """
-    # pass this verification because if it's to much it's user error
-    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
-    #     return False
-
-    # get program memory usage
-    processMemory = process.memory_info().rss
-    # print(processMemory)
-    if processMemory >= int(maximumRAM*0.9):
-        return False
-
-    return True
 
 
 if __name__ == "__main__":

@@ -32,7 +32,7 @@ class FileParser(ABC):
         inputFiles = os.listdir(inputFolder)
         for f in inputFiles:
             self.files.append(inputFolder+"/"+f)
-        self.docID = 0
+        self.numDocs = 0
         if limit == None:
             # a number bigger than all the rest
             self.limit = float('inf')
@@ -53,7 +53,7 @@ class FileParser(ABC):
         """
         self.content = None
         self.files = None
-        self.docID = None
+        self.numDocs = None
         self.limit = None
 
 
@@ -125,22 +125,23 @@ class LimitedRamFileParser(FileParser):
 
         """
         docContent = ""
-
+        docID = ""
         for line in self.f:
             line = line.decode("ISO-8859-1")
             if line.startswith("PMID"):
-                self.docID += 1
+                docID = line[6:].strip()
+                self.numDocs += 1
             elif line.startswith("TI"):
                 docContent = line[6:].strip()
             elif line.startswith("PG"):
-                    continue
+                continue
             elif line.startswith("AD"):
-                if self.docID >= self.limit:
+                if self.numDocs >= self.limit:
                     self.gz.close()
                     return None
                 if docContent == "":
                     break
-                return {str(self.docID): docContent}
+                return {str(docID): docContent}
             else:
                 if docContent != "":
                     docContent += " "+line[6:].strip()
@@ -160,7 +161,7 @@ class LimitedRamFileParser(FileParser):
         """
         self.content = None
         self.files = None
-        self.docID = None
+        self.numDocs = None
         self.limit = None
         self.gz = None
         self.f = None
