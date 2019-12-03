@@ -21,7 +21,7 @@ class Searcher(ABC):
 
     """
 
-    def __init__(self, inputFolder, tokenizer, positionCalc, maximumRAM=None):
+    def __init__(self, inputFolder, tokenizer, positionCalc, feedback=None, rocchioWeights=[], maximumRAM=None):
         """
         Class constructor
         """
@@ -34,6 +34,8 @@ class Searcher(ABC):
         
         self.tokenizer = tokenizer
         self.positionCalc = positionCalc
+        self.feedback = feedback
+        self.rocchioWeights = rocchioWeights
         self.maximumRAM = maximumRAM
 
     @abstractmethod
@@ -42,7 +44,6 @@ class Searcher(ABC):
         Function that processes the query passed as a string argument.
         """
         print("Searching...")
-        pass
 
     def clearVar(self):
         """
@@ -55,14 +56,11 @@ class Searcher(ABC):
 
 class IndexSearcher(Searcher):
 
-    def __init__(self, inputFolder, tokenizer, positionCalc, maximumRAM=None):
+    def __init__(self, inputFolder, tokenizer, positionCalc, feedback, rocchioWeights=[], maximumRAM=None):
         """
         Class constructor
         """
-        super().__init__(inputFolder, tokenizer, positionCalc, maximumRAM)
-        #if self.files != []:
-            # ......
-        pass
+        super().__init__(inputFolder, tokenizer, positionCalc, feedback, rocchioWeights, maximumRAM)
 
     def processQuery(self,query,outputFile):
         """
@@ -101,7 +99,7 @@ class IndexSearcher(Searcher):
         for line in f:
             assert(":" in line.split(";")[0]) # if not, then index is in the wrong format
             break
-        
+
         # retrieve the desired postings lists
         postingsLists = {}
         for file in requiredFiles:
@@ -119,18 +117,15 @@ class IndexSearcher(Searcher):
                                 docID = int(document[0])
                                 weight = float(document[1])
                                 positions = []
-                                if "," in document[2]:
-                                    strPos = document[2].split(",")
-                                    for s in strPos:
-                                        positions.append(int(s))
-                                else:
-                                    positions.append(document[2])
+                                strPos = document[2].split(",")
+                                for s in strPos:
+                                    positions.append(int(s))
                                 content[docID] = (weight,positions)
                         else:
                             for c in aux[1:]:
                                 document = c.split(":")
-                                docID = document[0]
-                                weight = document[1]
+                                docID = int(document[0])
+                                weight = float(document[1])
                                 content[docID] = weight
                         postingsLists[(t,curIdf)] = content
 
@@ -146,6 +141,13 @@ class IndexSearcher(Searcher):
 
         for t in weights.keys(): # finally we have the term weights of the query
             weights[t] = weights[t]/math.sqrt(norm)
+
+        # apply the rocchio algorithm
+        if self.feedback:
+            assert len(self.rocchioWeights) > 0, "Error while applying Rocchio algorithm: no weights and/or k value given."
+            k = self.rocchioWeights[3]
+            #for t in weights.keys():
+            #    weights[t] = self.rocchioWeights[0]*weights[t] + self.rocchioWeights[1]*(1/k)*sum(....) - self.rocchioWeights[2]*(1/....)*sum(....)
 
         # calculate the score of each document
         Scores = {}
