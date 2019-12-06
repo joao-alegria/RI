@@ -34,8 +34,8 @@ class PersistIndex(ABC):
             self.index = list(indexer.index.items())
         self.totalNumDocs = totalNumDocs
         self.outputFolder = outputFolder
+        self.translationFile = open(outputFolder+"/../indexMetadata.txt", "w")
 
-    @classmethod
     def setTotalNumDocs(self, totalNumDocs):
         """
         Setter function for the variable totalNumDocs.
@@ -44,6 +44,10 @@ class PersistIndex(ABC):
         :type totalNumDocs: int
         """
         self.totalNumDocs = totalNumDocs
+
+    def persistTranslations(self, translations):
+        for t in translations:
+            self.translationFile.write(t[0]+","+t[1]+"\n")
 
     @abstractmethod
     def persist(self, index=None, overrideFile=None):
@@ -89,7 +93,7 @@ class PersistCSV(PersistIndex):
         currStr = ""
         for token, freqs in self.index:
             currStr += token
-            for docID, countPositions in freqs.items():
+            for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
                 currStr += ","+docID+":"+str(countPositions[0])
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
@@ -112,6 +116,9 @@ class PersistCSVWeighted(PersistIndex):
         token2:idf2; docID1:tfw1; docID2:tfw2;...
     """
 
+    def __init__(self, outputFolder, indexer=None, totalNumDocs=1):
+        super().__init__(outputFolder, indexer, totalNumDocs)
+
     def persist(self, index=None, overrideFile=None):
         super().persist(index, overrideFile)
         if self.index == []:
@@ -125,7 +132,7 @@ class PersistCSVWeighted(PersistIndex):
         for token, freqs in self.index:
             currStr += token+":" + \
                 str(round(math.log10(self.totalNumDocs/len(freqs)), 2))
-            for docID, countPositions in freqs.items():
+            for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
                 currStr += ";"+docID+":" + str(countPositions[0])
             # batch-like writting, writting 1 token and its ocurrences at a time
             f.write(currStr+"\n")
@@ -160,7 +167,7 @@ class PersistCSVPosition(PersistIndex):
         currStr = ""
         for token, freqs in self.index:
             currStr += token
-            for docID, countPositions in freqs.items():
+            for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
                 currStr += ";"+docID+":" + \
                     str(countPositions[0])+":"+str(countPositions[1][0]) + \
                     "".join(","+str(x) for x in countPositions[1][1:])
@@ -198,7 +205,7 @@ class PersistCSVWeightedPosition(PersistIndex):
         for token, freqs in self.index:
             currStr += token+":" + \
                 str(round(math.log10(self.totalNumDocs/len(freqs)), 2))
-            for docID, countPositions in freqs.items():
+            for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
                 currStr += ";"+docID+":" + \
                     str(countPositions[0])+":"+str(countPositions[1][0]) + \
                     "".join(","+str(x) for x in countPositions[1][1:])

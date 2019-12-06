@@ -38,6 +38,8 @@ class Indexer(ABC):
         self.positions = positions
         self.weights = weights
         self.index = {}
+        self.docID = 0
+        self.translation = []
 
     @abstractmethod
     def createIndex(self, content=None):
@@ -55,6 +57,7 @@ class Indexer(ABC):
         """
         self.index = {}
         self.docs = {}
+        self.translation = []
 
 
 class FileIndexer(Indexer):
@@ -67,34 +70,37 @@ class FileIndexer(Indexer):
         Implementation of the function defined by the abstract class.
         """
         super().createIndex(content)
-        docID = list(content.keys())[0]
+        docPMID = list(content.keys())[0]
+        self.docID += 1
+        self.translation.append([str(self.docID), docPMID])
         docContent = list(content.values())[0]
         self.tokenizer.tokenize(docContent)
         tmpTC = {}
         for idx, t in enumerate(self.tokenizer.tokens):
             if t not in tmpTC:
                 if self.positions:
-                    tmpTC[t] = {docID: [1, [idx+1]]}
+                    tmpTC[t] = {str(self.docID): [1, [idx+1]]}
                 else:
-                    tmpTC[t] = {docID: [1, None]}
-            elif docID not in tmpTC[t]:
+                    tmpTC[t] = {str(self.docID): [1, None]}
+            elif str(self.docID) not in tmpTC[t]:
                 if self.positions:
-                    tmpTC[t][docID] = [1, [idx+1]]
+                    tmpTC[t][str(self.docID)] = [1, [idx+1]]
                 else:
-                    tmpTC[t][docID] = [1, None]
+                    tmpTC[t][str(self.docID)] = [1, None]
             else:
-                tmpTC[t][docID][0] = tmpTC[t][docID][0]+1
+                tmpTC[t][str(self.docID)][0] = tmpTC[t][str(self.docID)][0]+1
                 if self.positions:
-                    tmpTC[t][docID][1].append(idx+1)
+                    tmpTC[t][str(self.docID)][1].append(idx+1)
         if self.weights:
             norme = 0
             for term, docs in tmpTC.items():
                 for doc, posts in docs.items():
                     posts[0] = 1+math.log10(posts[0])
                     norme += posts[0]**2
+            norme = math.sqrt(norme)
             for term, docs in tmpTC.items():
                 for doc, posts in docs.items():
-                    posts[0] = round(posts[0]/math.sqrt(norme), 2)
+                    posts[0] = round(posts[0]/norme, 2)
 
         for x in tmpTC:
             if x not in self.index:
@@ -110,3 +116,4 @@ class FileIndexer(Indexer):
         """
         self.index = {}
         self.docs = {}
+        self.translation = []

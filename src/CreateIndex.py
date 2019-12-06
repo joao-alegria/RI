@@ -144,19 +144,19 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
-            outputFolder, indexer, parser.docID)
+            outputFolder, indexer, parser.numDocs)
         persister.persist()
     elif weightCalc:
         persister = PersistIndex.PersistCSVWeighted(
-            outputFolder, indexer, parser.docID)
+            outputFolder, indexer, parser.numDocs)
         persister.persist()
     elif positionCalc:
         persister = PersistIndex.PersistCSVPosition(
-            outputFolder, indexer, parser.docID)
+            outputFolder, indexer, parser.numDocs)
         persister.persist()
     else:
         persister = PersistIndex.PersistCSV(
-            outputFolder, indexer, parser.docID)
+            outputFolder, indexer, parser.numDocs)
         persister.persist()
 
     tokenizer.clearVar()
@@ -217,13 +217,12 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
                 break
             indexer.createIndex(doc)
 
-        # TODO: when writing ram usage jumps up
+        persister.setTotalNumDocs(parser.numDocs)
+        persister.persistTranslations(indexer.translation)
         if not runSPIMI and blockCounter == 1:
-            persister.setTotalNumDocs(parser.docID)
             persister.persist(indexer.index)
             return 0
         else:
-            persister.setTotalNumDocs(parser.docID)
             if persister.persist(indexer.index, auxFile.format(blockCounter)):
                 blockCounter += 1
         indexer.clearVar()
@@ -233,16 +232,16 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
     if weightCalc and positionCalc:
         merger = Merger.PositionWeightMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
     elif weightCalc:
         merger = Merger.WeightMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
     elif positionCalc:
         merger = Merger.PositionMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
     else:
         merger = Merger.SimpleMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.docID, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
 
     # merging intermediateIndexes
     tokenizer.clearVar()

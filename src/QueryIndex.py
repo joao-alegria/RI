@@ -49,8 +49,7 @@ def main(argv):
            k - number of retrieved documents considered for the Rocchio algorithm"""
 
     # default variables
-    outputFile = "../queryResults/results"
-    positionCalc = False
+    outputFile = "../queryResults/"
     tokenizer = "simple"
     maximumRAM = None
     feedback = None
@@ -74,10 +73,9 @@ def main(argv):
             return 3
         elif opt == "-o":
             outputFile = arg
-        elif opt == "-p":
-            positionCalc = True
         elif opt == "-t":
-            assert arg in ("simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
+            assert arg in (
+                "simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
             tokenizer = arg
         elif opt == "-r":
             maxM = psutil.virtual_memory().free
@@ -141,10 +139,53 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, fee
     searcher = Searcher.IndexSearcher(inputFolder, tokenizer, positionCalc, feedback, rocchioWeights, maximumRAM)
 
     f = open(queryFile,"r")
-    for line in f:
+    for line in f: # for each query
         content = line.split("\t")
-        searcher.processQuery(content[-1],outputFile+"_"+content[0])
+
+        #retrieve required index files
+        requiredFiles = searcher.retrieveRequiredFiles(content[-1])
+
+        # apply the rocchio algorithm
+        if feedback:
+            assert len(rocchioWeights) > 0, "Error while applying Rocchio algorithm: no weights and/or k value given."
+            k = rocchioWeights[3]
+            #for t in weights.keys():
+            #    weights[t] = self.rocchioWeights[0]*weights[t] + self.rocchioWeights[1]*(1/k)*sum(....) - self.rocchioWeights[2]*(1/....)*sum(....)
+        
+        # calculate the score of each document
+        for file in requiredFiles:
+            f = open(file, "r")
+            for line in f:
+                if isMemoryAvailable(maximumRAM):
+                    searcher.calculateScores(line)
+                #else:
+
+                
+        # sort results and write them
+        searcher.sortAndWriteResults(outputFile+content[0])
     return
+
+def isMemoryAvailable(maximumRAM):
+    """
+    Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
+
+    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
+    :type maximumRAM: int
+    :returns: True if the memory usage is under 85% of the maximum RAM allowed, false if not
+    :rtype: bool
+
+    """
+    # pass this verification because if it's to much it's user error
+    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
+    #     return False
+
+    # get program memory usage
+    processMemory = process.memory_info().rss
+    # print(processMemory)
+    if processMemory >= int(maximumRAM*0.9):
+        return False
+
+    return True
 
 if __name__ == "__main__":
     # bypassing the script arguments to the main function
