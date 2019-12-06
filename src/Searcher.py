@@ -23,7 +23,7 @@ class Searcher(ABC):
 
     """
 
-    def __init__(self, inputFolder, tokenizer, maximumRAM=None):
+    def __init__(self, inputFolder, tokenizer, positionCalc, K, limit, feedback=None, rocchioWeights=[], maximumRAM=None):
         """
         Class constructor
         """
@@ -35,19 +35,22 @@ class Searcher(ABC):
         for f in inputFiles:
             self.files.append(f)
         self.tokenizer = tokenizer
+        self.positionCalc = positionCalc
+        self.feedback = feedback
+        self.rocchioWeights = rocchioWeights
+        self.maximumRAM = maximumRAM
         translationFile = open("../indexMetadata.txt")
         self.translations = {}
         for line in translationFile:
             line = line.strip().split(",")
             self.translations[line[0]] = line[1]
+        self.Scores = {}
+        self.K = K
+        self.limit = limit
 
     @abstractmethod
-    def processQuery(self, query, outputFile):
-        """
-        Function that processes the query passed as a string argument.
-        """
+    def retrieveRequiredFiles(self, query):
         print("Searching...")
-        pass
 
     def clearVar(self):
         """
@@ -58,113 +61,86 @@ class Searcher(ABC):
 
 class IndexSearcher(Searcher):
 
-    def __init__(self, inputFolder, tokenizer, maximumRAM=None):
+    def __init__(self, inputFolder, tokenizer, positionCalc, K, limit, feedback, rocchioWeights=[], maximumRAM=None):
         """
         Class constructor
         """
-        super().__init__(inputFolder, tokenizer, maximumRAM)
-        # if self.files != []:
-        # ......
-        pass
+        super().__init__(inputFolder, tokenizer, positionCalc, K, limit,
+                         feedback, rocchioWeights, maximumRAM)
+        self.requiredFiles = None
+        self.curFile = None
+        self.curIdx = 0
+        self.curFilename = ""
 
-    def processQuery(self, query, outputFile):
-        """
-        Function that processes the query passed as a string argument.
-        """
-        super().processQuery(query, outputFile)
-
+    def retrieveRequiredFiles(self, query):
         # {(term,idf):{docid:(weight,[pos1,pos2])}}
         # term:idf;docid:weight:pos1,pos2;docid:weight:pos1,pos2;
         # term:idf;docid:weight;docid:weight;
         # term;docid:tf:pos1,pos2;docid:tf:pos1,pos2;
         # term,docid:tf,docid:tf,
 
+        super().retrieveRequiredFiles(query)
+
         # tokenize query
         self.tokenizer.tokenize(query.strip())
-
-        # start calculating weights of each token in the query
-        # weights = {}
-        # for t in self.tokenizer.tokens:  # here weights is actually tfs
-        #     if t not in weights.keys():
-        #         weights[t] = 1
-        #     else:
-        #         weights[t] += 1
-
         # find the index files required
-        requiredFiles = {}
+        self.requiredFiles = {}
         for file in self.files:
             aux = file.split("_")
             for t in self.tokenizer.tokens:
                 if t > aux[0] and t < aux[1]:
-                    if file not in requiredFiles:
-                        requiredFiles[file] = [t]
+                    if file not in self.requiredFiles:
+                        self.requiredFiles[file] = [t]
                     else:
-                        requiredFiles[file].append(t)
+                        self.requiredFiles[file].append(t)
                     break
 
-        K = 200
+        self.requiredFiles = sorted(self.requiredFiles.items())
 
-        # retrieve the desired postings lists
-        # postingsLists = {}
-        Scores = {}
-        for file in requiredFiles:
-            f = open(self.inputFolder+"/"+file, "r")
-            for line in f:
-                # assert(":" in line.split(";")[0])
-                aux = line.split(";")
-                curTerm = aux[0].split(":")[0]
-                if curTerm in requiredFiles[file]:
-                    requiredFiles[file].remove(curTerm)
-                    curIdf = float(aux[0].split(":")[1])
-                    # content = {}
-                    for c in aux[1:K+1]:
-                        document = c.split(":")
-                        docID = document[0]
-                        weight = document[1]
-                        if docID not in Scores:
-                            Scores[docID] = float(weight)*curIdf
-                        else:
-                            Scores[docID] += float(weight)*curIdf
-                    # postingsLists[curIdf] = content
-                    if len(requiredFiles[file]) <= 0:
-                        break
+    def calculateScores(self):
+        if self.curFile == None:
+            if self.curIdx >= len(self.requiredFiles):
+                return True
+            self.curFile = open(
+                self.inputFolder+self.requiredFiles[self.curIdx][0])
+            self.curFilename = self.requiredFiles[self.curIdx][0]
+        for line in self.curFile:
+            line = line.split(";")
+            curTerm = line[0].split(":")[0]
+            if curTerm in self.requiredFiles[self.curIdx][1]:
+                self.requiredFiles[self.curIdx][1].remove(curTerm)
+                curIdf = float(line[0].split(":")[1])
+                #print("current IDF - " + str(curIdf))
+                #print(len(self.tokenizer.tokens) <= 2 or curIdf >= 3.0)
+                # only consider high-idf query terms
+                # if curIdf >= 1.0 or len(self.tokenizer.tokens) <= 2:
+                for c in line[1:self.K]:  # champions list of size k
+                    docID = c.split(":")[0]
+                    weight = c.split(":")[1]
+                    if docID not in self.Scores:
+                        self.Scores[docID] = round(float(weight)*curIdf, 2)
+                        #print("Score - " + str(self.Scores[docID]))
+                    else:
+                        self.Scores[docID] += round(float(weight)
+                                                    * curIdf, 2)
+                        #print("Score - " + str(self.Scores[docID]))
+                if len(self.requiredFiles[self.curIdx][1]) <= 0:
+                    self.curFile = None
+                    self.curIdx += 1
+                    return False
+            return False
 
-        # finish calculating weights of each token in the query and normalize them
-        # norm = 0
-        # for t in weights:  # now tfs are transformed and normalized
-        #     idf = 0
-        #     for key in postingsLists.keys():
-        #         if key[0] == t:
-        #             idf = key[1]
-        #     weights[t] = (1 + math.log10(weights[t])) * idf
-        #     norm += weights[t]**2
-
-        # for t in weights:  # finally we have the term weights of the query
-        #     weights[t] = weights[t]/math.sqrt(norm) if math.sqrt(norm) else 0.0
-
-        # calculate the score of each document
-        # Scores = {}
-        # postingsLists = sorted(postingsLists.items(), reverse=True)
-        # bestIDF = postingsLists[0][0]
-        # for idf, docs in postingsLists:
-        #     for docID in docs:
-        #         if idf not in Scores:
-        #             Scores[docID] = docs[docID]
-        #         else:
-        #             Scores[docID] += docs[docID]
-        #         # if docID not in Scores:
-        #         #     Scores[docID] = docs[docID]
-        #         # else:
-        #         #     Scores[docID] += docs[docID]
-
-        # sort results and write them
-        Scores = sorted(Scores.items(), key=lambda kv: kv[1], reverse=True)
+    def sortAndWriteResults(self, outputFile):
+        self.curFile = None
+        self.curIdx = 0
+        self.curFilename = ""
+        Scores = sorted(self.Scores.items(),
+                        key=lambda kv: kv[1], reverse=True)
         outputFile = open(outputFile, "w")
-        for (docID, score) in Scores[:10]:
+        for (docID, score) in Scores[:self.limit]:
             outputFile.write(
-                str(self.translations[docID]) + ", " + str(round(score, 2)) + "\n")
+                str(self.translations[docID]) + ", " + str(score) + "\n")
         outputFile.close()
-
         return
 
     def clearVar(self):
