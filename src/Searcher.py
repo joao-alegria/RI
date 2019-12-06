@@ -46,7 +46,7 @@ class Searcher(ABC):
         self.Scores = {}
 
     @abstractmethod
-    def retrieveTokensAndRequiredFiles(self, query):
+    def retrieveRequiredFiles(self, query):
         print("Searching...")
 
     def clearVar(self):
@@ -64,14 +64,14 @@ class IndexSearcher(Searcher):
         """
         super().__init__(inputFolder, tokenizer, positionCalc, feedback, rocchioWeights, maximumRAM)
 
-    def retrieveTokensAndRequiredFiles(self, query):
+    def retrieveRequiredFiles(self, query):
         # {(term,idf):{docid:(weight,[pos1,pos2])}}
         # term:idf;docid:weight:pos1,pos2;docid:weight:pos1,pos2;
         # term:idf;docid:weight;docid:weight;
         # term;docid:tf:pos1,pos2;docid:tf:pos1,pos2;
         # term,docid:tf,docid:tf,
 
-        super().retrieveTokensAndRequiredFiles(query)
+        super().retrieveRequiredFiles(query)
 
         # tokenize query
         self.tokenizer.tokenize(query.strip())
@@ -92,21 +92,26 @@ class IndexSearcher(Searcher):
             assert(":" in line.split(";")[0])
             break
 
-        return (self.tokenizer.tokens,requiredFiles)
+        return requiredFiles
 
-    def calculateScores(self, line):
+    def calculateScores(self, line, k):
         aux = line.split(";")
         curTerm = aux[0].split(":")[0]
         if curTerm in self.tokenizer.tokens:
             curIdf = float(aux[0].split(":")[1])
-            for c in aux[1:100]:
-                document = c.split(":")
-                docID = document[0]
-                weight = document[1]
-                if docID not in self.Scores.keys():
-                    self.Scores[docID] = round(float(weight), 2)
-                else:
-                    self.Scores[docID] += round(float(weight), 2)
+            #print("current IDF - " + str(curIdf))
+            #print(len(self.tokenizer.tokens) <= 2 or curIdf >= 3.0) 
+            if curIdf >= 1.0 or len(self.tokenizer.tokens) <= 2: # only consider high-idf query terms
+                for c in aux[1:k+1]: # champions list of size k
+                    document = c.split(":")
+                    docID = document[0]
+                    weight = document[1]
+                    if docID not in self.Scores.keys():
+                        self.Scores[docID] = round(float(weight), 2)
+                        #print("Score - " + str(self.Scores[docID]))
+                    else:
+                        self.Scores[docID] += round(float(weight), 2)
+                        #print("Score - " + str(self.Scores[docID]))
         return
 
     def sortAndWriteResults(self,outputFile):

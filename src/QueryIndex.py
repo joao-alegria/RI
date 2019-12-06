@@ -51,6 +51,7 @@ def main(argv):
     # default variables
     outputFile = "../queryResults/"
     tokenizer = "simple"
+    positionCalc = False
     maximumRAM = None
     feedback = None
     rocchioWeights = []
@@ -73,6 +74,8 @@ def main(argv):
             return 3
         elif opt == "-o":
             outputFile = arg
+        elif opt == "-p":
+            positionCalc = True
         elif opt == "-t":
             assert arg in (
                 "simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
@@ -156,13 +159,11 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, fee
         for file in requiredFiles:
             f = open(file, "r")
             for line in f:
-                if isMemoryAvailable(maximumRAM):
-                    searcher.calculateScores(line)
-                #else:
+                searcher.calculateScores(line, 50)
 
-                
         # sort results and write them
         searcher.sortAndWriteResults(outputFile+content[0])
+        #exit(0)
     return
 
 def isMemoryAvailable(maximumRAM):
