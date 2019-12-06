@@ -113,6 +113,29 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, maximumRAM):
     return
 
 
+def isMemoryAvailable(maximumRAM):
+    """
+    Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
+
+    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
+    :type maximumRAM: int
+    :returns: True if the memory usage is under 85% of the maximum RAM allowed, false if not
+    :rtype: bool
+
+    """
+    # pass this verification because if it's to much it's user error
+    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
+    #     return False
+
+    # get program memory usage
+    processMemory = process.memory_info().rss
+    # print(processMemory)
+    if processMemory >= int(maximumRAM*0.82):
+        return False
+
+    return True
+
+
 if __name__ == "__main__":
     # bypassing the script arguments to the main function
     process = psutil.Process(os.getpid())

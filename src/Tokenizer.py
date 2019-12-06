@@ -101,9 +101,9 @@ class ComplexTokenizer(Tokenizer):
         # storing usefull regex
         self.regex0 = re.compile(" +")
         self.regex1 = re.compile(" +| *_+ *| *-+ *")
-        self.regex2 = re.compile("([,;.:?!\(\)\[\]\{\}\"\|#])")
+        self.regex2 = re.compile("([',;.:?!\(\)\[\]\{\}\"\|#])")
         self.regex3 = re.compile("[0-9]+(/)[0-9]+(/)[0-9]+")
-        self.regex4 = re.compile("([,;.:?!\(\)\[\]\{\}/\"\|#])")
+        self.regex4 = re.compile("([',;.:?!\(\)\[\]\{\}/\"\|#])")
         self.regex5 = re.compile("^(-)?[0-9]")
 
     def tokenize(self, processText):

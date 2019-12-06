@@ -36,7 +36,6 @@ def calculateP_R_F1(truth, prediction):
     for p in prediction:
         if p in truth:
             tp += 1
-            truth.remove(p)
         else:
             fp += 1
     for t in truth:
@@ -56,10 +55,10 @@ def calculateMAP(meanAPs):
 def calculateMPatK(truth, prediction, k):
     pSum = 0
     count = 0
-    for idx, p in enumerate(prediction[:k+1]):
+    for idx, p in enumerate(prediction[:k]):
         if p in truth:
             count += 1
-            P, R, F1 = calculateP_R_F1(truth, prediction[:idx+1])
+            P, R, F1 = calculateP_R_F1(truth, prediction[:idx])
             pSum += P
     return pSum/count if count != 0 else 0.0
 
@@ -77,15 +76,18 @@ def main(argv):
 
     ourResults = os.listdir(ourResultsFolder)
     meanPs = []
+    precisions = []
     for f in ourResults:
         truth = queryTrueResults[f]
         trueDocs = [x[0] for x in truth]
         results = loadOurResults(ourResultsFolder+"/"+f)
         P, R, F1 = calculateP_R_F1(trueDocs, results)
+        precisions.append(P)
         MPat10 = calculateMPatK(trueDocs, results, 10)
         meanPs.append(calculateMPatK(trueDocs, results, len(results)))
         print(f, P, R, F1, MPat10)
     meanAP = calculateMAP(meanPs)
+    print(sum(precisions)/len(precisions))
 
 
 if __name__ == "__main__":

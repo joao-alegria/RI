@@ -6,6 +6,7 @@
 
 import os
 import math
+import psutil
 from abc import ABC, abstractmethod
 
 
@@ -90,37 +91,43 @@ class IndexSearcher(Searcher):
         #         weights[t] += 1
 
         # find the index files required
-        requiredFiles = []
+        requiredFiles = {}
         for file in self.files:
             aux = file.split("_")
             for t in self.tokenizer.tokens:
                 if t > aux[0] and t < aux[1]:
-                    requiredFiles.append(self.inputFolder+file)
+                    if file not in requiredFiles:
+                        requiredFiles[file] = [t]
+                    else:
+                        requiredFiles[file].append(t)
                     break
 
-        # check if index files are in the correct format
-        f = open(requiredFiles[0])
-        for line in f:
-            # if not, then index is in the wrong format
-            assert(":" in line.split(";")[0])
-            break
+        K = 200
 
         # retrieve the desired postings lists
         # postingsLists = {}
-        # for file in requiredFiles:
-        #     f = open(file, "r")
-        #     for line in f:
-        #         aux = line.split(";")
-        #         curTerm = aux[0].split(":")[0]
-        #         if curTerm in self.tokenizer.tokens:
-        #             curIdf = float(aux[0].split(":")[1])
-        #             content = {}
-        #             for c in aux[1:]:
-        #                 document = c.split(":")
-        #                 docID = document[0]
-        #                 weight = document[1]
-        #                 content[docID] = float(weight)
-        #             postingsLists[(curTerm, curIdf)] = content
+        Scores = {}
+        for file in requiredFiles:
+            f = open(self.inputFolder+"/"+file, "r")
+            for line in f:
+                # assert(":" in line.split(";")[0])
+                aux = line.split(";")
+                curTerm = aux[0].split(":")[0]
+                if curTerm in requiredFiles[file]:
+                    requiredFiles[file].remove(curTerm)
+                    curIdf = float(aux[0].split(":")[1])
+                    # content = {}
+                    for c in aux[1:K+1]:
+                        document = c.split(":")
+                        docID = document[0]
+                        weight = document[1]
+                        if docID not in Scores:
+                            Scores[docID] = float(weight)*curIdf
+                        else:
+                            Scores[docID] += float(weight)*curIdf
+                    # postingsLists[curIdf] = content
+                    if len(requiredFiles[file]) <= 0:
+                        break
 
         # finish calculating weights of each token in the query and normalize them
         # norm = 0
@@ -137,40 +144,25 @@ class IndexSearcher(Searcher):
 
         # calculate the score of each document
         # Scores = {}
-        # for key in postingsLists:
-        #     for docID in postingsLists[key]:
-        #         if docID not in Scores:
-        #             # Scores[docID] = postingsLists[key][docID] * weights[key[0]]
-        #             Scores[docID] = postingsLists[key][docID]
+        # postingsLists = sorted(postingsLists.items(), reverse=True)
+        # bestIDF = postingsLists[0][0]
+        # for idf, docs in postingsLists:
+        #     for docID in docs:
+        #         if idf not in Scores:
+        #             Scores[docID] = docs[docID]
         #         else:
-        #             # Scores[docID] += postingsLists[key][docID] * weights[key[0]]
-        #             Scores[docID] += postingsLists[key][docID]
-
-        Scores = {}
-        for file in requiredFiles:
-            f = open(file, "r")
-            for line in f:
-                aux = line.split(";")
-                curTerm = aux[0].split(":")[0]
-                if curTerm in self.tokenizer.tokens:
-                    curIdf = float(aux[0].split(":")[1])
-                    for c in aux[1:100]:
-                        document = c.split(":")
-                        docID = document[0]
-                        weight = document[1]
-                        if docID not in Scores:
-                            Scores[docID] = round(
-                                float(weight), 2)
-                        else:
-                            Scores[docID] += round(
-                                float(weight), 2)
+        #             Scores[docID] += docs[docID]
+        #         # if docID not in Scores:
+        #         #     Scores[docID] = docs[docID]
+        #         # else:
+        #         #     Scores[docID] += docs[docID]
 
         # sort results and write them
         Scores = sorted(Scores.items(), key=lambda kv: kv[1], reverse=True)
         outputFile = open(outputFile, "w")
-        for (docID, score) in Scores:
+        for (docID, score) in Scores[:10]:
             outputFile.write(
-                str(self.translations[docID]) + ", " + str(score) + "\n")
+                str(self.translations[docID]) + ", " + str(round(score, 2)) + "\n")
         outputFile.close()
 
         return
@@ -180,3 +172,21 @@ class IndexSearcher(Searcher):
         Function that frees the memory currently in use by emptying all class variables.
         """
         self.files = None
+
+
+# Scores = {}
+#         for file in requiredFiles:
+#             f = open(file, "r")
+#             for line in f:
+#                 aux = line.split(";")
+#                 curTerm = aux[0].split(":")[0]
+#                 if curTerm in self.tokenizer.tokens:
+#                     curIdf = float(aux[0].split(":")[1])
+#                     for c in aux[1:K+1]:
+#                         document = c.split(":")
+#                         docID = document[0]
+#                         weight = document[1]
+#                         if docID not in Scores:
+#                             Scores[docID] = float(weight)*curIdf
+#                         else:
+#                             Scores[docID] += float(weight)*curIdf

@@ -126,26 +126,31 @@ class LimitedRamFileParser(FileParser):
         """
         docContent = ""
         docID = ""
+        add = False
         for line in self.f:
             line = line.decode("ISO-8859-1")
             if line.startswith("PMID"):
                 docID = line[6:].strip()
-                self.numDocs += 1
             elif line.startswith("TI"):
-                docContent = line[6:].strip()
-            elif line.startswith("PG"):
-                continue
-            elif line.startswith("AD"):
+                docContent += line[6:].strip()+" "
+                add = True
+            elif line.startswith("AB"):
+                docContent += line[6:].strip()+" "
+                add = True
+            elif line.startswith("  "):
+                if add:
+                    docContent += line[6:].strip()+" "
+            elif line == "\n":
+                self.numDocs += 1
                 if self.numDocs >= self.limit:
                     self.gz.close()
                     return None
                 if docContent == "":
-                    break
+                    continue
                 return {str(docID): docContent}
             else:
-                if docContent != "":
-                    docContent += " "+line[6:].strip()
-
+                add = False
+                continue
         self.gz.close()
 
         if self.files != []:
