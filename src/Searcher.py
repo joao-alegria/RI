@@ -115,7 +115,7 @@ class IndexSearcher(Searcher):
                                 for c in self.internalcache[t][2]:
                                     docID = int(c.split(":")[0])
                                     weight = c.split(":")[1]
-                                    s = round(float(weight) * self.internalcache[t][1], 2) # round(float(weight) * curIdf, 2)
+                                    s = float(weight) * self.internalcache[t][1] # float(weight) * curIdf
                                     if self.translations[docID-1] not in self.scores.keys():
                                         self.scores[self.translations[docID-1]] = alpha*s + beta*(1/len(relevantPMIDs))*s #- gamma*(1/len(irrelevantPMIDs))*s
                                     else:
@@ -129,9 +129,9 @@ class IndexSearcher(Searcher):
                             docID = int(c.split(":")[0])
                             weight = c.split(":")[1]
                             if self.translations[docID-1] not in self.scores.keys():
-                                self.scores[self.translations[docID-1]] = round(float(weight) * self.internalcache[t][1], 2)
+                                self.scores[self.translations[docID-1]] = float(weight) * self.internalcache[t][1]
                             else:
-                                self.scores[self.translations[docID-1]] += round(float(weight) * self.internalcache[t][1], 2)
+                                self.scores[self.translations[docID-1]] += float(weight) * self.internalcache[t][1]
             else:
                 for line in open(self.inputFolder+f):
                     line = line.strip().split(";")[:self.k+1]
@@ -163,7 +163,7 @@ class IndexSearcher(Searcher):
                                     for c in line[1:]:  # champions list of size k
                                         docID = int(c.split(":")[0])
                                         weight = c.split(":")[1]
-                                        s = round(float(weight) * curIdf, 2)
+                                        s = float(weight) * curIdf
                                         if self.translations[docID-1] not in self.scores.keys():
                                             self.scores[self.translations[docID-1]] = alpha*s + beta*(1/len(relevantPMIDs))*s #- gamma*(1/len(irrelevantPMIDs))*s
                                         else:
@@ -171,15 +171,31 @@ class IndexSearcher(Searcher):
                         elif self.feedback=="user":
                             assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                             userFeedbackFile = open("../userFeedback/" + str(self.n) + ".txt","r")
-                            
+                            for feedbackLine in userFeedbackFile:
+                                content = feedbackLine.split(":")
+                                qIdx = int(content[0])
+                                if queryIdx==qIdx:
+                                    relevantPMIDs = content[1].split(",")
+                                    irrelevantPMIDs = content[2].split(",")
+                                    alpha = self.rocchioWeights[0]
+                                    beta = self.rocchioWeights[1]
+                                    gamma = self.rocchioWeights[2]
+                                    for c in line[1:]:  # champions list of size k
+                                        docID = int(c.split(":")[0])
+                                        weight = c.split(":")[1]
+                                        s = float(weight) * curIdf
+                                        if self.translations[docID-1] not in self.scores.keys():
+                                            self.scores[self.translations[docID-1]] = alpha*s + beta*(1/len(relevantPMIDs))*s - gamma*(1/len(irrelevantPMIDs))*s
+                                        else:
+                                            self.scores[self.translations[docID-1]] += alpha*s + beta*(1/len(relevantPMIDs))*s - gamma*(1/len(irrelevantPMIDs))*s
                         else:
                             for c in line[1:]:  # champions list of size k
                                 docID = int(c.split(":")[0])
                                 weight = c.split(":")[1]
                                 if self.translations[docID-1] not in self.scores.keys():
-                                    self.scores[self.translations[docID-1]] = round(float(weight) * curIdf, 2)
+                                    self.scores[self.translations[docID-1]] = float(weight) * curIdf
                                 else:
-                                    self.scores[self.translations[docID-1]] += round(float(weight) * curIdf, 2)
+                                    self.scores[self.translations[docID-1]] += float(weight) * curIdf
                         if len(v) <= 0:
                             break
 
@@ -189,7 +205,7 @@ class IndexSearcher(Searcher):
         self.scores = sorted(self.scores.items(), key=lambda kv: kv[1], reverse=True)
         outputFile = open(outputFile, "w")
         for (PMID, score) in self.scores[:self.limit]:
-            outputFile.write(str(PMID) + ", " + str(score) + "\n")
+            outputFile.write(str(PMID) + ", " + str(round(score,2)) + "\n")
         outputFile.close()
         self.scores = {}
         return
