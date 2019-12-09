@@ -8,6 +8,7 @@ import os
 import sys
 import psutil
 import gc
+import time
 import getopt
 
 import Tokenizer
@@ -60,7 +61,7 @@ def main(argv):
     feedback = None             # None, pseudo or user
     rocchioWeights = []         # alpha, beta and gamma
     n = None                    # number of relevant docs (for feedback)
-    k = 100                     # champions list size
+    k = 10000                   # champions list size
     limit = 100                 # number of scores
 
     try:
@@ -163,42 +164,15 @@ def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k,
 
         # calculate the score of each document
         if feedback:
-            while not searcher.calculateScores(int(content[0])):
-                pass
+            searcher.calculateScores(int(content[0]))
         else:
-            while not searcher.calculateScores():
-                pass 
+            searcher.calculateScores()
 
         # sort results and write them
         searcher.sortAndWriteResults(outputFile+content[0])
         # exit(0)
     return
 
-
-def isMemoryAvailable(maximumRAM):
-    """
-    Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
-
-    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
-    :type maximumRAM: int
-    :returns: True if the memory usage is under 90% of the maximum RAM allowed, false if not
-    :rtype: bool
-
-    """
-    # pass this verification because if it's to much it's user error
-    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
-    #     return False
-
-    # get program memory usage
-    processMemory = process.memory_info().rss
-    # print(processMemory)
-    if processMemory >= int(maximumRAM*0.9):
-        return False
-
-    return True
-
-
 if __name__ == "__main__":
     # bypassing the script arguments to the main function
-    process = psutil.Process(os.getpid())
     main(sys.argv[1:])

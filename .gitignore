@@ -8,7 +8,8 @@ simpleOut.txt
 complexOut.txt
 __pycache__
 index
-backup
+backup.*
 queryResults
 heal.py
 indexMetadata.txt
+extraIndex

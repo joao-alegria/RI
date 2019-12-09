@@ -1,5 +1,6 @@
 import sys
 import os
+import math
 
 
 def loadQueryTruth(queryTruth):
@@ -63,6 +64,28 @@ def calculateMPatK(truth, prediction, k):
     return pSum/count if count != 0 else 0.0
 
 
+def calculateNDCG(truth, prediction):
+    ideal = 0
+    actual = 0
+    predictionRelevance = []
+    for p in prediction:
+        for t, tv in truth:
+            if p == t:
+                predictionRelevance.append(tv)
+            else:
+                predictionRelevance.append(0)
+
+    idealRelevance = [x[1] for x in truth]
+    idealRelevance.sort(reverse=True)
+    for idx in range(max(len(predictionRelevance), len(idealRelevance))):
+        denominator = math.log2(idx+1) if idx+1 > 1 else 1
+        if idx < len(predictionRelevance):
+            actual += predictionRelevance[idx]/denominator
+        if idx < len(idealRelevance):
+            ideal += idealRelevance[idx]/denominator
+    return actual/ideal if ideal != 0 else 0.0
+
+
 def main(argv):
     if len(argv) != 2:
         print("""USAGE:
@@ -77,17 +100,28 @@ def main(argv):
     ourResults = os.listdir(ourResultsFolder)
     meanPs = []
     precisions = []
+    recalls = []
+    f1s = []
+    mpat10s = []
+    ndcgs = []
     for f in ourResults:
         truth = queryTrueResults[f]
         trueDocs = [x[0] for x in truth]
         results = loadOurResults(ourResultsFolder+"/"+f)
         P, R, F1 = calculateP_R_F1(trueDocs, results)
-        precisions.append(P)
-        MPat10 = calculateMPatK(trueDocs, results, 10)
+        mpat10 = calculateMPatK(trueDocs, results, 10)
+        ndcg = calculateNDCG([[x[0], 3-int(x[1])] for x in truth], results)
         meanPs.append(calculateMPatK(trueDocs, results, len(results)))
-        print(f, P, R, F1, MPat10)
+        precisions.append(P)
+        recalls.append(R)
+        f1s.append(F1)
+        mpat10s.append(mpat10)
+        ndcgs.append(ndcg)
+        print(f, P, R, F1, mpat10, ndcg)
     meanAP = calculateMAP(meanPs)
+    print(meanAP)
     print(sum(precisions)/len(precisions))
+    print(sum(ndcgs)/len(ndcgs))
 
 
 if __name__ == "__main__":
