@@ -55,9 +55,9 @@ def main(argv):
 
     # default variables
     outputFile = "../queryResults/"
-    tokenizer = "complex" 
-    positionCalc = False 
-    maximumRAM = None 
+    tokenizer = "complex"
+    positionCalc = False
+    maximumRAM = None
     feedback = None             # None, pseudo or user
     rocchioWeights = []         # alpha, beta and gamma
     n = None                    # number of relevant docs (for feedback)
@@ -84,7 +84,8 @@ def main(argv):
         elif opt == "-p":
             positionCalc = True
         elif opt == "-t":
-            assert arg in ("simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
+            assert arg in (
+                "simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
             tokenizer = arg
         elif opt == "-r":
             maxM = psutil.virtual_memory().free
@@ -130,6 +131,7 @@ def main(argv):
 
     return 0
 
+
 def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k, limit, queryFile, inputFolder, rocchioWeights):
     """
     Follows the execution flow specific for the third assignment.
@@ -158,7 +160,8 @@ def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k,
     :type rocchioWeights: list<float>
     """
 
-    searcher = Searcher.IndexSearcher(positionCalc, tokenizer, limit, inputFolder, maximumRAM, feedback, n, k, rocchioWeights)
+    searcher = Searcher.IndexSearcher(
+        positionCalc, tokenizer, limit, inputFolder, maximumRAM, feedback, n, k, rocchioWeights)
 
     f = open(queryFile, "r")
     for line in f:  # for each query
@@ -177,6 +180,7 @@ def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k,
         searcher.sortAndWriteResults(outputFile+content[0])
         # exit(0)
     return
+
 
 if __name__ == "__main__":
     # bypassing the script arguments to the main function
