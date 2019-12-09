@@ -38,15 +38,16 @@ class Searcher(ABC):
         self.positionCalc = positionCalc
         self.feedback = feedback
         self.rocchioWeights = rocchioWeights
-        self.maximumRAM = maximumRAM
+        self.maximumRAM = maximumRAM if maximumRAM != None else psutil.virtual_memory().free
         translationFile = open("../indexMetadata.txt")
-        self.translations = {}
+        self.translations = []
         for line in translationFile:
             line = line.strip().split(",")
-            self.translations[line[0]] = line[1]
-        self.Scores = {}
+            self.translations.append(int(line[1]))
+        self.scores = {}
         self.K = K
         self.limit = limit
+        self.internalcache = {}
 
     @abstractmethod
     def retrieveRequiredFiles(self, query):
@@ -68,9 +69,7 @@ class IndexSearcher(Searcher):
         super().__init__(inputFolder, tokenizer, positionCalc, K, limit,
                          feedback, rocchioWeights, maximumRAM)
         self.requiredFiles = None
-        self.curFile = None
-        self.curIdx = 0
-        self.curFilename = ""
+        self.max = 0
 
     def retrieveRequiredFiles(self, query):
         # {(term,idf):{docid:(weight,[pos1,pos2])}}
@@ -84,63 +83,77 @@ class IndexSearcher(Searcher):
         # tokenize query
         self.tokenizer.tokenize(query.strip())
         # find the index files required
-        self.requiredFiles = {}
-        for file in self.files:
-            aux = file.split("_")
-            for t in self.tokenizer.tokens:
-                if t > aux[0] and t < aux[1]:
-                    if file not in self.requiredFiles:
-                        self.requiredFiles[file] = [t]
-                    else:
-                        self.requiredFiles[file].append(t)
-                    break
-
-        self.requiredFiles = sorted(self.requiredFiles.items())
+        self.requiredFiles = {"_cached_": []}
+        for t in self.tokenizer.tokens:
+            if t in self.internalcache:
+                self.requiredFiles["_cached_"].append(t)
+            else:
+                for file in self.files:
+                    aux = file.split("_")
+                    if t > aux[0] and t < aux[1]:
+                        if file not in self.requiredFiles:
+                            self.requiredFiles[file] = [t]
+                        else:
+                            self.requiredFiles[file].append(t)
+                        break
 
     def calculateScores(self):
-        if self.curFile == None:
-            if self.curIdx >= len(self.requiredFiles):
-                return True
-            self.curFile = open(
-                self.inputFolder+self.requiredFiles[self.curIdx][0])
-            self.curFilename = self.requiredFiles[self.curIdx][0]
-        for line in self.curFile:
-            line = line.split(";")
-            curTerm = line[0].split(":")[0]
-            if curTerm in self.requiredFiles[self.curIdx][1]:
-                self.requiredFiles[self.curIdx][1].remove(curTerm)
-                curIdf = float(line[0].split(":")[1])
-                #print("current IDF - " + str(curIdf))
-                #print(len(self.tokenizer.tokens) <= 2 or curIdf >= 3.0)
-                # only consider high-idf query terms
-                # if curIdf >= 1.0 or len(self.tokenizer.tokens) <= 2:
-                for c in line[1:self.K]:  # champions list of size k
-                    docID = c.split(":")[0]
-                    weight = c.split(":")[1]
-                    if docID not in self.Scores:
-                        self.Scores[docID] = round(float(weight)*curIdf, 2)
-                        #print("Score - " + str(self.Scores[docID]))
-                    else:
-                        self.Scores[docID] += round(float(weight)
-                                                    * curIdf, 2)
-                        #print("Score - " + str(self.Scores[docID]))
-                if len(self.requiredFiles[self.curIdx][1]) <= 0:
-                    self.curFile = None
-                    self.curIdx += 1
-                    return False
-            return False
+        for f, v in self.requiredFiles.items():
+            if f == "_cached_":
+                for t in v:
+                    self.internalcache[t][0] += 1
+                    if self.internalcache[t][0] > self.max:
+                        self.max = self.internalcache[t][0]
+                    for c in self.internalcache[t][2]:
+                        docID = c.split(":")[0]
+                        weight = c.split(":")[1]
+                        if docID not in self.scores:
+                            self.scores[docID] = round(
+                                float(weight)*self.internalcache[t][1], 2)
+                        else:
+                            self.scores[docID] += round(float(weight)
+                                                        * self.internalcache[t][1], 2)
+            else:
+                for line in open(self.inputFolder+f):
+                    line = line.strip().split(";")[:self.K+1]
+                    curTerm = line[0].split(":")[0]
+                    if curTerm in v:
+                        v.remove(curTerm)
+                        curIdf = float(line[0].split(":")[1])
+                        if self.isMemoryAvailable():
+                            self.internalcache[curTerm] = [1, curIdf, line[1:]]
+                        else:
+                            # self.internalcache = {k: v for k, v in self.internalcache.items() if v[0] >= self.max-(self.max/4)}
+                            self.internalcache = sorted(
+                                self.internalcache.items(), key=lambda tup: tup[1][0], reverse=True)
+                            self.internalcache = dict(
+                                self.internalcache[:round(len(self.internalcache)/4)])
+                        for c in line[1:]:  # champions list of size k
+                            docID = c.split(":")[0]
+                            weight = c.split(":")[1]
+                            if docID not in self.scores:
+                                self.scores[docID] = round(
+                                    float(weight)*curIdf, 2)
+                                # print("Score - " + str(self.scores[docID]))
+                            else:
+                                self.scores[docID] += round(float(weight)
+                                                            * curIdf, 2)
+                                # print("Score - " + str(self.scores[docID]))
+                        if len(v) <= 0:
+                            break
 
     def sortAndWriteResults(self, outputFile):
         self.curFile = None
         self.curIdx = 0
-        self.curFilename = ""
-        Scores = sorted(self.Scores.items(),
-                        key=lambda kv: kv[1], reverse=True)
+        self.scores = sorted(self.scores.items(),
+                             key=lambda kv: kv[1], reverse=True)
         outputFile = open(outputFile, "w")
-        for (docID, score) in Scores[:self.limit]:
-            outputFile.write(
-                str(self.translations[docID]) + ", " + str(score) + "\n")
+        for (docID, score) in self.scores[:self.limit]:
+            if int(docID)-1 < len(self.translations):
+                outputFile.write(
+                    str(self.translations[int(docID)-1]) + ", " + str(score) + "\n")
         outputFile.close()
+        self.scores = {}
         return
 
     def clearVar(self):
@@ -149,20 +162,24 @@ class IndexSearcher(Searcher):
         """
         self.files = None
 
+    def isMemoryAvailable(self):
+        """
+        Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
 
-# Scores = {}
-#         for file in requiredFiles:
-#             f = open(file, "r")
-#             for line in f:
-#                 aux = line.split(";")
-#                 curTerm = aux[0].split(":")[0]
-#                 if curTerm in self.tokenizer.tokens:
-#                     curIdf = float(aux[0].split(":")[1])
-#                     for c in aux[1:K+1]:
-#                         document = c.split(":")
-#                         docID = document[0]
-#                         weight = document[1]
-#                         if docID not in Scores:
-#                             Scores[docID] = float(weight)*curIdf
-#                         else:
-#                             Scores[docID] += float(weight)*curIdf
+        :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
+        :type maximumRAM: int
+        :returns: True if the memory usage is under 90% of the maximum RAM allowed, false if not
+        :rtype: bool
+
+        """
+        # pass this verification because if it's to much it's user error
+        # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
+        #     return False
+
+        # get program memory usage
+        processMemory = psutil.Process(os.getpid()).memory_info().rss
+        # print(processMemory)
+        if processMemory >= int(self.maximumRAM*0.85):
+            return False
+
+        return True

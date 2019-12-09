@@ -8,6 +8,7 @@ import os
 import sys
 import psutil
 import gc
+import time
 import getopt
 
 import Tokenizer
@@ -144,7 +145,7 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, fee
     """
 
     searcher = Searcher.IndexSearcher(
-        inputFolder, tokenizer, positionCalc, 500, 100, feedback, rocchioWeights, maximumRAM)
+        inputFolder, tokenizer, positionCalc, 10000, 50, feedback, rocchioWeights, maximumRAM)
 
     f = open(queryFile, "r")
     for line in f:  # for each query
@@ -162,8 +163,7 @@ def assignment3(tokenizer, outputFile, queryFile, inputFolder, positionCalc, fee
             #    weights[t] = self.rocchioWeights[0]*weights[t] + self.rocchioWeights[1]*(1/k)*sum(....) - self.rocchioWeights[2]*(1/....)*sum(....)
 
         # calculate the score of each document
-        while not searcher.calculateScores():
-            pass
+        searcher.calculateScores()
 
         # sort results and write them
         searcher.sortAndWriteResults(outputFile+content[0])
@@ -194,30 +194,6 @@ def isMemoryAvailable(maximumRAM):
     return True
 
 
-def isMemoryAvailable(maximumRAM):
-    """
-    Auxiliary function used to determine whether there is still memory available to keep reading information from the input files or not.
-
-    :param maximumRAM: maximum amount of RAM (in Gb) allowed for the program execution
-    :type maximumRAM: int
-    :returns: True if the memory usage is under 85% of the maximum RAM allowed, false if not
-    :rtype: bool
-
-    """
-    # pass this verification because if it's to much it's user error
-    # if psutil.virtual_memory().percent > 98:  # we avoid using 100% of memory as a prevention measure
-    #     return False
-
-    # get program memory usage
-    processMemory = process.memory_info().rss
-    # print(processMemory)
-    if processMemory >= int(maximumRAM*0.82):
-        return False
-
-    return True
-
-
 if __name__ == "__main__":
     # bypassing the script arguments to the main function
-    process = psutil.Process(os.getpid())
     main(sys.argv[1:])

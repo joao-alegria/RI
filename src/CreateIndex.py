@@ -158,6 +158,8 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
         persister = PersistIndex.PersistCSV(
             outputFolder, indexer, parser.numDocs)
         persister.persist()
+    persister.persistTranslations(
+        sorted(indexer.translation, key=lambda tup: tup[0]))
 
     tokenizer.clearVar()
     parser.clearVar()
@@ -218,7 +220,8 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
             indexer.createIndex(doc)
 
         persister.setTotalNumDocs(parser.numDocs)
-        persister.persistTranslations(indexer.translation)
+        persister.persistTranslations(
+            sorted(indexer.translation, key=lambda tup: tup[0]))
         if not runSPIMI and blockCounter == 1:
             persister.persist(indexer.index)
             return 0
