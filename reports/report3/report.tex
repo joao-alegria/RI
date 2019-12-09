@@ -71,7 +71,22 @@ consider not only the title of each document but also the abstract
 
 \section*{2. Ranked Retrieval of Relevant Documents}
 
-....................
+With an entirely functional index creator and a folder of generated indexes from
+the corpus of text documents, it was now time to develop a program capable of
+interpreting queries and returning the index entries most relevant to them.
+In this chapter we describe our implementation of a query results ranked retriever
+- that we called \texttt{Searcher} -, explain how we prepared it for memory 
+limitations and present the updates done to our class diagram.
+
+The file \texttt{Searcher.py} contains an abstract class called \texttt{Searcher}
+that serves as a template for the implementations of results retriever classes.
+For our purposes, we developed \texttt{IndexSearcher}, a class that extends from
+the abstract template and is capable of selecting which index files will be 
+required to answer a given query, assigning scores to documents from the index
+and returning the documents considered most relevant to the query according to 
+these scores.
+
+
 
 \section*{3. Evaluation and Results Discussion}
 
