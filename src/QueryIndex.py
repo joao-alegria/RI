@@ -106,10 +106,10 @@ def main(argv):
             k = int(arg)
         elif opt == "-n":
             assert int(arg) > 0, "Error: n value must be a positive integer"
-            k = int(arg)
+            n = int(arg)
         elif opt == "-l":
             assert int(arg) > 0, "Error: limit value must be a positive integer"
-            k = int(arg)
+            limit = int(arg)
 
     if feedback:
         assert len(
