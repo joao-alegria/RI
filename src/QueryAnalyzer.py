@@ -42,7 +42,7 @@ def calculateP_R_F1(truth, prediction):
     for t in truth:
         if t not in prediction:
             fn += 1
-        P = tp/(tp+fp) if (tp+fp) != 0 else 0.0
+    P = tp/(tp+fp) if (tp+fp) != 0 else 0.0
     R = tp/(tp+fn) if (tp+fn) != 0 else 0.0
     F1 = (2*R*P)/(R+P) if (R+P) != 0 else 0.0
 
@@ -73,14 +73,13 @@ def calculateNDCG(truth, prediction):
         if not wrote:
             predictionRelevance.append(0)
 
-    idealRelevance = [x[1] for x in truth]
+    # idealRelevance = [x[1] for x in truth]
+    idealRelevance = predictionRelevance.copy()
     idealRelevance.sort(reverse=True)
-    for idx in range(max(len(predictionRelevance), len(idealRelevance))):
+    for idx in range(len(idealRelevance)):
         denominator = math.log2(idx+1) if idx+1 > 1 else 1
-        if idx < len(predictionRelevance):
-            actual += predictionRelevance[idx]/denominator
-        if idx < len(idealRelevance):
-            ideal += idealRelevance[idx]/denominator
+        actual += predictionRelevance[idx]/denominator
+        ideal += idealRelevance[idx]/denominator
     return actual/ideal if ideal != 0 else 0.0
 
 
@@ -113,7 +112,7 @@ def main(argv):
         results = loadOurResults(ourResultsFolder+"/"+f)
         P, R, F1 = calculateP_R_F1(trueDocs, results)
         mpat10 = calculateMPatK(trueDocs, results, 10)
-        ndcg = calculateNDCG([[x[0], 3-int(x[1])] for x in truth], results)
+        ndcg = calculateNDCG([[x[0], int(x[1])] for x in truth], results)
         mp = calculateMPatK(trueDocs, results, len(results))
         mps.append(mp)
         precisions.append(P)
