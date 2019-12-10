@@ -120,13 +120,26 @@ these scores.
 
 The step of determining which index files will be needed to answer the query
 is done through the function \textit{retrieveRequiredFiles()} and is basically
-a comparison of each query term with the name of each index file.
+a comparison of each query term of the query with the name of each index file. To obtain those tokens, logically the tokenizing process must be identical if not the same as the one used when indexing the entire corpus. Not doing so may compromise significantly the efficiency of the process.
 As each index file is named after the first and last terms it contains (separated
 by an underscore) and as the entire index is alphabetically ordered, the function
-simply determines where each term will be present and returns those index files.
+simply determines where each term will be present and returns those index files. A special case occurs when the necessary information is cached, i.e., the results are already present in memory. This memory management will be further detailed in the section \ref{memory}.
 
-Calculating the score of each document regarding a query is not as easy to explain.
-................. explain \textit{calculateScores()} ..................
+Calculating the score of each document regarding a query is not as easy to explain. The function \textit{calculateScores()} is the one responsible for obtaining the relevant document ids and the respective score values. With the the required files established and the indication if como information is already cached the score calculation may start. It's necessary to iterate over all the necessary files and identify the lines were the query tokens appear, so that we have access to the documents where that specific term occurred; as a execution time and memory reduction mechanism we implemented a champion list strategy to decrease our search space, meaning that we only consider the first N documents (N can be defined by the user), which is made easy by the fact that previously with our indexing process we already order the posting list (list of documents were a term appeared) by the tf-idf weight calculated on that process too.
+
+Once knowing the champion list for each term we know which documents are relevant to that query, assuming that having at least one term of the query is enough. Of course, not all documents have the same relevance to the user, a document that have all the query terms may be more relevant that others with only one term. A score is then calculated to allow the ordering of the several documents following the formulas:
+
+\begin{equation}
+  \label{score}
+  Score_{d} = \sum_{t=0}^{nT} W_{qt} * W_{dt}
+\end{equation}
+
+\begin{equation}
+  \label{simple}
+  W_{qt} = 1 + \log(tf) * idf => Simplifying => W_{qt} = 1 * idf
+\end{equation}
+
+Where \ref{score} shows that the score of a document is obtained by the sum of the multiplications of the query term weight by the weight of the term in the document. This formula although not too complex can be simplified, as shown by formula \ref{simple}. Since the execution time when retrieving information is crucial, the more simple and straightforward the process can be, the best it is for the user. The simplification that we implemented consist in assuming that each term occurs only once in the query, which that doesn't compromise the performance of the search, since the terms are still considered and the number of times a term appears in the query will not affect the relevance of a document. This allow our process to simply skip the step of calculating the query terms weight as shown by \ref{simple}, which can translate in crucial processing time.
 
 Once the scores are found, \textit{sortAndWriteResults()} does what its name 
 suggests: sorts the documents by score and writes to a results file the first K
@@ -136,19 +149,35 @@ documents, where K is passed as argument by the user.
 
 We knew \texttt{IndexSearcher} was a very limited solution, as it considers 
 documents as relevant only for the presence of query terms in their titles 
-and / or abstracts.
+and/or abstracts.
 So the idea of attempting to expand queries was introduced through feeding back
 to the Searcher information that would help it fine tune its results.
 
-The aim of relevance feedback is to transform query vectors (consisting in the
+The aim of relevance feedback is to try to steer the search process behavior in a way that guides the results to more relevant document, this is accomplished by transforming the query vectors (consisting in the
 weights of each query term in the query) into new vectors closer to the actually
 relevant documents and further away from the remainder.
 The way we implemented this form of attempting to improve results was through 
 a well known algorithm named Rocchio algorithm.
 
-.............. explain rocchio ..............
+Rocchio was developed using the Vector Space Model like many other relevance feedback approaches. Descending from the SMART Information Retrieval System, the algorithm assumes that most users have a general conception of which documents should be denoted as relevant or non-relevant. With this information in mind, a improvement over the classic score values calculation is proposed by following the formula:
 
-\newpage
+\begin{equation}
+  \vec{q}_{m} = \alpha\vec{q}_{0} + \beta\frac{1}{|D_{r}|} \sum_{ \vec{d}_{j} \in D_{r}} \vec{d}_{j} - \gamma\frac{1}{|D_{nr}|} \sum_{ \vec{d}_{j} \in D_{nr}} \vec{d}_{j}
+\end{equation}
+
+Where $\vec{q}_{0}$ is the original query vector, i.e., the weights of each term in the query, that in our context, with the simplification is $1*idf$, the $D_{r}$ is the list of known relevant documents and $D_{nr}$ is the list of known non-relevant documents; finally $\alpha, \beta, \gamma$ are parameters that can be fine tunned by the user to improve the performance of the algorithm. Developing a bit the formula we end up with the addition of three vectors, the original query, the sum of all relevant document vectors and the sum of all nun-relevant vectors, which when applying the formula and summing all the values of the resulting vector we achieve the new score of the document.
+
+Taking a closer look on what the algorithm attempts to do, in a first analysis it appears to do the same for all documents, which could translate in maintaining the relations between then, but it's from our understanding that although thats true, referring to the vector space model that the algorithm has its base that what's really happening is that the algorithm is trying to shift the query closer to the relevant documents by the addition of its middle point ($\frac{1}{|D_{r}|} \sum_{ \vec{d}_{j} \in D_{r}} \vec{d}_{j}$) and distance it from the non-relevant documents through the substation of its middle point ($\frac{1}{|D_{nr}|} \sum_{ \vec{d}_{j} \in D_{nr}} \vec{d}_{j}$). This algorithm had a considerable impact in our system, which will be further explained in section \ref{results} and section \ref{discussion}.
+
+We decided to implement 2 distinct approaches of providing feedback, i.e., the relevant and non-relevant documents to the algorithm. The first was a simulation of the user feedback and the other was a pseudo feedback. To achieve the first strategy we executed the information retrieval normally, obtaining the best results our system could supply and compared the obtained top K results with the gold standard supplied to us. From those, the results that checked with the gold standard were considered as relevant documents and the remaining as irrelevant; this information was partially processed and persisted in files to make its further usage easier. A similar process was made to the pseudo feedback, being this one quite simpler since it only considers the relevant documents and defines them by selecting the top K values returned.
+
+A Python script was developed to perform all this automatically, and being an auxiliary function we didn't took in consideration the execution time nor the memory usage, since the values it produces should ideally, in a real world situation, be selected and verified in a more controlled and reliable way.
+
+\subsection{Memory Management} \label{memory}
+When developing our searcher we decided to implement an intelligent memory usage strategy to take advantage of the unused memory that the system has available. By storing the terms and the respective champions needed to answer the queries performed in the system, as well as the number of times the term is used, we can manage which terms and documents are in memory and which ones should we maintain, which theoretically should be the most important ones.
+
+The workflow that we adopted consisted in if the program has memory available it will store the terms used to answer the query being processed and the respective champion lists. If the system detects that the memory limit is close to be surpassed, the internal cache is cleaned, leaving only one forth of what was originally there, being that one forth the most used terms until then. This insures that the most relevant terms are probably in memory and consequently will decrease the execution time, due to less I/O operations.  After cleaning the internal cache the process verifies that memory was freed and continues writing the terms used which may become the new most used terms.
+
 \section{Evaluation and Results Discussion}
 
 In order to evaluate the quality of our solutions, with and without relevance 
@@ -221,11 +250,11 @@ Following the same logical line of thought of the previous metric, the lower
 this number is the better, since it means that more queries can be processed in 
 less time.
 
-\subsection{Results}
+\subsection{Results}\label{results}
 
 Lorem ipsum ...
 
-\subsection{Discussion}
+\subsection{Discussion}\label{discussion}
 
 Lorem ipsum ...
 
@@ -238,7 +267,7 @@ Lorem ipsum ...
 After completing the assignment, we drew a few conclusions regarding our
 solutions and the whole concept of ...........
 
-The biggest challenge we faced was .........
+The biggest challenge we faced was ......... rocchio, memory
 
 From this assignment, we take ........
 
