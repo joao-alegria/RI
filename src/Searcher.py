@@ -15,6 +15,7 @@ class Searcher(ABC):
     Abstract class that serves as template and interface for future instances and implementations.
 
     """
+
     def __init__(self, positionCalc, tokenizer, limit, inputFolder, maximumRAM=None, feedback=None, n=None, k=None, rocchioWeights=[]):
         """
         Class constructor
@@ -26,7 +27,7 @@ class Searcher(ABC):
         self.positionCalc = positionCalc
         self.feedback = feedback
         self.rocchioWeights = rocchioWeights
-        
+
         self.scores = {}
         self.internalcache = {}
         self.k = k
@@ -39,7 +40,7 @@ class Searcher(ABC):
         inputFiles = os.listdir(inputFolder)
         for f in inputFiles:
             self.files.append(f)
-        
+
         translationFile = open("../indexMetadata.txt")
         self.translations = []
         for line in translationFile:
@@ -63,7 +64,8 @@ class IndexSearcher(Searcher):
         """
         Class constructor
         """
-        super().__init__(positionCalc, tokenizer, limit, inputFolder, maximumRAM, feedback, n, k, rocchioWeights)
+        super().__init__(positionCalc, tokenizer, limit, inputFolder,
+                         maximumRAM, feedback, n, k, rocchioWeights)
         self.requiredFiles = None
         self.max = 0
 
@@ -93,20 +95,21 @@ class IndexSearcher(Searcher):
                             self.requiredFiles[file].append(t)
                         break
 
-    def calculateScores(self,queryIdx=None):
-        for f, v in self.requiredFiles.items(): # for each required file
-            if f == "_cached_": # if file is in cache
-                for t in v: 
+    def calculateScores(self, queryIdx=None):
+        for f, v in self.requiredFiles.items():  # for each required file
+            if f == "_cached_":  # if file is in cache
+                for t in v:
                     self.internalcache[t][0] += 1
                     if self.internalcache[t][0] > self.max:
                         self.max = self.internalcache[t][0]
-                    if self.feedback=="pseudo":
+                    if self.feedback == "pseudo":
                         assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
-                        pseudoFeedbackFile = open("../pseudoFeedback/" + str(self.n) + ".txt","r")
+                        pseudoFeedbackFile = open(
+                            "../pseudoFeedback/" + str(self.n) + ".txt", "r")
                         for feedbackLine in pseudoFeedbackFile:
                             content = feedbackLine.split(":")
                             qIdx = int(content[0])
-                            if queryIdx==qIdx:
+                            if queryIdx == qIdx:
                                 alpha = self.rocchioWeights[0]
                                 beta = self.rocchioWeights[1]
                                 #gamma = self.rocchioWeights[2]
@@ -117,20 +120,28 @@ class IndexSearcher(Searcher):
                                 for c in self.internalcache[t][2]:
                                     docID = int(c.split(":")[0])
                                     weight = c.split(":")[1]
-                                    s = float(weight) * self.internalcache[t][1] # float(weight) * curIdf
+                                    # float(weight) * curIdf
+                                    s = float(weight) * \
+                                        self.internalcache[t][1]
                                     if self.translations[docID-1] not in self.scores.keys():
-                                        self.scores[self.translations[docID-1]] = alpha*s # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                        # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                        self.scores[self.translations[docID-1]
+                                                    ] = alpha*s
                                     else:
-                                        self.scores[self.translations[docID-1]] += alpha*s # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                        # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                        self.scores[self.translations[docID-1]
+                                                    ] += alpha*s
                                     if relevantDocsSize != 0.0:
-                                        self.scores[self.translations[docID-1]] += beta*(1/relevantDocsSize)*relevantSumDj
-                    elif self.feedback=="user":
+                                        self.scores[self.translations[docID-1]
+                                                    ] += beta*(1/relevantDocsSize)*relevantSumDj
+                    elif self.feedback == "user":
                         assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
-                        userFeedbackFile = open("../userFeedback/" + str(self.n) + ".txt","r")
+                        userFeedbackFile = open(
+                            "../userFeedback/" + str(self.n) + ".txt", "r")
                         for feedbackLine in userFeedbackFile:
                             content = feedbackLine.split(":")
                             qIdx = int(content[0])
-                            if queryIdx==qIdx:
+                            if queryIdx == qIdx:
                                 alpha = self.rocchioWeights[0]
                                 beta = self.rocchioWeights[1]
                                 gamma = self.rocchioWeights[2]
@@ -141,24 +152,32 @@ class IndexSearcher(Searcher):
                                 for c in self.internalcache[t][2]:
                                     docID = int(c.split(":")[0])
                                     weight = c.split(":")[1]
-                                    s = float(weight) * curIdf
+                                    s = float(weight) * \
+                                        self.internalcache[t][1]
                                     if self.translations[docID-1] not in self.scores.keys():
-                                        self.scores[self.translations[docID-1]] = alpha*s
+                                        self.scores[self.translations[docID-1]
+                                                    ] = alpha*s
                                     else:
-                                        self.scores[self.translations[docID-1]] += alpha*s
+                                        self.scores[self.translations[docID-1]
+                                                    ] += alpha*s
                                     if relevantDocsSize != 0.0:
-                                        self.scores[self.translations[docID-1]] += beta*(1/relevantDocsSize)*relevantSumDj
+                                        self.scores[self.translations[docID-1]
+                                                    ] += beta*(1/relevantDocsSize)*relevantSumDj
                                     if irrelevantDocsSize != 0.0:
-                                        self.scores[self.translations[docID-1]] -= gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                        self.scores[self.translations[docID-1]] -= gamma * \
+                                            (1/irrelevantDocsSize) * \
+                                            irrelevantSumDj
                     else:
                         for c in self.internalcache[t][2]:
                             docID = int(c.split(":")[0])
                             weight = c.split(":")[1]
                             if self.translations[docID-1] not in self.scores.keys():
-                                self.scores[self.translations[docID-1]] = float(weight) * self.internalcache[t][1]
+                                self.scores[self.translations[docID-1]
+                                            ] = float(weight) * self.internalcache[t][1]
                             else:
-                                self.scores[self.translations[docID-1]] += float(weight) * self.internalcache[t][1]
-            else: # if file is not in cache
+                                self.scores[self.translations[docID-1]
+                                            ] += float(weight) * self.internalcache[t][1]
+            else:  # if file is not in cache
                 for line in open(self.inputFolder+f):
                     line = line.strip().split(";")[:self.k+1]
                     curTerm = line[0].split(":")[0]
@@ -174,13 +193,14 @@ class IndexSearcher(Searcher):
                             self.internalcache = dict(
                                 self.internalcache[:round(len(self.internalcache)/4)])
 
-                        if self.feedback=="pseudo":
+                        if self.feedback == "pseudo":
                             assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
-                            pseudoFeedbackFile = open("../pseudoFeedback/" + str(self.n) + ".txt","r")
+                            pseudoFeedbackFile = open(
+                                "../pseudoFeedback/" + str(self.n) + ".txt", "r")
                             for feedbackLine in pseudoFeedbackFile:
                                 content = feedbackLine.split(":")
                                 qIdx = int(content[0])
-                                if queryIdx==qIdx:
+                                if queryIdx == qIdx:
                                     alpha = self.rocchioWeights[0]
                                     beta = self.rocchioWeights[1]
                                     #gamma = self.rocchioWeights[2]
@@ -193,18 +213,24 @@ class IndexSearcher(Searcher):
                                         weight = c.split(":")[1]
                                         s = float(weight) * curIdf
                                         if self.translations[docID-1] not in self.scores.keys():
-                                            self.scores[self.translations[docID-1]] = alpha*s # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                            # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                            self.scores[self.translations[docID-1]
+                                                        ] = alpha*s
                                         else:
-                                            self.scores[self.translations[docID-1]] += alpha*s # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                            # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                            self.scores[self.translations[docID-1]
+                                                        ] += alpha*s
                                         if relevantDocsSize != 0.0:
-                                            self.scores[self.translations[docID-1]] += beta*(1/relevantDocsSize)*relevantSumDj
-                        elif self.feedback=="user":
+                                            self.scores[self.translations[docID-1]] += beta*(
+                                                1/relevantDocsSize)*relevantSumDj
+                        elif self.feedback == "user":
                             assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
-                            userFeedbackFile = open("../userFeedback/" + str(self.n) + ".txt","r")
+                            userFeedbackFile = open(
+                                "../userFeedback/" + str(self.n) + ".txt", "r")
                             for feedbackLine in userFeedbackFile:
                                 content = feedbackLine.split(":")
                                 qIdx = int(content[0])
-                                if queryIdx==qIdx:
+                                if queryIdx == qIdx:
                                     alpha = self.rocchioWeights[0]
                                     beta = self.rocchioWeights[1]
                                     gamma = self.rocchioWeights[2]
@@ -217,31 +243,38 @@ class IndexSearcher(Searcher):
                                         weight = c.split(":")[1]
                                         s = float(weight) * curIdf
                                         if self.translations[docID-1] not in self.scores.keys():
-                                            self.scores[self.translations[docID-1]] = alpha*s
+                                            self.scores[self.translations[docID-1]
+                                                        ] = alpha*s
                                         else:
-                                            self.scores[self.translations[docID-1]] += alpha*s 
+                                            self.scores[self.translations[docID-1]
+                                                        ] += alpha*s
                                         if relevantDocsSize != 0.0:
-                                            self.scores[self.translations[docID-1]] += beta*(1/relevantDocsSize)*relevantSumDj
+                                            self.scores[self.translations[docID-1]] += beta*(
+                                                1/relevantDocsSize)*relevantSumDj
                                         if irrelevantDocsSize != 0.0:
-                                            self.scores[self.translations[docID-1]] -= gamma*(1/irrelevantDocsSize)*irrelevantSumDj
+                                            self.scores[self.translations[docID-1]] -= gamma*(
+                                                1/irrelevantDocsSize)*irrelevantSumDj
                         else:
                             for c in line[1:]:  # champions list of size k
                                 docID = int(c.split(":")[0])
                                 weight = c.split(":")[1]
                                 if self.translations[docID-1] not in self.scores.keys():
-                                    self.scores[self.translations[docID-1]] = float(weight) * curIdf
+                                    self.scores[self.translations[docID-1]
+                                                ] = float(weight) * curIdf
                                 else:
-                                    self.scores[self.translations[docID-1]] += float(weight) * curIdf
+                                    self.scores[self.translations[docID-1]
+                                                ] += float(weight) * curIdf
                         if len(v) <= 0:
                             break
 
     def sortAndWriteResults(self, outputFile):
         self.curFile = None
         self.curIdx = 0
-        self.scores = sorted(self.scores.items(), key=lambda kv: kv[1], reverse=True)
+        self.scores = sorted(self.scores.items(),
+                             key=lambda kv: kv[1], reverse=True)
         outputFile = open(outputFile, "w")
         for (PMID, score) in self.scores[:self.limit]:
-            outputFile.write(str(PMID) + ", " + str(round(score,2)) + "\n")
+            outputFile.write(str(PMID) + ", " + str(round(score, 2)) + "\n")
         outputFile.close()
         self.scores = {}
         return
