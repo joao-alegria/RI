@@ -70,7 +70,7 @@ def main(argv):
         print(HELP)
         return 1
 
-    if args == [] or (len(args) != 2 and len(args) != 5):
+    if args == [] or (len(args) != 2 and len(args) != 4 and len(args) != 5):
         print(HELP)
         return 2
 
@@ -112,20 +112,22 @@ def main(argv):
             limit = int(arg)
 
     if feedback:
-        assert len(
-            args) >= 5, "Error: if you want to use feedback, please insert alpha, beta and gamma as well"
-        rocchioWeights.append(float(args[2]))
-        rocchioWeights.append(float(args[3]))
-        rocchioWeights.append(float(args[4]))
+        if feedback=="pseudo":
+            assert len(args) == 4, "Error: if you want to use pseudo feedback, please insert alpha and beta as well"
+            rocchioWeights.append(float(args[2]))
+            rocchioWeights.append(float(args[3]))
+            #rocchioWeights.append(float(args[4]))
+        else:
+            assert len(args) == 5, "Error: if you want to use user feedback, please insert alpha, beta and gamma as well"
+            rocchioWeights.append(float(args[2]))
+            rocchioWeights.append(float(args[3]))
+            rocchioWeights.append(float(args[4]))
 
     # taking in account the choosen tokenizer, the respective data flow is created
     if tokenizer == "simple":
-
-        assignment3(positionCalc, outputFile, Tokenizer.SimpleTokenizer(
-        ), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
+        assignment3(positionCalc, outputFile, Tokenizer.SimpleTokenizer(), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
     else:  # 'complex' = default tokenizer
-        assignment3(positionCalc, outputFile, Tokenizer.ComplexTokenizer(
-        ), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
+        assignment3(positionCalc, outputFile, Tokenizer.ComplexTokenizer(), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
 
     return 0
 

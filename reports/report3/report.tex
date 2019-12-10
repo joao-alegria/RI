@@ -75,8 +75,21 @@ The second strategy is the concatenation of both fields and the processing of th
 The implementation strategy that we used to accept the abstract in our index was the second approach, the simple concatenation of the title with the abstract, since in our context the position where the terms occurred was not necessary. This enabled us to process both at the same time without changing anything in the already created indexing pipeline. This new feature, as already mentioned, needs significantly more computation power, which is confirmed from the fact that previously the indexing process of the entire corpus took approximately 20 minutes, while with the abstract takes close to 80 minutes, a 4 fold increase that was to be expected since the text to process in this iteration is also close to 4 times larger.
 
 \section{Ranked Retrieval of Relevant Documents}
+With an entirely functional index creator and a folder of generated indexes from
+the corpus of text documents, it was now time to develop a program capable of
+interpreting queries and returning the index entries most relevant to them.
+In this chapter we describe our implementation of a query results ranked retriever
+- that we called \texttt{Searcher} -, explain how we prepared it for memory 
+limitations and present the updates done to our class diagram.
 
-....................
+The file \texttt{Searcher.py} contains an abstract class called \texttt{Searcher}
+that serves as a template for the implementations of results retriever classes.
+For our purposes, we developed \texttt{IndexSearcher}, a class that extends from
+the abstract template and is capable of selecting which index files will be 
+required to answer a given query, assigning scores to documents from the index
+and returning the documents considered most relevant to the query according to 
+these scores.
+
 
 \section{Evaluation and Results Discussion}
 After calculating the relevant documents for each query, a assortment of performance metrics were calculated. The metrics chosen for this purpose was Precision, Recall, F-Measure, Mean Precision at rank 10, Mean Precision, Normalized Discounted Cumulative Gain as well as all the averages in between the queries performed for all the previous metrics. Time related metrics were also obtained, such as Query Throughput and Median Query Latency, for these we choose to use an auxiliary linux command line program called \textit{time}, which is able to summarize the system resources needed to run a specific program.
