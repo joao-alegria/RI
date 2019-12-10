@@ -148,6 +148,12 @@ a well known algorithm named Rocchio algorithm.
 
 .............. explain rocchio ..............
 
+\begin{figure}[h!]
+\includegraphics[width=\linewidth]{ClassDiagram_assign3.png}
+\caption{Program's class diagram.}
+\label{fig:classdiagram}
+\end{figure}
+
 \newpage
 \section{Evaluation and Results Discussion}
 
@@ -223,11 +229,102 @@ less time.
 
 \subsection{Results}
 
-Lorem ipsum ...
+The tests phase of the project was conducted with the help of \texttt{QueryIndex}
+to execute the ranked retrievals and \texttt{QueryAnalyzer} to evaluate the results.
+They considered the original dataset indexed with the updates mentioned in chapter 
+1 and all 50 given queries.
+
+\texttt{QueryIndex.py} works as the script that creates an instance of the 
+\texttt{IndexSearcher} and, for each query, tells it to retrieve the best results.
+The command works as follows:
+
+\begingroup
+\addtolength\leftmargini{-0.4in}
+\addtolength\baselineskip{-0.05in}
+\begin{quote}
+\begin{verbatim}
+$ python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] 
+  [-r limitRAM] [-f feedback] [-n n] [-k k] [-l limit] queryFile 
+  indexFolder [a b g]
+\end{verbatim}
+\end{quote}
+\endgroup
+
+Here, \texttt{-h} is the option that presents the manual for the command usage.
+Option \texttt{-p}, if present, tell the program that the index has the positions
+of each term in each document along with the weights.
+Option \texttt{-o} allows the definition of the output folder's name where the
+results will be stored.
+Option \texttt{-t} makes possible for the user to choose the type of tokenizer
+to be used, and the alternatives are: 'simple' for the use of the 
+\texttt{SimpleTokenizer} class, and 'complex' for the \texttt{ComplexTokenizer} class.
+The chosen tokenizer must be the same used when indexing the text corpus.
+Option \texttt{-r} allows the user to define the maximum amount of memory that can
+be used by the process running the program.
+Option \texttt{-f} makes possible for the user to choose a form of relevance 
+feedback, so that there is a greater assurance that the returned documents are
+actually relevant to the query.
+The alternatives are: 'pseudo' and 'user'.
+Options \texttt{-n}, \texttt{-k} and \texttt{-l} allow the definition of the 
+number of retrieved documents considered for the Rocchio algorithm (applyed in
+the relevance feedback), the size of the champions list and the number of scores
+to return (to store in the output files).
+The previous arguments are all optional and the actual values for these arguments
+must appear right after the respective options.
+\texttt{QueryFile} and \texttt{indexFolder} are the only obligatory parameters,
+as they tell the program where are the queries and the index files.
+\texttt{A}, \texttt{b} and \texttt{g} are optional parameters that must be defined
+if the relevance feedback is activated (if \texttt{-f} and \texttt{-n} are also
+defined), as they correspond to the Rocchio algorithm's parameters alpha, beta
+and gamma.
+
+We executed \texttt{QueryIndex.py} for different combinations of parameters to
+ensure its correct functioning and to search for the configuration with highest 
+performances.
+It was initially tested with indexes with positions and both types of tokenizers, 
+although the remaining tests were all using only weights to reduce execution times
+and only the complex tokenizer to remove noise and increase precision.
+Then we tested the program with and without champions list (although this was
+not done through the command's parameters) and for champions lists of different sizes.
+Following we also varied the number of documents the program returned.
+And finally we tested the program with relevance feedback, with both pseudo and
+simulated user feedbacks, and with different Rocchio parameters values.
+
+The presence of the champions list seemed to have no relevant impact on the 
+overall performance, with the tests at the time rounding the 19\% of precision
+(with a champions list of size 10 000).
+This feature was important for the execution times, as it reduced the search 
+space of the program for each query without loosing valuable information.
+What we later understood was that, if its size was reduced, the lost of useful
+information and relevant documents started to have a big inpact on the performance,
+as for a list of size 1000 the precision dropped to about 16\%.
+
+With the champions list at size 10 000, we tried to reduce the number of results
+returned from 100 to 50, 20 and 10. 
+The later reached a precision of 26\%, which was good news to us.
+
+Although pseudo feedback was also part of our tests, we new \textit{a priori} 
+that this would not influence the results at all, since it assumed that the first
+results the program already considered more relevant were in fact relevant and 
+increased their final scores.
+User feedback, on the other hand, proved to have great value when tested.
+.............................
+
+
+
+
+
+
 
 \subsection{Discussion}
 
 Lorem ipsum ...
+
++ champions list = + precision
+user feedback = + precision
++ results returned = - precision
+
+low recall is normal since we return X and X can be a very small group compared to the entire universe of documents
 
 \subsection{Implementation Limitations}
 

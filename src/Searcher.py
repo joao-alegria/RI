@@ -29,7 +29,7 @@ class Searcher(ABC):
         self.rocchioWeights = rocchioWeights
 
         self.scores = {}
-        self.internalcache = {}
+        self.internalCache = {}
         self.k = k
         self.n = n
         self.limit = limit
@@ -51,11 +51,9 @@ class Searcher(ABC):
     def retrieveRequiredFiles(self, query):
         print("Searching...")
 
-    def clearVar(self):
-        """
-        Function that frees the memory currently in use by emptying all class variables.
-        """
-        self.files = None
+    @abstractmethod
+    def calculateScores(self, queryIdx=None):
+        return
 
 
 class IndexSearcher(Searcher):
@@ -83,7 +81,7 @@ class IndexSearcher(Searcher):
         # find the index files required
         self.requiredFiles = {"_cached_": []}
         for t in self.tokenizer.tokens:
-            if t in self.internalcache:
+            if t in self.internalCache:
                 self.requiredFiles["_cached_"].append(t)
             else:
                 for file in self.files:
@@ -99,9 +97,9 @@ class IndexSearcher(Searcher):
         for f, v in self.requiredFiles.items():  # for each required file
             if f == "_cached_":  # if file is in cache
                 for t in v:
-                    self.internalcache[t][0] += 1
-                    if self.internalcache[t][0] > self.max:
-                        self.max = self.internalcache[t][0]
+                    self.internalCache[t][0] += 1
+                    if self.internalCache[t][0] > self.max:
+                        self.max = self.internalCache[t][0]
                     if self.feedback == "pseudo":
                         assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                         pseudoFeedbackFile = open(
@@ -117,12 +115,12 @@ class IndexSearcher(Searcher):
                                 relevantSumDj = float(content[2])
                                 #irrelevantDocsSize = int(content[3])
                                 #irrelevantSumDj = float(content[4])
-                                for c in self.internalcache[t][2]:
+                                for c in self.internalCache[t][2]:
                                     docID = int(c.split(":")[0])
                                     weight = c.split(":")[1]
                                     # float(weight) * curIdf
                                     s = float(weight) * \
-                                        self.internalcache[t][1]
+                                        self.internalCache[t][1]
                                     if self.translations[docID-1] not in self.scores.keys():
                                         # + beta*(1/relevantDocsSize)*relevantSumDj - gamma*(1/irrelevantDocsSize)*irrelevantSumDj
                                         self.scores[self.translations[docID-1]
@@ -149,11 +147,11 @@ class IndexSearcher(Searcher):
                                 relevantSumDj = float(content[2])
                                 irrelevantDocsSize = int(content[3])
                                 irrelevantSumDj = float(content[4])
-                                for c in self.internalcache[t][2]:
+                                for c in self.internalCache[t][2]:
                                     docID = int(c.split(":")[0])
                                     weight = c.split(":")[1]
                                     s = float(weight) * \
-                                        self.internalcache[t][1]
+                                        self.internalCache[t][1]
                                     if self.translations[docID-1] not in self.scores.keys():
                                         self.scores[self.translations[docID-1]
                                                     ] = alpha*s
@@ -168,15 +166,15 @@ class IndexSearcher(Searcher):
                                             (1/irrelevantDocsSize) * \
                                             irrelevantSumDj
                     else:
-                        for c in self.internalcache[t][2]:
+                        for c in self.internalCache[t][2]:
                             docID = int(c.split(":")[0])
                             weight = c.split(":")[1]
                             if self.translations[docID-1] not in self.scores.keys():
                                 self.scores[self.translations[docID-1]
-                                            ] = float(weight) * self.internalcache[t][1]
+                                            ] = float(weight) * self.internalCache[t][1]
                             else:
                                 self.scores[self.translations[docID-1]
-                                            ] += float(weight) * self.internalcache[t][1]
+                                            ] += float(weight) * self.internalCache[t][1]
             else:  # if file is not in cache
                 for line in open(self.inputFolder+f):
                     line = line.strip().split(";")[:self.k+1]
@@ -185,13 +183,13 @@ class IndexSearcher(Searcher):
                         v.remove(curTerm)
                         curIdf = float(line[0].split(":")[1])
                         if self.isMemoryAvailable():
-                            self.internalcache[curTerm] = [1, curIdf, line[1:]]
+                            self.internalCache[curTerm] = [1, curIdf, line[1:]]
                         else:
-                            # self.internalcache = {k: v for k, v in self.internalcache.items() if v[0] >= self.max-(self.max/4)}
-                            self.internalcache = sorted(
-                                self.internalcache.items(), key=lambda tup: tup[1][0], reverse=True)
-                            self.internalcache = dict(
-                                self.internalcache[:round(len(self.internalcache)/4)])
+                            # self.internalCache = {k: v for k, v in self.internalCache.items() if v[0] >= self.max-(self.max/4)}
+                            self.internalCache = sorted(
+                                self.internalCache.items(), key=lambda tup: tup[1][0], reverse=True)
+                            self.internalCache = dict(
+                                self.internalCache[:round(len(self.internalCache)/4)])
 
                         if self.feedback == "pseudo":
                             assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
@@ -278,12 +276,6 @@ class IndexSearcher(Searcher):
         outputFile.close()
         self.scores = {}
         return
-
-    def clearVar(self):
-        """
-        Function that frees the memory currently in use by emptying all class variables.
-        """
-        self.files = None
 
     def isMemoryAvailable(self):
         """
