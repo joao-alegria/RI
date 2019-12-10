@@ -15,7 +15,7 @@ tokenizer = Tokenizer.ComplexTokenizer()
 limit = 100
 maximumRAM = None
 feedback = None
-N = [5]#,10,20]
+N = [10]#,10,20]
 k = 10000
 rocchioWeights = []
 
