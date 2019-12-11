@@ -133,7 +133,7 @@ class IndexSearcher(Searcher):
                     if self.feedback == "pseudo":
                         assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                         pseudoFeedbackFile = open(
-                            "../pseudoFeedback/" + str(self.rocchioScope) + ".txt", "r")
+                            "../pseudoFeedback/" + str(self.rocchioScope) + ".txt")
                         for feedbackLine in pseudoFeedbackFile:
                             content = feedbackLine.split(":")
                             qIdx = int(content[0])
@@ -165,7 +165,7 @@ class IndexSearcher(Searcher):
                     elif self.feedback == "user":
                         assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                         userFeedbackFile = open(
-                            "../userFeedback/" + str(self.rocchioScope) + ".txt", "r")
+                            "../userFeedback/" + str(self.rocchioScope) + ".txt")
                         for feedbackLine in userFeedbackFile:
                             content = feedbackLine.split(":")
                             qIdx = int(content[0])
@@ -310,7 +310,7 @@ class IndexSearcher(Searcher):
         outputFile = open(outputFile, "w")
         for (PMID, score) in self.scores[:self.limit]:
             outputFile.write(str(PMID) + ", " +
-                             str(round(score, 2)) + "\rocchioScope")
+                             str(round(score, 2)) + "\n")
         outputFile.close()
         self.scores = {}
         return

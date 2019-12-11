@@ -8,6 +8,7 @@
 \usepackage{enumitem}
 \usepackage{amsmath}
 \usepackage[utf8]{inputenc}
+\usepackage{longtable}
 
 \topmargin -1.5cm
 \oddsidemargin 0.0cm
@@ -202,7 +203,7 @@ Once the scores are found, \textit{sortAndWriteResults()} does what its name
 suggests: sorts the documents by score and writes to a results file the first 
 \texttt{limit} documents, where \texttt{limit} is passed as argument.
 
-\subsection{Relevance Feedback}
+\subsection{Relevance Feedback}\label{rocchio}
 
 We knew \texttt{IndexSearcher} was a very limited solution, as it considers 
 documents as relevant only for the presence of query terms in their titles 
@@ -318,7 +319,7 @@ In this chapter we explain the metrics used to evaluate the implemented ranked
 retrieval, present the results of our evaluation and our discussion regarding 
 them and attempt to understand what exactly are the solutions limitations.
 
-\subsection{Evaluation Metrics}
+\subsection{Evaluation Metrics} \label{metrics}
 
 Precision and recall are one of the most used metrics in information retrieval.
 The first is characterized by dividing the correct retrieved documents by the 
@@ -465,7 +466,7 @@ To do this, we fixed \texttt{n} at 10 and tested the 3 parameters for values
 between 0 and 1.
 The values with the best precision were \texttt{$\alpha$ = 1.0}, 
 \texttt{$\beta$ = 1.0} and \texttt{$\gamma$ = 0.1}, with a final precision of 31\%.
-Table ......... (located at the end of this document) presents the queries results
+Table \ref{tab:tab1} (located at the end of this document) presents the queries results
 and statistics of the best performance achieved for further analysis.
 
 \subsection{Discussion}\label{discussion}
@@ -481,20 +482,16 @@ the final performance is as it is.
 The reason why champions lists reduce execution times has already been slightly 
 discussed. 
 This is mainly due to the fact that, before executing any computation on the index,
-a cheap verification is done to determine whether it is worth executing them, so
+a resize of the search space is done to discard irrelevant documents while maintains the ones that are considered more relevant, so
 it makes sense that, if a sufficient amount of unnecessary computations are avoided,
 the time required to answer a query is significantly reduced.
-The key aspect here is the condition that determines whether de calculation must 
-be done or not and the goal is to avoid loosing relevant information as much as
-possible while speeding up the retrieval process.
 This is also why champion lists too small have a negative impact on the overall 
 performance, since they have a higher probability of discarding index entries 
 that in reality would benefit the results.
 
 The fact that the number of results returned directly influences the results 
 precision is also relatively simple to understand.
-As the performance metrics are only applied to the returned documents, 
-.......................
+As the performance metrics are applied to the returned documents and compared against a set of documents previously defined as relevant, it's  necessary to understand in the first place that the gold standard provided were obtained and validated by humans. This aspect is quite important and drastically limits our capability of achieving higher precisions, aspect that will be further detailed in section \ref{limitations}. Nevertheless our system is still able to find relevant documents, being those place higher in the document return list as it should. When increasing the size of that list, it increases the probability of finding documents that our system considered relevant but in reality, when validated by humans may not be relevant at all.
 
 The way the user feedback through the rocchio algorithm works is: scores from 
 documents considered not relevant to a given query by users must be lowered and 
@@ -504,9 +501,10 @@ this feedback will have a positive influence on the program's precision because
 it gives the program "inside information" on what the user making the query is
 probably looking for.
 And the more documents considered on the algorithm, the more the results will 
-be closer to the truly relevant documents and further from the non relevant as 
+be closer to the truly relevant documents and further from the non relevant, as 
 more documents from the results are affected by this regulatory feature.
-.......................
+The best parameter combination found for the rocchio algorithm was $\alpha=1, \beta=1 and \gamma=0.1$. This makes sense since what those values try to convey is that the original query results are relevant, undeniable since it's the source of information for the information retrieval process. Secondly,  with $\beta=1$ it indicates that the values from the relevant document feedback is as relevant as the query, which makes sense since it's know a priori that those documents are relevant for that query. Lastly with $\gamma=0.1$ shows that the irrelevant results need to be considered but considerably less than the positive information.
+Referring to section \ref{rocchio} it's easy to understand that those values make sense based on the Vector Space Model, where the intention is to allow the shift of the query vector closer to the relevant documents with $\beta=1$ and try to distance then from the irrelevant documents but not as much as to distance it again from the relevant ones, hence the $\gamma=0.1$.
 
 In our analysis we only mention precision as a means of determining whether 
 the variation of parameters was good or bad, but in reality our observations 
@@ -516,36 +514,12 @@ Nevertheless, we reached a few conclusions regarding other performance metrics
 worth mentioning.
 
 A low recall is common amongst all tests and, at first sight, it seems a bad sign.
-However, it is actually expected to be low, since the amount of returned documents
+However, it is actually expected to be low, since in many cases the amount of returned documents
 is usually very low compared to the entire list of documents from the index.
 
-.......................
+Another curious conclusion taken from our tests was the values obtained by the Normalized Discounted Cumulative Gain which as already explained in section \ref{metrics}, in summary represents how well the ordering of our results were presented, being the most relevant documents ideally present higher in the document list. Although not perfect, it was quite interesting to see that our ordering was acceptable, which we didn't expect from the poor precision values obtained.
 
-Precision
-
-Explain why:
-
-X champions list reduces execution time
-
-X champion lists too small have worst precision
-
-- the less results are returned the higher the precision
-
-X simulated user feedback increased precision
-
-X the more documents considered on the rocchio algorithm the higher the precision
-
-- some rocchio parameters values result in higher precision
-
-Other Observations
-
-Explain why:
-
-X low recall is expected  entire universe of documents)
-
-- .....
-
-\subsection{Implementation Limitations}
+\subsection{Implementation Limitations} \label{limitations}
 
 So far we have explored ways of improving the program's performance through
 limited, although relevant, strategies.
@@ -563,7 +537,7 @@ However, we kept their sizes as they were as we considered them more realistic
 than reducing them to small amounts of Mb.
 The amount of memory available also naturally influences execution time.
 We found that, without memory restrictions, the minimum amount of memory required 
-for retrievals to work reasonably well is 500Mb.
+for retrievals to work reasonably well is only 500Mb, taking in consideration that the index process was made with 2Gb of memory space.
 Adding restrictions slows down retrieval but makes the program capable of managing
 the used memory to lower values.
 
@@ -589,7 +563,6 @@ in a smart, automatic and adaptive way.
 This is only achievable if a lot of data to analyse is available, and is a technique
 very much explored by large search engines.
 
-\newpage
 \section{Conclusions}
 
 After completing the assignment, we drew a few conclusions regarding our
@@ -641,6 +614,73 @@ careful and find that the delivered code is properly presented to any developer.
 \end{thebibliography}
 
 \clearpage
+
+\appendix
+\section*{Appendix}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{longtable}
+% Note: It may be necessary to compile the document several times to get a multi-page table to line up properly
+\begin{longtable}[c]{|l|l|l|l|l|l|l|}
+  \hline
+  Query & Precision & Recall & F1 & MeanPrecision & MeanPrecision@10 & NDCG \\ \hline
+  \endhead
+  %
+  1 & 0.50 & 0.06 & 0.11 & 0.80 & 0.80 & 1.00 \\ \hline
+  2 & 0.60 & 0.06 & 0.11 & 0.68 & 0.68 & 0.83 \\ \hline
+  3 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  4 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  5 & 0.10 & 0.04 & 0.06 & 0.00 & 0.00 & 0.50 \\ \hline
+  6 & 1.00 & 0.11 & 0.19 & 0.90 & 0.90 & 1.00 \\ \hline
+  7 & 0.80 & 0.07 & 0.13 & 0.80 & 0.80 & 0.86 \\ \hline
+  8 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  9 & 0.70 & 0.06 & 0.11 & 0.47 & 0.47 & 0.64 \\ \hline
+  10 & 1.00 & 0.75 & 0.86 & 0.67 & 0.67 & 1.00 \\ \hline
+  11 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  12 & 0.30 & 0.01 & 0.02 & 0.67 & 0.67 & 1.00 \\ \hline
+  13 & 0.10 & 0.04 & 0.06 & 0.00 & 0.00 & 0.32 \\ \hline
+  14 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  15 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  16 & 0.70 & 0.05 & 0.09 & 0.52 & 0.52 & 0.80 \\ \hline
+  17 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  18 & 1.00 & 1.00 & 1.00 & 0.00 & 0.00 & 1.00 \\ \hline
+  19 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  20 & 0.30 & 0.03 & 0.05 & 0.15 & 0.15 & 0.56 \\ \hline
+  21 & 0.50 & 0.06 & 0.11 & 0.71 & 0.71 & 0.86 \\ \hline
+  22 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  23 & 0.20 & 0.01 & 0.02 & 0.13 & 0.13 & 0.81 \\ \hline
+  24 & 1.00 & 0.38 & 0.56 & 0.90 & 0.90 & 0.84 \\ \hline
+  25 & 0.10 & 0.03 & 0.05 & 0.00 & 0.00 & 0.39 \\ \hline
+  26 & 0.80 & 0.17 & 0.28 & 0.63 & 0.63 & 0.85 \\ \hline
+  27 & 0.10 & 0.03 & 0.05 & 0.00 & 0.00 & 1.00 \\ \hline
+  28 & 0.20 & 0.15 & 0.17 & 0.25 & 0.25 & 0.75 \\ \hline
+  29 & 0.10 & 0.02 & 0.04 & 0.00 & 0.00 & 0.43 \\ \hline
+  30 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 0.30 \\ \hline
+  31 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  32 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  33 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  34 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  35 & 0.40 & 0.01 & 0.03 & 0.38 & 0.38 & 0.77 \\ \hline
+  36 & 0.80 & 0.03 & 0.06 & 0.58 & 0.58 & 0.82 \\ \hline
+  37 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  38 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  39 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  40 & 0.20 & 0.01 & 0.01 & 0.17 & 0.17 & 0.83 \\ \hline
+  41 & 1.00 & 0.02 & 0.03 & 0.90 & 0.90 & 0.89 \\ \hline
+  42 & 0.40 & 0.01 & 0.01 & 0.24 & 0.24 & 0.67 \\ \hline
+  43 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 1.00 \\ \hline
+  44 & 0.40 & 0.01 & 0.01 & 0.24 & 0.24 & 0.48 \\ \hline
+  45 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 1.00 \\ \hline
+  46 & 1.00 & 0.05 & 0.10 & 0.90 & 0.90 & 1.00 \\ \hline
+  47 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  48 & 0.60 & 0.04 & 0.07 & 0.44 & 0.44 & 0.75 \\ \hline
+  49 & 0.40 & 0.05 & 0.10 & 0.43 & 0.43 & 0.73 \\ \hline
+  50 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  Avg & 0.31 & 0.07 & 0.09 & 0.25 & 0.25 & 0.49 \\ \hline
+  \caption{Values for 10 documents, user feedback(1,1,0.1)}
+  \label{tab:tab1}\\
+  \end{longtable}
+
 
 \end{document}
 
