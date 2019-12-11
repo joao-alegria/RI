@@ -1,0 +1,50 @@
+src package
+===========
+
+Submodules
+----------
+
+
+
+src.FileParser module
+---------------------
+
+.. automodule:: src.FileParser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+
+src.Indexer module
+------------------
+
+.. automodule:: src.Indexer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.PersistIndex module
+-----------------------
+
+.. automodule:: src.PersistIndex
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.Tokenizer module
+--------------------
+
+.. automodule:: src.Tokenizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: src
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -136,6 +136,13 @@ In this chapter we describe our implementation of a query results ranked retriev
 We also explain how we prepared it for memory limitations and present the 
 updates done to our class diagram.
 
+\begin{figure}[h!]
+\includegraphics[width=\linewidth]{ClassDiagram_assign3.png}
+\caption{Program's class diagram.}
+\label{fig:classdiagram}
+\end{figure}
+
+\newpage
 \subsection{Document Ranked Scores}
 
 The file \texttt{Searcher.py} contains an abstract class called \texttt{Searcher}
@@ -144,6 +151,8 @@ For our purposes, we developed \texttt{IndexSearcher}, a class that extends from
 \texttt{Searcher} and is capable of selecting which index files are required to 
 answer a given query, assigning scores to indexed documents and returning those 
 considered most relevant to the query according to these scores.
+Figure \ref{fig:classdiagram} shows the diagram of all developed classes, 
+including those for index creation and those for querying.
 
 The step of determining which index files will be needed is done by 
 \textit{retrieveRequiredFiles()} and is basically a comparison of each query 
@@ -240,10 +249,11 @@ finally $\alpha$, $\beta$ and $\gamma$ are parameters that can be altered by the
 user to improve the performance of the algorithm. 
 
 Developing the formula we end up with the addition of three vectors: 
-the original query, the sum of all relevant document vectors and the sum of all 
-non-relevant vectors, which when applying the formula and summing all the values 
-of the resulting vector we achieve the new score of the document.
+the original query and the sums of all relevant and of all non-relevant document 
+vectors, which when applying the formula and summing all values of the resulting 
+vector we achieve the new document score.
 
+\newpage
 Taking a closer look at what the algorithm attempts to do, in a first analysis 
 it appears to do the same for all documents, which could translate in maintaining 
 the relations between them, but it's from our understanding that although true, 
@@ -291,15 +301,6 @@ This ensures that the most relevant terms are probably in memory and consequentl
 will decrease the execution time, due to less I/O operations. 
 After cleaning the internal cache the process verifies that memory was freed and 
 continues writing the terms used which may become the new most used terms.
-
-Below we present the diagram of all developed classes, including those for index 
-creation and those for index querying.
-
-\begin{figure}[h!]
-\includegraphics[width=\linewidth]{ClassDiagram_assign3.png}
-\caption{Program's class diagram.}
-\label{fig:classdiagram}
-\end{figure}
 
 \newpage
 \section{Evaluation and Results Discussion}
@@ -378,7 +379,8 @@ less time.
 
 The tests phase of the project was conducted with the help of \texttt{QueryIndex}
 to execute the ranked retrievals and \texttt{QueryAnalyzer} to evaluate the results.
-They considered the original dataset indexed with the updates mentioned in section \ref{updates} and all 50 given queries.
+They considered the original dataset indexed with the updates mentioned in section
+\ref{updates} and all 50 given queries.
 
 \texttt{QueryIndex.py} works as the script that creates an instance of the 
 \texttt{IndexSearcher} and, for each query, tells it to retrieve the best results.
@@ -407,7 +409,7 @@ Option \texttt{-r} allows the user to define the maximum amount of memory that c
 be used by the process running the program.
 Option \texttt{-f} makes possible for the user to choose a form of relevance 
 feedback, so that there is a greater assurance that the returned documents are
-actually relevant to the query.
+actually relevant to the query. 
 The alternatives are: 'pseudo' and 'user'.
 Options \texttt{-s}, \texttt{-c} and \texttt{-l} allow the definition of the 
 number of retrieved documents considered for the Rocchio algorithm (applied in
@@ -418,10 +420,10 @@ must appear right after the respective options.
 \texttt{QueryFile} and \texttt{indexFolder} are the only obligatory parameters,
 as they tell the program where are the queries and the index files.
 \texttt{A}, \texttt{b} and \texttt{g} are optional parameters that must be defined
-if the relevance feedback is activated (if \texttt{-f} and \texttt{-s} are also
-defined), as they correspond to the Rocchio algorithm's parameters $\alpha$,
-$\beta$ and $\gamma$.
+if the relevance feedback is activated (if \texttt{-f} and \texttt{-s} are defined), 
+as they correspond to Rocchio' parameters $\alpha$, $\beta$ and $\gamma$.
 
+\newpage
 We executed \texttt{QueryIndex.py} for different combinations of parameters to
 ensure its correct functioning and to search for the configuration with highest 
 performances.
@@ -463,13 +465,18 @@ To do this, we fixed \texttt{n} at 10 and tested the 3 parameters for values
 between 0 and 1.
 The values with the best precision were \texttt{$\alpha$ = 1.0}, 
 \texttt{$\beta$ = 1.0} and \texttt{$\gamma$ = 0.1}, with a final precision of 31\%.
-Table \ref{tab:tab1} (located at the end of this document) presents the performance metrics of the best combination achieved for further analysis.
+Table \ref{tab:tab1} (located at the end of this document) presents the performance 
+metrics of the best combination achieved for further analysis.
 Other tables are present in our repository for different number of results returned 
 and without relevance feedback.
-Finally the time related metrics. As already said query response time is very crucial, since the user wants instant results.
-Our implementation is able to respond to all 50 queries within 35 seconds if no memory restrictions are placed. Due to system fluctuations and memory restrictions to the system, it may reach 60 seconds of execution time, for example if the memory is restricted to 250Mb.
-This means that in general the system is capable of accomplishing a query throughput
-of 1.43 queries per second and a query latency of 0.7 seconds.
+Finally the time related metrics. 
+As already said query response time is very crucial, since the user wants instant results.
+Our implementation is able to respond to all 50 queries within 35 seconds if no 
+memory restrictions are placed. 
+Due to system fluctuations and memory restrictions to the system, it may reach 
+60 seconds of execution time, for example if the memory is restricted to 250Mb.
+This means that in general the system is capable of accomplishing a query 
+throughput of 1.43 queries per second and a query latency of 0.7 seconds.
 
 \subsection{Discussion}\label{discussion}
 
@@ -525,6 +532,7 @@ shift of the query vector closer to relevant documents with $\beta=1$ and distan
 them from the irrelevant documents but not so much as to distance them again 
 from the relevant ones, hence the $\gamma=0.1$.
 
+\newpage
 In our analysis we only mention precision as a means of determining whether 
 the variation of parameters was good or bad, but in reality our observations 
 are also verified by the other metrics, only their evolution is not as 
@@ -566,7 +574,16 @@ We found that, without memory restrictions, the minimum amount of memory require
 for retrievals to work reasonably well is only 500Mb, taking in consideration 
 that the index process was made with 2Gb of memory space.
 Adding restrictions slows down retrieval but makes the program capable of managing
-the used memory to lower values. Due ro the fact that our implementation was made using Python, when reading the index to find the documents that contain a certain term we need to read the entire line, since Python from our knowledge isn't capable of reading portions of a file line. With that in mind, although we implemented internal memory management we couldn't control that, making our process need at least 400 Mb of memory.
+the used memory to lower values. 
+
+One limitation we were not able to surpass was that, when reading a line from an 
+index file, although the content might only be partially stored in memory, the act
+of reading is anatomic and so if the line is large enough it might surpass the 
+defined memory restrictions.
+This issue is intrinsic to the programming language chosen and we did not find a 
+way to only partially read a line.
+For this reason, even if the memory is limited, we determined that the minimum 
+amount of RAM required was of 400Mb.
 
 There are some facts that explain why a high precision is never achieved.
 The first is the lack of consideration for synonym terms and similar and related 
@@ -606,12 +623,6 @@ As there was a need to ensure a minimum amount of available memory for the inter
 variables to be properly used and we wished to keep information from query to query,
 this process was not trivial and required a lot of brainstorming and code changes 
 to achieve its final version.
-One limitation we were not able to surpass was that, when reading a line from an 
-index file, although the content might only be partially stored in memory, the act
-of reading is anatomic and so if the line is large enough it might surpass the 
-defined memory restrictions.
-This issue is intrinsic to the programming language chosen and we did not find a 
-way to only partially read a line.
 
 From this assignment, we take a deeper understanding of the way search engines 
 and other information retrieval systems decide which elements can be considered
@@ -646,8 +657,6 @@ careful and find that the delivered code is properly presented to any developer.
     accessed in 12/2019.
   
 \end{thebibliography}
-
-\clearpage
 
 \appendix
 \section*{Appendix}
