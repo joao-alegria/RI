@@ -18,6 +18,8 @@ class PersistIndex(ABC):
     :type outputFolder: str
     :param indexer: instance of the indexer used in the context to create the corpus index
     :type indexer: Indexer
+    :param totalNumDocs: total number of documents needed if the weights need to be calculated
+    :type totalNumDocs: int
     """
 
     def __init__(self, outputFolder, indexer=None, totalNumDocs=1):
@@ -46,6 +48,12 @@ class PersistIndex(ABC):
         self.totalNumDocs = totalNumDocs
 
     def persistTranslations(self, translations):
+        """
+        Auxiliary function that persists the index metadata, i.e., the translation from internal ID to PMID(real document identifier).
+
+        :param translations: list of translations.Ex: [(internalID, PMID),...]
+        :type translations: list<tuple<str, str>>
+        """
         for t in translations:
             self.translationFile.write(t[0]+","+t[1]+"\n")
 

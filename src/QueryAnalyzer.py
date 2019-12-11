@@ -1,13 +1,24 @@
+"""
+.. module:: QueryAnalyzer
+    :noindex:
+.. moduleauthor:: Filipe Pires [85122] & Joao Alegria [85048]
+"""
+
 import sys
 import os
 import math
 
 
 def loadQueryTruth(queryTruth):
-    f = open(queryTruth, "r")
+    """
+    Processes the gold standard file.
 
+    :param queryTruth: filename of the gold standard
+    :type queryTruth: str
+    """
+
+    f = open(queryTruth)
     queryResults = {}
-
     for line in f:
         processedLine = line.strip().split("\t")
         if processedLine[0] not in queryResults:
@@ -18,10 +29,15 @@ def loadQueryTruth(queryTruth):
 
 
 def loadOurResults(ourQuery):
-    f = open(ourQuery, "r")
+    """
+    Processes the various query result files.
 
+    :param ourQuery: filename of the query results
+    :type ourQuery: str
+    """
+
+    f = open(ourQuery)
     ourResults = []
-
     for line in f:
         processedLine = line.strip().split(",")[0]
         if processedLine not in ourResults:
@@ -31,6 +47,15 @@ def loadOurResults(ourQuery):
 
 
 def calculateP_R_F1(truth, prediction):
+    """
+    Calculates the Precision, Recall and F-Measure of a given query result.
+
+    :param truth: list of gold standard documents
+    :type truth: list<str>
+    :param prediction: list of our system returned results
+    :type prediction: list<str>
+    """
+
     tp = 0
     fp = 0
     fn = 0
@@ -50,6 +75,17 @@ def calculateP_R_F1(truth, prediction):
 
 
 def calculateMPatK(truth, prediction, k):
+    """
+    Calculates the Mean Precision on a given rank of the results.
+
+    :param truth: list of gold standard documents
+    :type truth: list<str>
+    :param prediction: list of our system returned results
+    :type prediction: list<str>
+    :param k: rank at which the mean precision should be calculated at
+    :type k: int
+    """
+
     pSum = 0
     count = 0
     for idx, p in enumerate(prediction[:k]):
@@ -61,6 +97,14 @@ def calculateMPatK(truth, prediction, k):
 
 
 def calculateNDCG(truth, prediction):
+    """
+    Calculates the Normalized Discounted Cumulative Gain.
+
+    :param truth: list of gold standard documents and its relevance
+    :type truth: list<tup<str,int>>
+    :param prediction: list of our system returned results
+    :type prediction: list<str>
+    """
     ideal = 0
     actual = 0
     predictionRelevance = []
@@ -86,7 +130,7 @@ def calculateNDCG(truth, prediction):
 def main(argv):
     if len(argv) != 3:
         print("""USAGE:
-        python3 QueryAnalyzer.py queryTruth queryResultFolder outputFile
+        python3 QueryAnalyzer.py <queryTruth> <queryResultFolder> <outputFile>
         """)
         sys.exit(0)
     queryTruth = argv[0]

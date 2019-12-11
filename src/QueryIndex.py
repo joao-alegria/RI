@@ -27,7 +27,7 @@ def main(argv):
     """
 
     HELP = """USAGE:\n
-    python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] [-r limitRAM] [-f feedback] [-n n] [-k k] [-l limit] queryFile indexFolder [a b g] \n
+    python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] [-r limitRAM] [-f feedback] [-s rocchioScope] [-c numChamps] [-l limit] <queryFile> <indexFolder> [a b g] \n
         OPTIONS:
            h - shows this help
            p - tells if indexes have positions calculated
@@ -36,8 +36,8 @@ def main(argv):
            t - define the tokenizer used for the program
            r - limit program execution to defined RAM capacity
            f - define the feedback used for the Rocchio algorithm
-           n - define the number of retrieved documents considered for the Rocchio algorithm
-           k - define the size of the champions list
+           s - define the number of retrieved documents considered for the Rocchio algorithm
+           c - define the size of the champions list
            l - define the number of scores to return
         ARGUMENTS:
            outputFile - actual name for the output file
@@ -49,14 +49,13 @@ def main(argv):
            b - beta weight for the Rocchio algorithm
            g - gamma weight for the Rocchio algorithm
            feedback - must be 'user' or 'pseudo'
-           n - number of retrieved documents considered for the Rocchio algorithm
-           k - size of the champions list
+           rocchioScope - number of retrieved documents considered for the Rocchio algorithm
+           numChamps - size of the champions list
            limit - limit number of scores to return"""
 
     # default variables
     outputFile = "../queryResults/"
     tokenizer = "complex"
-    positionCalc = False
     maximumRAM = None
     feedback = None             # None, pseudo or user
     rocchioWeights = []         # alpha, beta and gamma
@@ -65,7 +64,7 @@ def main(argv):
     limit = 100                 # number of scores
 
     try:
-        opts, args = getopt.getopt(argv, "hpo:t:r:f:k:n:l:")
+        opts, args = getopt.getopt(argv, "ho:t:r:f:c:s:l:")
     except getopt.GetoptError:
         print(HELP)
         return 1
@@ -81,8 +80,6 @@ def main(argv):
             return 3
         elif opt == "-o":
             outputFile = arg
-        elif opt == "-p":
-            positionCalc = True
         elif opt == "-t":
             assert arg in (
                 "simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
@@ -101,43 +98,47 @@ def main(argv):
             assert arg in (
                 "user", "pseudo"), "Feedback option must be either \"user\" or \"pseudo\"."
             feedback = arg
-        elif opt == "-k":
-            assert int(arg) > 0, "Error: k value must be a positive integer"
+        elif opt == "-c":
+            assert int(
+                arg) > 0, "Error: numChamps value must be a positive integer"
             k = int(arg)
-        elif opt == "-n":
-            assert int(arg) > 0, "Error: n value must be a positive integer"
+        elif opt == "-s":
+            assert int(
+                arg) > 0, "Error: rocchioScope value must be a positive integer"
             n = int(arg)
         elif opt == "-l":
             assert int(arg) > 0, "Error: limit value must be a positive integer"
             limit = int(arg)
 
     if feedback:
-        if feedback=="pseudo":
-            assert len(args) == 4, "Error: if you want to use pseudo feedback, please insert alpha and beta as well"
+        if feedback == "pseudo":
+            assert len(
+                args) == 4, "Error: if you want to use pseudo feedback, please insert alpha and beta as well"
             rocchioWeights.append(float(args[2]))
             rocchioWeights.append(float(args[3]))
-            #rocchioWeights.append(float(args[4]))
+            # rocchioWeights.append(float(args[4]))
         else:
-            assert len(args) == 5, "Error: if you want to use user feedback, please insert alpha, beta and gamma as well"
+            assert len(
+                args) == 5, "Error: if you want to use user feedback, please insert alpha, beta and gamma as well"
             rocchioWeights.append(float(args[2]))
             rocchioWeights.append(float(args[3]))
             rocchioWeights.append(float(args[4]))
 
     # taking in account the choosen tokenizer, the respective data flow is created
     if tokenizer == "simple":
-        assignment3(positionCalc, outputFile, Tokenizer.SimpleTokenizer(), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
+        assignment3(outputFile, Tokenizer.SimpleTokenizer(
+        ), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
     else:  # 'complex' = default tokenizer
-        assignment3(positionCalc, outputFile, Tokenizer.ComplexTokenizer(), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
+        assignment3(outputFile, Tokenizer.ComplexTokenizer(
+        ), maximumRAM, feedback, n, k, limit, args[0], args[1], rocchioWeights)
 
     return 0
 
 
-def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k, limit, queryFile, inputFolder, rocchioWeights):
+def assignment3(outputFile, tokenizer, maximumRAM, feedback, rocchioScope, numChamps, limit, queryFile, inputFolder, rocchioWeights):
     """
     Follows the execution flow specific for the third assignment.
 
-    :param positionCalc: True if the term positions are to be calculated, False if not
-    :type positionCalc: bool
     :param outputFile: name of the file where the query results will be written to
     :type outputFile: str
     :param tokenizer: class instance to be used in the tokenization process
@@ -146,10 +147,10 @@ def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k,
     :type maximumRAM: int
     :param feedback: type of feedback used in the rocchio algorithm
     :type feedback: str
-    :param n: number of retrieved documents considered for the Rocchio algorithm
-    :type n: int
-    :param k: size of the champions list
-    :type k: int
+    :param rocchioScope: number of retrieved documents considered for the Rocchio algorithm
+    :type rocchioScope: int
+    :param numChamps: size of the champions list
+    :type numChamps: int
     :param limit: number of Scores to return
     :type limit: int
     :param queryFile: name of the file where the query (or queries) are written
@@ -161,7 +162,7 @@ def assignment3(positionCalc, outputFile, tokenizer, maximumRAM, feedback, n, k,
     """
 
     searcher = Searcher.IndexSearcher(
-        positionCalc, tokenizer, limit, inputFolder, maximumRAM, feedback, n, k, rocchioWeights)
+        tokenizer, limit, inputFolder, maximumRAM, feedback, rocchioScope, numChamps, rocchioWeights)
 
     f = open(queryFile, "r")
     for line in f:  # for each query

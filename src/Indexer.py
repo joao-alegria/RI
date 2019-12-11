@@ -16,10 +16,14 @@ class Indexer(ABC):
     """
     Abstract class and interface for several types of index persistances implementations.
 
-    :param fileParser: instance of the file parser used in the context to retrieve the data from the corpus
-    :type fileParser: FileParser
     :param tokenizer: instance of the tokenizer used in the context to process the content of the corpus
     :type tokenizer: Tokenizer
+    :param positions: flag that indicates if the positions need to be calculated
+    :type positions: boolean
+    :param weights: flag that indicates if the weights need to be calculated
+    :type weights: boolean
+    :param fileParser: instance of the file parser used in the context to retrieve the data from the corpus
+    :type fileParser: FileParser
 
     """
 

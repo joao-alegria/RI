@@ -14,9 +14,24 @@ class Searcher(ABC):
     """
     Abstract class that serves as template and interface for future instances and implementations.
 
+    :param tokenizer: instance of the tokenizer meant to be used
+    :type tokenizer: Tokenizer
+    :param limit: number of documents that the program should return as result
+    :type limit: int
+    :param maximumRAM: maximum limit of RAM the program should use
+    :type maximumRAM: float
+    :param feedback: type of feedback intended to be used, either "pseudo" or "user"
+    :type feedback: str
+    :param rocchioScope: number of documents that the rocchio algorithm will consider
+    :type rocchioScope: int
+    :param numChamps: champion list size
+    :type numChamps: int
+    :param rochhioWeights: contains the paramenters for the rocchio algorithm, need to contain [alpha, beta] for the pseudo feedback and [alpha, beta, gamma] for the user feedback
+    :type rocchioWeights: list<float>
+
     """
 
-    def __init__(self, positionCalc, tokenizer, limit, inputFolder, maximumRAM=None, feedback=None, n=None, k=None, rocchioWeights=[]):
+    def __init__(self, tokenizer, limit, inputFolder, maximumRAM=None, feedback=None, rocchioScope=None, numChamps=None, rocchioWeights=[]):
         """
         Class constructor
         """
@@ -24,14 +39,13 @@ class Searcher(ABC):
 
         self.files = []
         self.tokenizer = tokenizer
-        self.positionCalc = positionCalc
         self.feedback = feedback
         self.rocchioWeights = rocchioWeights
 
         self.scores = {}
         self.internalCache = {}
-        self.k = k
-        self.n = n
+        self.numChamps = numChamps
+        self.rocchioScope = rocchioScope
         self.limit = limit
 
         self.maximumRAM = maximumRAM if maximumRAM != None else psutil.virtual_memory().free
@@ -49,25 +63,41 @@ class Searcher(ABC):
 
     @abstractmethod
     def retrieveRequiredFiles(self, query):
+        """
+        Mandatory function that future descendent instances need to implement. Function responsable for obtaining the necessary files to process the query. 
+
+        :param query: query string needed to be processed
+        :type query: str
+        """
         print("Searching...")
 
     @abstractmethod
     def calculateScores(self, queryIdx=None):
+        """
+        Mandatory function that future descendent instances need to implement. Function responsable for calculating the scores for each document. 
+
+        :param queryIdx: optional query identifier
+        :type queryIdx: int
+        """
         return
 
 
 class IndexSearcher(Searcher):
 
-    def __init__(self, positionCalc, tokenizer, limit, inputFolder, maximumRAM=None, feedback=None, n=None, k=None, rocchioWeights=[]):
+    def __init__(self, tokenizer, limit, inputFolder, maximumRAM=None, feedback=None, rocchioScope=None, numChamps=None, rocchioWeights=[]):
         """
         Class constructor
         """
-        super().__init__(positionCalc, tokenizer, limit, inputFolder,
-                         maximumRAM, feedback, n, k, rocchioWeights)
+        super().__init__(tokenizer, limit, inputFolder,
+                         maximumRAM, feedback, rocchioScope, numChamps, rocchioWeights)
         self.requiredFiles = None
         self.max = 0
 
     def retrieveRequiredFiles(self, query):
+        """
+        In this implementation we take in consideration if the terms are cached in memory.
+        """
+
         # {(term,idf):{docid:(weight,[pos1,pos2])}}
         # term:idf;docid:weight:pos1,pos2;docid:weight:pos1,pos2;
         # term:idf;docid:weight;docid:weight;
@@ -101,9 +131,9 @@ class IndexSearcher(Searcher):
                     if self.internalCache[t][0] > self.max:
                         self.max = self.internalCache[t][0]
                     if self.feedback == "pseudo":
-                        assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
+                        assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                         pseudoFeedbackFile = open(
-                            "../pseudoFeedback/" + str(self.n) + ".txt", "r")
+                            "../pseudoFeedback/" + str(self.rocchioScope) + ".txt", "r")
                         for feedbackLine in pseudoFeedbackFile:
                             content = feedbackLine.split(":")
                             qIdx = int(content[0])
@@ -133,9 +163,9 @@ class IndexSearcher(Searcher):
                                         self.scores[self.translations[docID-1]
                                                     ] += beta*(1/relevantDocsSize)*relevantSumDj
                     elif self.feedback == "user":
-                        assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
+                        assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                         userFeedbackFile = open(
-                            "../userFeedback/" + str(self.n) + ".txt", "r")
+                            "../userFeedback/" + str(self.rocchioScope) + ".txt", "r")
                         for feedbackLine in userFeedbackFile:
                             content = feedbackLine.split(":")
                             qIdx = int(content[0])
@@ -177,7 +207,7 @@ class IndexSearcher(Searcher):
                                             ] += float(weight) * self.internalCache[t][1]
             else:  # if file is not in cache
                 for line in open(self.inputFolder+f):
-                    line = line.strip().split(";")[:self.k+1]
+                    line = line.strip().split(";")[:self.numChamps+1]
                     curTerm = line[0].split(":")[0]
                     if curTerm in v:
                         v.remove(curTerm)
@@ -185,16 +215,16 @@ class IndexSearcher(Searcher):
                         if self.isMemoryAvailable():
                             self.internalCache[curTerm] = [1, curIdf, line[1:]]
                         else:
-                            # self.internalCache = {k: v for k, v in self.internalCache.items() if v[0] >= self.max-(self.max/4)}
+                            # self.internalCache = {numChamps: v for numChamps, v in self.internalCache.items() if v[0] >= self.max-(self.max/4)}
                             self.internalCache = sorted(
                                 self.internalCache.items(), key=lambda tup: tup[1][0], reverse=True)
                             self.internalCache = dict(
                                 self.internalCache[:round(len(self.internalCache)/4)])
 
                         if self.feedback == "pseudo":
-                            assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
+                            assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                             pseudoFeedbackFile = open(
-                                "../pseudoFeedback/" + str(self.n) + ".txt", "r")
+                                "../pseudoFeedback/" + str(self.rocchioScope) + ".txt", "r")
                             for feedbackLine in pseudoFeedbackFile:
                                 content = feedbackLine.split(":")
                                 qIdx = int(content[0])
@@ -206,7 +236,7 @@ class IndexSearcher(Searcher):
                                     relevantSumDj = float(content[2])
                                     #irrelevantDocsSize = int(content[3])
                                     #irrelevantSumDj = float(content[4])
-                                    for c in line[1:]:  # champions list of size k
+                                    for c in line[1:]:  # champions list of size numChamps
                                         docID = int(c.split(":")[0])
                                         weight = c.split(":")[1]
                                         s = float(weight) * curIdf
@@ -222,9 +252,9 @@ class IndexSearcher(Searcher):
                                             self.scores[self.translations[docID-1]] += beta*(
                                                 1/relevantDocsSize)*relevantSumDj
                         elif self.feedback == "user":
-                            assert self.n, "Error: integer n defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
+                            assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
                             userFeedbackFile = open(
-                                "../userFeedback/" + str(self.n) + ".txt", "r")
+                                "../userFeedback/" + str(self.rocchioScope) + ".txt", "r")
                             for feedbackLine in userFeedbackFile:
                                 content = feedbackLine.split(":")
                                 qIdx = int(content[0])
@@ -236,7 +266,7 @@ class IndexSearcher(Searcher):
                                     relevantSumDj = float(content[2])
                                     irrelevantDocsSize = int(content[3])
                                     irrelevantSumDj = float(content[4])
-                                    for c in line[1:]:  # champions list of size k
+                                    for c in line[1:]:  # champions list of size numChamps
                                         docID = int(c.split(":")[0])
                                         weight = c.split(":")[1]
                                         s = float(weight) * curIdf
@@ -253,7 +283,7 @@ class IndexSearcher(Searcher):
                                             self.scores[self.translations[docID-1]] -= gamma*(
                                                 1/irrelevantDocsSize)*irrelevantSumDj
                         else:
-                            for c in line[1:]:  # champions list of size k
+                            for c in line[1:]:  # champions list of size numChamps
                                 docID = int(c.split(":")[0])
                                 weight = c.split(":")[1]
                                 if self.translations[docID-1] not in self.scores.keys():
@@ -266,13 +296,21 @@ class IndexSearcher(Searcher):
                             break
 
     def sortAndWriteResults(self, outputFile):
+        """
+        Additional function responsable for persisting the query results.
+
+        :param outputFile: name of the file where the results should be stored
+        :type outputFile: str
+        """
+
         self.curFile = None
         self.curIdx = 0
         self.scores = sorted(self.scores.items(),
                              key=lambda kv: kv[1], reverse=True)
         outputFile = open(outputFile, "w")
         for (PMID, score) in self.scores[:self.limit]:
-            outputFile.write(str(PMID) + ", " + str(round(score, 2)) + "\n")
+            outputFile.write(str(PMID) + ", " +
+                             str(round(score, 2)) + "\rocchioScope")
         outputFile.close()
         self.scores = {}
         return

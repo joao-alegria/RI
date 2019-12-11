@@ -1,3 +1,8 @@
+"""
+.. module:: Rocchio Auxiliary Script
+    :noindex:
+.. moduleauthor:: Filipe Pires [85122] & Joao Alegria [85048]
+"""
 
 import os
 import sys

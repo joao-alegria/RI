@@ -18,8 +18,8 @@ class Merger(ABC):
 
     :param intermediateIndex: list of the names of the intermedia indexes to be merged
     :type intermediateIndex: list<str>
-    :param indexer: instance of the indexer used in the context to create the corpus index
-    :type indexer: Indexer
+    :param totalNumDocs: total number of documents needed if the weights need to be calculated
+    :type totalNumDocs: int
     :param outputFolder: name of the folder where to store the final index
     :type outputFolder: str
     """
