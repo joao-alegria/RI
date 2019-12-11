@@ -266,7 +266,7 @@ feedback, so that there is a greater assurance that the returned documents are
 actually relevant to the query.
 The alternatives are: 'pseudo' and 'user'.
 Options \texttt{-n}, \texttt{-k} and \texttt{-l} allow the definition of the 
-number of retrieved documents considered for the Rocchio algorithm (applyed in
+number of retrieved documents considered for the Rocchio algorithm (applied in
 the relevance feedback), the size of the champions list and the number of scores
 to return (to store in the output files).
 The previous arguments are all optional and the actual values for these arguments
@@ -296,44 +296,127 @@ overall performance, with the tests at the time rounding the 19\% of precision
 This feature was important for the execution times, as it reduced the search 
 space of the program for each query without loosing valuable information.
 What we later understood was that, if its size was reduced, the lost of useful
-information and relevant documents started to have a big inpact on the performance,
+information and relevant documents started to have a big impact on the performance,
 as for a list of size 1000 the precision dropped to about 16\%.
 
 With the champions list at size 10 000, we tried to reduce the number of results
 returned from 100 to 50, 20 and 10. 
 The later reached a precision of 26\%, which was good news to us.
 
-Although pseudo feedback was also part of our tests, we new \textit{a priori} 
+Although pseudo feedback was also part of our tests, we knew \textit{a priori} 
 that this would not influence the results at all, since it assumed that the first
 results the program already considered more relevant were in fact relevant and 
 increased their final scores.
 User feedback, on the other hand, proved to have great value when tested.
-.............................
+To test this form of feedback, we varied the parameters \texttt{n} (number of 
+retrieved documents considered for the Rocchio algorithm) between 5, 10 and 20
+with the \texttt{a}, \texttt{b} and \texttt{g} parameters fixed at 1.0, 0.5 and
+0.25 respectively.
+The final precision for each \texttt{n} was: ..........................
+At last we inverted the parameters variation in order to study the effects of 
+alpha, beta and gamma.
+To do this, we fixed \texttt{n} at ......... and tested the 3 parameters with
+the following combinations: ................
+These values were chosen based on recommendations from studies on the Rocchio
+algorithm and the ones with the best precision were \texttt{a = }, 
+\texttt{b = } and \texttt{g = }, with a final percentage of .......... \%.
 
-
-
-
-
-
+Table ......... (located at the end of this document) presents the queries results
+and statistics of the best performance achieved for further analysis.
 
 \subsection{Discussion}
 
-Lorem ipsum ...
+So the tests results were presented in the previous section, and the seemingly
+best combination of parameters was achieved with the available resources and 
+developed features.
+However, we did not content with accepting the facts and looked for logical
+explanations to the influence of each factor on the final performance.
+Here we share our thoughts on each observation made and attempt to explain why
+the final performance is as it is.
 
-+ champions list = + precision
-user feedback = + precision
-+ results returned = - precision
+The reason why champions lists reduce execution times has already been slightly 
+discussed. 
+This is mainly due to the fact that, before executing any computation on the index,
+a cheap verification is done to determine wether it is worth executing them, so
+it makes sense that, if a sufficient amount of unnecessary computations are avoided,
+the time required to answer a query is significantly reduced.
+The key aspect here is the condition that determines wether de calculation must 
+be done or not and the goal is to avoid loosing relevant information as much as
+possible while speeding up the retrieval process.
+This is also why champion lists too small have a negative impact on the overall 
+performance, since they have a higher probability of discarding index entries 
+that in reality would benefit the results.
 
-low recall is normal since we return X and X can be a very small group compared to the entire universe of documents
+The fact that the number of results returned directly influences the results 
+precision is also relatively simple to understand.
+As the performance metrics are only applied to the returned documents, 
+.......................
+
+The way the user feedback through the rocchio algorithm works is: scores from 
+documents considered not relevant to a given query by users must be lowered and 
+scores from documents considered in fact relevant must be increased.
+Well, it is only natural that, when applied with appropriate scores regulation,
+this feedback will have a positive influence on the program's precision because
+it gives the program "inside information" on what the user making the query is
+probably looking for.
+And the more documents considered on the algorithm, the more the results will 
+be closer to the truly relevant documents and further from the non relevant as 
+more documents from the results are affected by this regulatory feature.
+.......................
+
+In our analysis we only mention precision as a means of determining whether 
+the variation of parameters was good or bad, but in reality our observations 
+are also verified by the other metrics, only their evolution is not as 
+straightforward to explain as precision's.
+Nevertheless, we reached a few conclusions regarding other performance metrics
+worth mentioning.
+
+A low recall is common amongst all tests and, at first sight, it seems a bad sign.
+However, it is actually expected to be low, since the amount of returned documents
+is usually very low compared to the entire list of documents from the index.
+
+.......................
+
+Precision
+
+Explain why:
+
+X champions list reduces execution time
+
+X champion lists too small have worst precision
+
+- the less results are returned the higher the precision
+
+X simulated user feedback increased precision
+
+X the more documents considered on the rocchio algorithm the higher the precision
+
+- some rocchio parameters values result in higher precision
+
+Other Observations
+
+Explain why:
+
+X low recall is expected  entire universe of documents)
+
+- .....
 
 \subsection{Implementation Limitations}
 
-Lorem ipsum ...
+So far we have explored ways of improving the program's performance through
+limited, although relevant, strategies.
+But the hard truth is that a precision of 30\% on a sort of search engine is not
+exactly something to be very much proud of, or, at least, not the ideal value 
+a regular user expects from such system.
+In this section we attempt to understand why our solution is so limited and 
+what could be done to greatly increase its quality.
+
+........................
 
 \section{Conclusions}
 
 After completing the assignment, we drew a few conclusions regarding our
-solutions and the whole concept of ...........
+solutions and the whole concept of efficient indexing and information retrieval.
 
 The biggest challenge we faced was .........
 
