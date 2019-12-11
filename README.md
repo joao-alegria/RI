@@ -69,10 +69,10 @@ An example using the Simple Tokenizer and a memory limitation of 300Mb, a champi
 python3 QueryIndex.py -o ../results -t simple -r 0.3 -c 1000 -l 10 ../queries.txt ../input
 ```
 
-An example using the same configuration but for an index with positions included and using the user feedback considering the top 5 documents retrieved and passing 1, 0.5 and 0.25 as Rocchio's alpha, beta and gamma parameters:
+An example using the same configuration but using user feedback considering the top 5 documents retrieved and passing 1, 0.5 and 0.25 as Rocchio's alpha, beta and gamma parameters:
 
 ```
-python3 QueryIndex.py -p -o ../results -t simple -r 0.3 -c 1000 -l 10 -f user -n 5 ../queries.txt ../input 1 0.5 0.25
+python3 QueryIndex.py  -o ../results -t simple -r 0.3 -c 1000 -l 10 -f user -n 5 ../queries.txt ../input 1 0.5 0.25
 ```
 
 An example using the same configuration as the first but using the Complex Tokenizer, using the pseudo feedback considering the top 20 documents retrieved and passing 1 and 0.5 as Rocchio's alpha and beta parameters:
@@ -82,6 +82,7 @@ An example using the same configuration as the first but using the Complex Token
 python3 QueryIndex.py -o ../results -r 0.3 -c 1000 -l 10 -f pseudo -n 20 ../queries.txt ../input 1 0.5
 ```
 
+Auxiliary script where created such as IndexAnalyzer to analyze the resulting indexes, the rocchio auxiliary script to simulate offline user feedback to the system and QueryAnalyzer to calculate the performance metrics of the system.
 
 ## Authors
 

@@ -27,10 +27,9 @@ def main(argv):
     """
 
     HELP = """USAGE:\n
-    python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] [-r limitRAM] [-f feedback] [-s rocchioScope] [-c numChamps] [-l limit] <queryFile> <indexFolder> [a b g] \n
+    python3 QueryIndex.py [-h] [-o outputFile] [-t tokenizer] [-r limitRAM] [-f feedback] [-s rocchioScope] [-c numChamps] [-l limit] <queryFile> <indexFolder> [a b g] \n
         OPTIONS:
            h - shows this help
-           p - tells if indexes have positions calculated
            f - tells 
            o - define output file's name
            t - define the tokenizer used for the program

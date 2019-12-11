@@ -66,7 +66,7 @@ All code and documentation is present in our public GitHub project at
 \url{https://github.com/joao-alegria/RI}. 
 
 \newpage
-\section{Re-Indexing the Corpus}
+\section{Re-Indexing the Corpus}\label{updates}
 
 In order to make query searches flexible, it was proposed to us the reindexation
 of the text corpus considering not only the document titles but also their abstracts.
@@ -378,8 +378,7 @@ less time.
 
 The tests phase of the project was conducted with the help of \texttt{QueryIndex}
 to execute the ranked retrievals and \texttt{QueryAnalyzer} to evaluate the results.
-They considered the original dataset indexed with the updates mentioned in chapter 
-1 and all 50 given queries.
+They considered the original dataset indexed with the updates mentioned in section \ref{updates} and all 50 given queries.
 
 \texttt{QueryIndex.py} works as the script that creates an instance of the 
 \texttt{IndexSearcher} and, for each query, tells it to retrieve the best results.
@@ -390,7 +389,7 @@ The command works as follows:
 \addtolength\baselineskip{-0.05in}
 \begin{quote}
 \begin{verbatim}
-$ python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer] 
+$ python3 QueryIndex.py [-h] [-o outputFile] [-t tokenizer] 
   [-r limitRAM] [-f feedback] [-s rocchioScope] [-c numChamps] 
   [-l limit] queryFile indexFolder [a b g]
 \end{verbatim}
@@ -398,8 +397,6 @@ $ python3 QueryIndex.py [-h] [-p] [-o outputFile] [-t tokenizer]
 \endgroup
 
 Here, \texttt{-h} is the option that presents the manual for the command usage.
-Option \texttt{-p}, if present, tell the program that the index has the positions
-of each term in each document along with the weights.
 Option \texttt{-o} allows the definition of the output folder's name where the
 results will be stored.
 Option \texttt{-t} makes possible for the user to choose the type of tokenizer
@@ -466,10 +463,13 @@ To do this, we fixed \texttt{n} at 10 and tested the 3 parameters for values
 between 0 and 1.
 The values with the best precision were \texttt{$\alpha$ = 1.0}, 
 \texttt{$\beta$ = 1.0} and \texttt{$\gamma$ = 0.1}, with a final precision of 31\%.
-Table \ref{tab:tab1} (located at the end of this document) presents the queries results
-and statistics of the best performance achieved for further analysis.
+Table \ref{tab:tab1} (located at the end of this document) presents the performance metrics of the best combination achieved for further analysis.
 Other tables are present in our repository for different number of results returned 
 and without relevance feedback.
+Finally the time related metrics. As already said query response time is very crucial, since the user wants instant results.
+Our implementation is able to respond to all 50 queries within 35 seconds if no memory restrictions are placed. Due to system fluctuations and memory restrictions to the system, it may reach 60 seconds of execution time, for example if the memory is restricted to 250Mb.
+This means that in general the system is capable of accomplishing a query throughput
+of 1.43 queries per second and a query latency of 0.7 seconds.
 
 \subsection{Discussion}\label{discussion}
 
@@ -513,7 +513,7 @@ this feedback will positively influence the program's precision because it gives
 And the more documents considered on the algorithm, the more the results will 
 be closer to the truly relevant documents and further from the non relevant, as 
 more documents from the results are affected by this regulatory feature.
-The best parameter combination found for the algorithm was $\alpha=1, \beta=1 and \gamma=0.1$. 
+The best parameter combination found for the algorithm was $\alpha=1, \beta=1$ and $\gamma=0.1$. 
 This makes sense since what those values try to convey is that the original query 
 results must be really relevant, that the values from the relevant document 
 feedback are as relevant as the query (which is logical since it knows 
@@ -566,11 +566,7 @@ We found that, without memory restrictions, the minimum amount of memory require
 for retrievals to work reasonably well is only 500Mb, taking in consideration 
 that the index process was made with 2Gb of memory space.
 Adding restrictions slows down retrieval but makes the program capable of managing
-the used memory to lower values.
-The final version responds to all 50 queries within 35 seconds, or 50 seconds 
-if memory is restricted to 300Mb.
-This means that in general the system is capable of accomplishing a query throughput
-of 1.43 queries per second and a query latency of 0.7.
+the used memory to lower values. Due ro the fact that our implementation was made using Python, when reading the index to find the documents that contain a certain term we need to read the entire line, since Python from our knowledge isn't capable of reading portions of a file line. With that in mind, although we implemented internal memory management we couldn't control that, making our process need at least 400 Mb of memory.
 
 There are some facts that explain why a high precision is never achieved.
 The first is the lack of consideration for synonym terms and similar and related 
