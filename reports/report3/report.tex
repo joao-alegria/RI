@@ -225,7 +225,7 @@ Descending from the SMART Information Retrieval System, the algorithm assumes
 that most users have a general conception of which documents should be denoted 
 as relevant or non-relevant. 
 With this information in mind, an improvement over the classic score values 
-calculation is proposed by the following the formula:
+calculation is proposed by the following the formula \cite{rocchio}:
 
 \vspace{-10pt}
 \begin{equation}
@@ -482,16 +482,26 @@ the final performance is as it is.
 The reason why champions lists reduce execution times has already been slightly 
 discussed. 
 This is mainly due to the fact that, before executing any computation on the index,
-a resize of the search space is done to discard irrelevant documents while maintains the ones that are considered more relevant, so
-it makes sense that, if a sufficient amount of unnecessary computations are avoided,
-the time required to answer a query is significantly reduced.
+a resize of the search space is done to discard irrelevant documents while 
+the ones considered more relevant are maintained;
+It makes sense then that if a sufficient amount of unnecessary computations are 
+avoided the time required to answer a query is significantly reduced.
 This is also why champion lists too small have a negative impact on the overall 
 performance, since they have a higher probability of discarding index entries 
 that in reality would benefit the results.
 
 The fact that the number of results returned directly influences the results 
 precision is also relatively simple to understand.
-As the performance metrics are applied to the returned documents and compared against a set of documents previously defined as relevant, it's  necessary to understand in the first place that the gold standard provided were obtained and validated by humans. This aspect is quite important and drastically limits our capability of achieving higher precisions, aspect that will be further detailed in section \ref{limitations}. Nevertheless our system is still able to find relevant documents, being those place higher in the document return list as it should. When increasing the size of that list, it increases the probability of finding documents that our system considered relevant but in reality, when validated by humans may not be relevant at all.
+As the performance metrics are applied to the returned documents and compared 
+against a set of documents previously defined as relevant, it is necessary to 
+understand in the first place that the gold standard provided was obtained and 
+validated by humans. 
+Although this standard brings into reality the largest limitations we face, further 
+detailed in section \ref{limitations}, our system is still able of finding relevant 
+documents and placing them at a higher rank. 
+When increasing the size of the returned list, it increases the probability of 
+including documents that our system considers relevant but may not actually be 
+relevant at all.
 
 The way the user feedback through the rocchio algorithm works is: scores from 
 documents considered not relevant to a given query by users must be lowered and 
@@ -503,8 +513,18 @@ probably looking for.
 And the more documents considered on the algorithm, the more the results will 
 be closer to the truly relevant documents and further from the non relevant, as 
 more documents from the results are affected by this regulatory feature.
-The best parameter combination found for the rocchio algorithm was $\alpha=1, \beta=1 and \gamma=0.1$. This makes sense since what those values try to convey is that the original query results are relevant, undeniable since it's the source of information for the information retrieval process. Secondly,  with $\beta=1$ it indicates that the values from the relevant document feedback is as relevant as the query, which makes sense since it's know a priori that those documents are relevant for that query. Lastly with $\gamma=0.1$ shows that the irrelevant results need to be considered but considerably less than the positive information.
-Referring to section \ref{rocchio} it's easy to understand that those values make sense based on the Vector Space Model, where the intention is to allow the shift of the query vector closer to the relevant documents with $\beta=1$ and try to distance then from the irrelevant documents but not as much as to distance it again from the relevant ones, hence the $\gamma=0.1$.
+The best parameter combination found for the rocchio algorithm was $\alpha=1, 
+\beta=1 and \gamma=0.1$. 
+This makes sense since what those values try to convey is that the original query 
+results must be really relevant, that the values from the relevant document 
+feedback is as relevant as the query (which is logical since it knows 
+\textit{a priori} that those documents are truly relevant), and that the irrelevant 
+results need to be considered but their importance is much smaller.
+Referring to section \ref{rocchio}, one can understand that those values are 
+reasonable based on the Vector Space Model, where the intention is to allow the 
+shift of the query vector closer to the relevant documents with $\beta=1$ and 
+try to distance then from the irrelevant documents but not as much as to distance 
+it again from the relevant ones, hence the $\gamma=0.1$.
 
 In our analysis we only mention precision as a means of determining whether 
 the variation of parameters was good or bad, but in reality our observations 
@@ -514,10 +534,17 @@ Nevertheless, we reached a few conclusions regarding other performance metrics
 worth mentioning.
 
 A low recall is common amongst all tests and, at first sight, it seems a bad sign.
-However, it is actually expected to be low, since in many cases the amount of returned documents
-is usually very low compared to the entire list of documents from the index.
+However, it is actually expected to be low, since in many cases the amount of 
+returned documents is usually very low compared to the entire list of documents 
+from the index.
 
-Another curious conclusion taken from our tests was the values obtained by the Normalized Discounted Cumulative Gain which as already explained in section \ref{metrics}, in summary represents how well the ordering of our results were presented, being the most relevant documents ideally present higher in the document list. Although not perfect, it was quite interesting to see that our ordering was acceptable, which we didn't expect from the poor precision values obtained.
+Another curious conclusion taken from our tests was the values obtained by the 
+Normalized Discounted Cumulative Gain which as already explained in section 
+\ref{metrics}, in summary represents how well the ordering of our results were 
+presented, being the most relevant documents ideally present higher in the 
+document list. 
+Although not perfect, it was quite interesting to see that our ordering was 
+acceptable, which we didn't expect from the poor precision values obtained.
 
 \subsection{Implementation Limitations} \label{limitations}
 
@@ -537,13 +564,17 @@ However, we kept their sizes as they were as we considered them more realistic
 than reducing them to small amounts of Mb.
 The amount of memory available also naturally influences execution time.
 We found that, without memory restrictions, the minimum amount of memory required 
-for retrievals to work reasonably well is only 500Mb, taking in consideration that the index process was made with 2Gb of memory space.
+for retrievals to work reasonably well is only 500Mb, taking in consideration 
+that the index process was made with 2Gb of memory space.
 Adding restrictions slows down retrieval but makes the program capable of managing
 the used memory to lower values.
+The final version of our solution executes all 50 query retrievals within 35 seconds,
+or 50 seconds if a memory restriction of 300Mb is placed (this was tested for other
+maximum RAM values allowed and we understood that it was not strictly linear).
 
 There are some facts that explain why a high precision is never achieved.
-The first of all, and perhaps the most obvious one, is the lack of consideration
-for synonym terms and similar and related words when retrieving the documents.
+The first is the lack of consideration for synonym terms and similar and related 
+words when retrieving the documents.
 As the solution only searches for the exact terms on the query, there are many
 occurrences of ignored documents that were in fact very much relevant but did not
 use the exact same terminology.
@@ -598,7 +629,7 @@ as we were able to make a detailed study on what was at our reach to achieve the
 most optimized solution we were able to.
 We were also happy to discover that, when the problem of synonyms and related 
 words was not very much present, the solution was able to achieve very high 
-precisions.
+precisions within less than a second per query.
 In terms of code structure, modularity and documentation, we were also very 
 careful and find that the delivered code is properly presented to any developer.
 
@@ -610,6 +641,13 @@ careful and find that the delivered code is properly presented to any developer.
     \textit{IR: Assignment 3},
     University of Aveiro,
     2019/20.
+
+  \bibitem{rocchio}
+    \textit{The Rocchio (1971) Algorithm},
+    \url{https://nlp.stanford.edu/IR-book/html/htmledition/the-rocchio71-algorithm-1.html}
+    Stanford University,
+    2008,
+    accessed in 12/2019.
   
 \end{thebibliography}
 
@@ -678,7 +716,7 @@ careful and find that the delivered code is properly presented to any developer.
   50 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   Avg & 0.31 & 0.07 & 0.09 & 0.25 & 0.25 & 0.49 \\ \hline
   \caption{Values for 10 documents, user feedback(1,1,0.1)}
-  \label{tab:tab1}\\
+  \label{tab:tab1} 
   \end{longtable}
 
 

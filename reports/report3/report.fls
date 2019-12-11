@@ -62,6 +62,8 @@ INPUT /usr/share/texmf-dist/tex/latex/amsmath/amsopn.sty
 INPUT /usr/share/texmf-dist/tex/latex/amsmath/amsopn.sty
 INPUT /usr/share/texmf-dist/tex/latex/base/inputenc.sty
 INPUT /usr/share/texmf-dist/tex/latex/base/inputenc.sty
+INPUT /usr/share/texmf-dist/tex/latex/tools/longtable.sty
+INPUT /usr/share/texmf-dist/tex/latex/tools/longtable.sty
 INPUT /home/fp/Desktop/4A1S/RI/P/RI/reports/report3/report.aux
 INPUT /home/fp/Desktop/4A1S/RI/P/RI/reports/report3/report.aux
 OUTPUT /home/fp/Desktop/4A1S/RI/P/RI/reports/report3/report.aux
