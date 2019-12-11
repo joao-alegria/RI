@@ -468,6 +468,8 @@ The values with the best precision were \texttt{$\alpha$ = 1.0},
 \texttt{$\beta$ = 1.0} and \texttt{$\gamma$ = 0.1}, with a final precision of 31\%.
 Table \ref{tab:tab1} (located at the end of this document) presents the queries results
 and statistics of the best performance achieved for further analysis.
+Other tables are present in our repository for different number of results returned 
+and without relevance feedback.
 
 \subsection{Discussion}\label{discussion}
 
@@ -482,16 +484,15 @@ the final performance is as it is.
 The reason why champions lists reduce execution times has already been slightly 
 discussed. 
 This is mainly due to the fact that, before executing any computation on the index,
-a resize of the search space is done to discard irrelevant documents while 
-the ones considered more relevant are maintained;
-It makes sense then that if a sufficient amount of unnecessary computations are 
-avoided the time required to answer a query is significantly reduced.
+a resize of the search space is done to discard irrelevant documents;
+It makes sense then that, if a sufficient amount of unnecessary computations are 
+avoided, the query answering is significantly reduced.
 This is also why champion lists too small have a negative impact on the overall 
-performance, since they have a higher probability of discarding index entries 
-that in reality would benefit the results.
+performance, since there is a higher probability of discarding entries that in 
+reality would be benefitial.
 
 The fact that the number of results returned directly influences the results 
-precision is also relatively simple to understand.
+precision is also simple to understand.
 As the performance metrics are applied to the returned documents and compared 
 against a set of documents previously defined as relevant, it is necessary to 
 understand in the first place that the gold standard provided was obtained and 
@@ -503,28 +504,26 @@ When increasing the size of the returned list, it increases the probability of
 including documents that our system considers relevant but may not actually be 
 relevant at all.
 
-The way the user feedback through the rocchio algorithm works is: scores from 
+The way the user feedback through the Rocchio algorithm works is: scores from 
 documents considered not relevant to a given query by users must be lowered and 
-scores from documents considered in fact relevant must be increased.
+scores from relevant documents must be increased.
 Well, it is only natural that, when applied with appropriate scores regulation,
-this feedback will have a positive influence on the program's precision because
-it gives the program "inside information" on what the user making the query is
-probably looking for.
+this feedback will positively influence the program's precision because it gives
+"inside information" on what the user making the query is probably looking for.
 And the more documents considered on the algorithm, the more the results will 
 be closer to the truly relevant documents and further from the non relevant, as 
 more documents from the results are affected by this regulatory feature.
-The best parameter combination found for the rocchio algorithm was $\alpha=1, 
-\beta=1 and \gamma=0.1$. 
+The best parameter combination found for the algorithm was $\alpha=1, \beta=1 and \gamma=0.1$. 
 This makes sense since what those values try to convey is that the original query 
 results must be really relevant, that the values from the relevant document 
-feedback is as relevant as the query (which is logical since it knows 
+feedback are as relevant as the query (which is logical since it knows 
 \textit{a priori} that those documents are truly relevant), and that the irrelevant 
 results need to be considered but their importance is much smaller.
 Referring to section \ref{rocchio}, one can understand that those values are 
 reasonable based on the Vector Space Model, where the intention is to allow the 
-shift of the query vector closer to the relevant documents with $\beta=1$ and 
-try to distance then from the irrelevant documents but not as much as to distance 
-it again from the relevant ones, hence the $\gamma=0.1$.
+shift of the query vector closer to relevant documents with $\beta=1$ and distance 
+them from the irrelevant documents but not so much as to distance them again 
+from the relevant ones, hence the $\gamma=0.1$.
 
 In our analysis we only mention precision as a means of determining whether 
 the variation of parameters was good or bad, but in reality our observations 
@@ -568,9 +567,10 @@ for retrievals to work reasonably well is only 500Mb, taking in consideration
 that the index process was made with 2Gb of memory space.
 Adding restrictions slows down retrieval but makes the program capable of managing
 the used memory to lower values.
-The final version of our solution executes all 50 query retrievals within 35 seconds,
-or 50 seconds if a memory restriction of 300Mb is placed (this was tested for other
-maximum RAM values allowed and we understood that it was not strictly linear).
+The final version responds to all 50 queries within 35 seconds, or 50 seconds 
+if memory is restricted to 300Mb.
+This means that in general the system is capable of accomplishing a query throughput
+of 1.43 queries per second and a query latency of 0.7.
 
 There are some facts that explain why a high precision is never achieved.
 The first is the lack of consideration for synonym terms and similar and related 
