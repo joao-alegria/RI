@@ -70,9 +70,8 @@ All code and documentation is present in our public GitHub project at
 In order to make query searches flexible, it was proposed to us the reindexation
 of the text corpus considering not only the document titles but also their abstracts.
 This turned out to be quite challenging due to its computational weight, as 
-the abstracts were considerably larger than the titles.
-The initial index occupied about 500Mb in disk, whereas the reindexation turned
-out to be over 3Gb large.
+the abstracts were much larger than the titles.
+The initial index occupied 500Mb in disk, whereas the reindexation was over 3Gb large.
 
 There were 2 approaches when adding the abstract processing to our indexing process. 
 The first one would consist in dealing with titles and abstracts separately,
@@ -96,6 +95,34 @@ and, as we previously mentioned, the final size in disk of the index smaller.
 The execution time of this pipeline thankfully did not evolve as fast as the
 disk space, passing from 20 minutes without the abstract to approximately 1 hour
 and 20 minutes with it.
+
+\begingroup
+\addtolength\leftmargini{-0.4in}
+\addtolength\baselineskip{-0.05in}
+\begin{quote}
+\begin{verbatim}
+PMID- 10605436
+(...)
+TI  - Concerning the localization of steroids in centrioles
+      and basal bodies by immunofluorescence.
+PG  - 255-60
+AB  - Specific steroid antibodies, by the immunofluorescence 
+      technique, regularly reveal fluorescent centrioles and 
+      cilia-bearing basal bodies in target and nontarget cells. 
+      Although the precise identity of the immunoreactive 
+      steroid substance has not yet been established, it seems 
+      noteworthy that exogenous steroids can be vitally 
+      concentrated by centrioles, perhaps by exchange with 
+      steroids already present at this level. This unexpected 
+      localization suggests that steroids may affect cell
+      growth and differentiation in some way different from the 
+      two-step receptor mechanism.
+(...)
+\end{verbatim}
+\end{quote}
+\endgroup
+\vspace{-10pt}
+Above is an example of the existing information on the text corpus about one document.
 
 \newpage
 \section{Ranked Retrieval of Relevant Documents}
@@ -528,36 +555,79 @@ a regular user expects from such system.
 In this section we attempt to understand why our solution is so limited and 
 what could be done to greatly increase its quality.
 
-........................ 
-
 Two major factors limit retrieval speed.
+Index file size is directly correlated with this, as it will determine how long
+will it take to find the query terms on the indexes. 
+If we made them smaller, retrievals would be faster.
+However, we kept their sizes as they were as we considered them more realistic 
+than reducing them to small amounts of Mb.
+The amount of memory available also naturally influences execution time.
+We found that, without memory restrictions, the minimum amount of memory required 
+for retrievals to work reasonably well is 500Mb.
+Adding restrictions slows down retrieval but makes the program capable of managing
+the used memory to lower values.
 
-- if index files were smaller, retrievals would be faster
-  we kept their sizes as they were as we considered them more realistic than 
-  reducing them to small amounts of Mb
+There are some facts that explain why a high precision is never achieved.
+The first of all, and perhaps the most obvious one, is the lack of consideration
+for synonym terms and similar and related words when retrieving the documents.
+As the solution only searches for the exact terms on the query, there are many
+occurrences of ignored documents that were in fact very much relevant but did not
+use the exact same terminology.
+One simple example we manually detected was with the word 'cancer' that in many 
+of the truly relevant documents appeared only as 'carcinoma'.
+This could be dealt with by introducing a new form of query expansion Thesaurus-based,
+i.e. expanding the query terms by, for each term, adding synonyms and related words
+present in a thesaurus of quick access.
+There is, however, a high cost of manually producing a thesaurus and periodically 
+updating it.
 
-- ram limitations also affect execution time
-  we found that the minimum amount of memory required for retrievals to work
-  reasonably well is 500Mb 
+Another way of improving performance would be through query refinements based on
+log mining.
+What this means, in a very simplified manner, is to consider previously made
+queries and the results that users chose the most to refine the new query retrievals
+in a smart, automatic and adaptive way.
+This is only achievable if a lot of data to analyse is available, and is a technique
+very much explored by large search engines.
 
-There are some reasons that explain why a high precision is never achieved.
-
-- synonyms and similar/related words are not considered when retrieving documents
-
-- query log mining 
-
-........................
-
+\newpage
 \section{Conclusions}
 
 After completing the assignment, we drew a few conclusions regarding our
 solutions and the whole concept of efficient indexing and information retrieval.
 
-The biggest challenge we faced was ......... rocchio, memory
+The biggest challenge we faced was definitely the implementation of the Rocchio 
+algorithm.
+Understanding it required the capacity to visually place the query vectors in a 
+multidimensional space and interpret what the algorithm did and how could it be 
+achieved programmatically.
 
-From this assignment, we take ........
+Another big challenge was the memory management.
+As there was a need to ensure a minimum amount of available memory for the internal
+variables to be properly used and we wished to keep information from query to query,
+this process was not trivial and required a lot of brainstorming and code changes 
+to achieve its final version.
+One limitation we were not able to surpass was that, when reading a line from an 
+index file, although the content might only be partially stored in memory, the act
+of reading is anatomic and so if the line is large enough it might surpass the 
+defined memory restrictions.
+This issue is intrinsic to the programming language chosen and we did not find a 
+way to only partially read a line.
 
-The overall perspective of our performance regarding the project is ..........
+From this assignment, we take a deeper understanding of the way search engines 
+and other information retrieval systems decide which elements can be considered
+more relevant and appropriate to return.
+Our research and development made us gain knowledge on powerful optimization 
+techniques in a practical way and challenged us to use what we had previously
+developed for the first assignments the best possible way.
+
+The overall perspective of our performance regarding the project is very positive,
+as we were able to make a detailed study on what was at our reach to achieve the 
+most optimized solution we were able to.
+We were also happy to discover that, when the problem of synonyms and related 
+words was not very much present, the solution was able to achieve very high 
+precisions.
+In terms of code structure, modularity and documentation, we were also very 
+careful and find that the delivered code is properly presented to any developer.
 
 \begin{thebibliography}{9}
   \bibliographystyle{Science}
