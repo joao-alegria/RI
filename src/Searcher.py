@@ -54,7 +54,7 @@ class Searcher(ABC):
         inputFiles = os.listdir(inputFolder)
         for f in inputFiles:
             self.files.append(f)
-        self.files = sorted(files)
+        self.files = sorted(self.files)
 
         translationFile = open("../indexMetadata.txt")
         self.translations = []
