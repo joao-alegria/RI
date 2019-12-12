@@ -9,6 +9,8 @@ import os
 import math
 from abc import ABC, abstractmethod
 
+LIMITCACHE = 5
+
 
 class PersistIndex(ABC):
     """
@@ -22,7 +24,7 @@ class PersistIndex(ABC):
     :type totalNumDocs: int
     """
 
-    def __init__(self, outputFolder, indexer=None, totalNumDocs=1):
+    def __init__(self, outputFolder, fileLimit=float("inf"), indexer=None, totalNumDocs=1):
         """
         Class constructor
         """
@@ -36,7 +38,10 @@ class PersistIndex(ABC):
             self.index = list(indexer.index.items())
         self.totalNumDocs = totalNumDocs
         self.outputFolder = outputFolder
+        self.fileLimit = fileLimit
         self.translationFile = open(outputFolder+"/../indexMetadata.txt", "w")
+        self.cacheFile = open("../docCache", "w")
+        self.docCache = {}
 
     def setTotalNumDocs(self, totalNumDocs):
         """
@@ -94,18 +99,27 @@ class PersistCSV(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        filenameTemplate = self.currentFilename + "/{}"
         if not overrideFile:
-            self.currentFilename = self.currentFilename + \
-                "/"+self.index[0][0]+"_"+self.index[-1][0]
+            self.currentFilename = filenameTemplate.format(self.index[0][0])
         f = open(self.currentFilename, "w")
         currStr = ""
+        count = 0
+        idx = 0
         for token, freqs in self.index:
             currStr += token
             for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
                 currStr += ","+docID+":"+str(countPositions[0])
             # batch-like writting, writting 1 token and its ocurrences at a time
+            count += len(currStr)
             f.write(currStr+"\n")
             currStr = ""
+            if not overrideFile:
+                if count > self.fileLimit:
+                    f.close()
+                    f = open(filenameTemplate.format(self.index[idx][0]), "w")
+                    count = 0
+            idx += 1
         f.close()
         self.index = []
         return True
@@ -124,27 +138,33 @@ class PersistCSVWeighted(PersistIndex):
         token2:idf2; docID1:tfw1; docID2:tfw2;...
     """
 
-    def __init__(self, outputFolder, indexer=None, totalNumDocs=1):
-        super().__init__(outputFolder, indexer, totalNumDocs)
-
     def persist(self, index=None, overrideFile=None):
         super().persist(index, overrideFile)
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        filenameTemplate = self.currentFilename + "/{}"
         if not overrideFile:
-            self.currentFilename = self.currentFilename + \
-                "/"+self.index[0][0]+"_"+self.index[-1][0]
+            self.currentFilename = filenameTemplate.format(self.index[0][0])
         f = open(self.currentFilename, "w")
         currStr = ""
+        count = 0
+        idx = 0
         for token, freqs in self.index:
             currStr += token+":" + \
                 str(round(math.log10(self.totalNumDocs/len(freqs)), 2))
             for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
                 currStr += ";"+docID+":" + str(countPositions[0])
             # batch-like writting, writting 1 token and its ocurrences at a time
+            count += len(currStr)
             f.write(currStr+"\n")
             currStr = ""
+            if not overrideFile:
+                if count > self.fileLimit:
+                    f.close()
+                    f = open(filenameTemplate.format(self.index[idx][0]), "w")
+                    count = 0
+            idx += 1
         f.close()
         self.index = []
         return True
@@ -168,11 +188,13 @@ class PersistCSVPosition(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        filenameTemplate = self.currentFilename + "/{}"
         if not overrideFile:
-            self.currentFilename = self.currentFilename + \
-                "/"+self.index[0][0]+"_"+self.index[-1][0]
+            self.currentFilename = filenameTemplate.format(self.index[0][0])
         f = open(self.currentFilename, "w")
         currStr = ""
+        count = 0
+        idx = 0
         for token, freqs in self.index:
             currStr += token
             for docID, countPositions in sorted(freqs.items(), key=lambda tup: tup[1], reverse=True):
@@ -180,8 +202,15 @@ class PersistCSVPosition(PersistIndex):
                     str(countPositions[0])+":"+str(countPositions[1][0]) + \
                     "".join(","+str(x) for x in countPositions[1][1:])
             # batch-like writting, writting 1 token and its ocurrences at a time
+            count += len(currStr)
             f.write(currStr+"\n")
             currStr = ""
+            if not overrideFile:
+                if count > self.fileLimit:
+                    f.close()
+                    f = open(filenameTemplate.format(self.index[idx][0]), "w")
+                    count = 0
+            idx += 1
         f.close()
         self.index = []
         return True
@@ -205,11 +234,13 @@ class PersistCSVWeightedPosition(PersistIndex):
         if self.index == []:
             return False
         self.index.sort(key=lambda tup: tup[0])
+        filenameTemplate = self.currentFilename + "/{}"
         if not overrideFile:
-            self.currentFilename = self.currentFilename + \
-                "/"+self.index[0][0]+"_"+self.index[-1][0]
+            self.currentFilename = filenameTemplate.format(self.index[0][0])
         f = open(self.currentFilename, "w")
         currStr = ""
+        count = 0
+        idx = 0
         for token, freqs in self.index:
             currStr += token+":" + \
                 str(round(math.log10(self.totalNumDocs/len(freqs)), 2))
@@ -218,9 +249,39 @@ class PersistCSVWeightedPosition(PersistIndex):
                     str(countPositions[0])+":"+str(countPositions[1][0]) + \
                     "".join(","+str(x) for x in countPositions[1][1:])
             # batch-like writting, writting 1 token and its ocurrences at a time
+
+                # weight = [countPositions[0]][0]
+                # term = [token][0]
+                # doc = [docID][0]
+                # if doc not in self.docCache:
+                #     self.docCache[doc] = [(term, weight)]
+                # else:
+                #     if len(self.docCache[doc]) < LIMITCACHE:
+                #         self.docCache[doc].append((term, weight))
+                #     else:
+                #         for termcache, termweight in self.docCache[doc]:
+                #             if termweight < weight:
+                #                 self.docCache[doc].remove(
+                #                     (termcache, termweight))
+                #                 self.docCache[doc].append(
+                #                     (term, weight))
+                #                 break
+
+                # weight = 0
+                # term = ""
+                # doc = 0
+
+            count += len(currStr)
             f.write(currStr+"\n")
             currStr = ""
+            if not overrideFile:
+                if count > self.fileLimit:
+                    f.close()
+                    f = open(filenameTemplate.format(self.index[idx][0]), "w")
+                    count = 0
+            idx += 1
         f.close()
+        del self.index
         self.index = []
 
         return True

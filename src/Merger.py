@@ -24,7 +24,7 @@ class Merger(ABC):
     :type outputFolder: str
     """
 
-    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder, fileLimit):
         """
         Class constructor
         """
@@ -37,6 +37,7 @@ class Merger(ABC):
                 os.remove(self.outFolder+"/"+f)
         self.files = [io.open(x, "r") for x in intermediateIndex]
         self.index = []
+        self.fileLimit = fileLimit
         self.totalNumDocs = totalNumDocs
 
     @abstractmethod
@@ -63,11 +64,11 @@ class Merger(ABC):
 
 
 class PositionWeightMerger(Merger):
-    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder, fileLimit):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder, fileLimit)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
@@ -105,27 +106,35 @@ class PositionWeightMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outFolder+"/" +
-                   self.index[0][0]+"_"+self.index[-1][0], "w")
+        filenameTemplate = self.outFolder + "/{}"
+        out = open(filenameTemplate.format(self.index[0][0]), "w")
         auxString = ""
+        count = 0
+        idx = 0
         for t, docs in self.index:
             auxString += t+":" + \
                 str(round(math.log10(self.totalNumDocs/len(docs)), 2))
             for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ";"+doc+":" + w[0] + ":" + \
                     str(w[1][0])+"".join(","+x for x in w[1][1:])
+            count += len(auxString)
             out.write(auxString+"\n")
             auxString = ""
+            if count > self.fileLimit:
+                out.close()
+                out = open(filenameTemplate.format(self.index[idx][0]), "w")
+                count = 0
+            idx += 1
         self.index = []
         out.close()
 
 
 class WeightMerger(Merger):
-    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder, fileLimit):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder, fileLimit)
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
     def mergeIndex(self):
@@ -162,26 +171,34 @@ class WeightMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outFolder+"/" +
-                   self.index[0][0]+"_"+self.index[-1][0], "w")
+        filenameTemplate = self.outFolder + "/{}"
+        out = open(filenameTemplate.format(self.index[0][0]), "w")
         auxString = ""
+        count = 0
+        idx = 0
         for t, docs in self.index:
             auxString += t+":" + \
                 str(round(math.log10(self.totalNumDocs/len(docs)), 2))
             for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ";"+doc+":" + w
+            count += len(auxString)
             out.write(auxString+"\n")
             auxString = ""
+            if count > self.fileLimit:
+                out.close()
+                out = open(filenameTemplate.format(self.index[idx][0]), "w")
+                count = 0
+            idx += 1
         self.index = []
         out.close()
 
 
 class PositionMerger(Merger):
-    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder, fileLimit):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder, fileLimit)
         self.positionIndex = {}
         self.terms = [x.readline().strip().split(";") for x in self.files]
 
@@ -220,27 +237,35 @@ class PositionMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outFolder+"/" +
-                   self.index[0][0]+"_"+self.index[-1][0], "w")
+        filenameTemplate = self.outFolder + "/{}"
+        out = open(filenameTemplate.format(self.index[0][0]), "w")
         auxString = ""
+        count = 0
+        idx = 0
         for t, docs in self.index:
             auxString += t
             for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ";"+doc+":" + \
-                    str(w[0])+":" + \
-                    str(w[1][0])+"".join(","+str(x) for x in w[1][1:])
+                    str(w[0])+":" + str(w[1][0])+"".join(","+str(x)
+                                                         for x in w[1][1:])
+            count += len(auxString)
             out.write(auxString+"\n")
             auxString = ""
+            if count > self.fileLimit:
+                out.close()
+                out = open(filenameTemplate.format(self.index[idx][0]), "w")
+                count = 0
+            idx += 1
         self.index = []
         out.close()
 
 
 class SimpleMerger(Merger):
-    def __init__(self, intermediateIndex, totalNumDocs, outputFolder):
+    def __init__(self, intermediateIndex, totalNumDocs, outputFolder, fileLimit):
         """
         Class constructor
         """
-        super().__init__(intermediateIndex, totalNumDocs, outputFolder)
+        super().__init__(intermediateIndex, totalNumDocs, outputFolder, fileLimit)
         self.terms = [x.readline().strip().split(",") for x in self.files]
 
     def mergeIndex(self):
@@ -277,14 +302,22 @@ class SimpleMerger(Merger):
         if self.index == []:
             return
         self.index.sort(key=lambda tup: tup[0])
-        out = open(self.outFolder+"/" +
-                   self.index[0][0]+"_"+self.index[-1][0], "w")
+        filenameTemplate = self.outFolder + "/{}"
+        out = open(filenameTemplate.format(self.index[0][0]), "w")
         auxString = ""
+        count = 0
+        idx = 0
         for t, docs in self.index:
             auxString += t
             for doc, w in sorted(docs.items(), key=lambda tup: tup[1], reverse=True):
                 auxString += ","+doc+":" + str(w)
+            count += len(auxString)
             out.write(auxString+"\n")
             auxString = ""
+            if count > self.fileLimit:
+                out.close()
+                out = open(filenameTemplate.format(self.index[idx][0]), "w")
+                count = 0
+            idx += 1
         self.index = []
         out.close()

@@ -53,9 +53,10 @@ def main(argv):
     maximumRAM = None
     weightCalc = False
     positionCalc = False
+    fileLimit = float("inf")
 
     try:
-        opts, args = getopt.getopt(argv, "wpho:t:l:r:")
+        opts, args = getopt.getopt(argv, "wpho:t:l:r:f:")
     except getopt.GetoptError:
         print(HELP)
         return 1
@@ -73,6 +74,8 @@ def main(argv):
             outputFolder = arg
         elif opt == "-l":
             limit = int(arg)
+        elif opt == "-f":
+            fileLimit = float(arg)*1000000000
         elif opt == "-t":
             assert arg in (
                 "simple", "complex"), "Tokenizer option must be either \"simple\" or \"complex\"."
@@ -96,23 +99,23 @@ def main(argv):
     if tokenizer == "simple":
         if maximumRAM is None:
             assignment1(Tokenizer.SimpleTokenizer(),
-                        outputFolder, args[0], limit, weightCalc, positionCalc)
+                        outputFolder, args[0], limit, weightCalc, positionCalc, fileLimit)
         else:
             assignment2(Tokenizer.SimpleTokenizer(), outputFolder,
-                        args[0], limit, weightCalc, positionCalc, maximumRAM)
+                        args[0], limit, weightCalc, positionCalc, maximumRAM, fileLimit)
 
     else:  # 'complex' = default tokenizer
         if maximumRAM is None:
             assignment1(Tokenizer.ComplexTokenizer(),
-                        outputFolder, args[0], limit, weightCalc, positionCalc)
+                        outputFolder, args[0], limit, weightCalc, positionCalc, fileLimit)
         else:
             assignment2(Tokenizer.ComplexTokenizer(), outputFolder,
-                        args[0], limit, weightCalc, positionCalc, maximumRAM)
+                        args[0], limit, weightCalc, positionCalc, maximumRAM, fileLimit)
 
     return 0
 
 
-def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positionCalc):
+def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positionCalc, fileLimit):
     """
     Follows the execution flow specific for the first assignment.
 
@@ -144,19 +147,19 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
-            outputFolder, indexer, parser.numDocs)
+            outputFolder, fileLimit, indexer, parser.numDocs)
         persister.persist()
     elif weightCalc:
         persister = PersistIndex.PersistCSVWeighted(
-            outputFolder, indexer, parser.numDocs)
+            outputFolder, fileLimit, indexer, parser.numDocs)
         persister.persist()
     elif positionCalc:
         persister = PersistIndex.PersistCSVPosition(
-            outputFolder, indexer, parser.numDocs)
+            outputFolder, fileLimit, indexer, parser.numDocs)
         persister.persist()
     else:
         persister = PersistIndex.PersistCSV(
-            outputFolder, indexer, parser.numDocs)
+            outputFolder, fileLimit, indexer, parser.numDocs)
         persister.persist()
     persister.persistTranslations(
         sorted(indexer.translation, key=lambda tup: tup[0]))
@@ -172,7 +175,7 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
     gc.collect()
 
 
-def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positionCalc, maximumRAM):
+def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positionCalc, maximumRAM, fileLimit):
     """
     Follows the execution flow specific for the second assignment.
 
@@ -198,13 +201,15 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
     indexer = Indexer.FileIndexer(tokenizer, positionCalc, weightCalc)
     if weightCalc and positionCalc:
         persister = PersistIndex.PersistCSVWeightedPosition(
-            outputFolder, indexer)
+            outputFolder, fileLimit, indexer)
     elif weightCalc:
-        persister = PersistIndex.PersistCSVWeighted(outputFolder, indexer)
+        persister = PersistIndex.PersistCSVWeighted(
+            outputFolder, fileLimit, indexer)
     elif positionCalc:
-        persister = PersistIndex.PersistCSVPosition(outputFolder, indexer)
+        persister = PersistIndex.PersistCSVPosition(
+            outputFolder, fileLimit, indexer)
     else:
-        persister = PersistIndex.PersistCSV(outputFolder, indexer)
+        persister = PersistIndex.PersistCSV(outputFolder, fileLimit, indexer)
 
     auxFile = "intermediate_index_{0}.txt"
     blockCounter = 1
@@ -235,16 +240,16 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
 
     if weightCalc and positionCalc:
         merger = Merger.PositionWeightMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder, fileLimit)
     elif weightCalc:
         merger = Merger.WeightMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder, fileLimit)
     elif positionCalc:
         merger = Merger.PositionMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder, fileLimit)
     else:
         merger = Merger.SimpleMerger(
-            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder)
+            [auxFile.format(x) for x in range(1, blockCounter)], parser.numDocs, outputFolder, fileLimit)
 
     # merging intermediateIndexes
     tokenizer.clearVar()
