@@ -13,3 +13,4 @@ queryResults
 heal.py
 indexMetadata.txt
 extraIndex
+*.xlsx

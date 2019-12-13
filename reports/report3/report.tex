@@ -31,7 +31,7 @@
 }
 {\end{list}}
 
-\title{Assignment 3} 
+\title{Assignment  3} 
 
 \author
 {Filipe Pires [85122], João Alegria [85048]\\
@@ -279,8 +279,6 @@ and away from the irrelevant ones ($- \gamma \frac{1}{|D_{nr}|} \sum_{ \vec{d}_{
 The reason we limit the number of terms to add to the query vector is both for 
 execution time reduction and to ignore terms that will most likely not affect the 
 outcome in a significant way.
-This algorithm had a considerable impact in our system, which will be further 
-explained in the next chapter. 
 
 But how exactly are the relevant and irrelevant documents determined?
 The two ways we explored to answer this question was through a simulated user 
@@ -302,10 +300,9 @@ uses the simplification of not using the negative feedback so it does not requir
 knowledge about the irrelevant documents.
 As both forms of feedback will add terms to the query vector and change its 
 position in the multidimensional space, it is expected that both will have a 
-positive impact on the overal performance of the ranked retrieval, but it is 
-also logical that the first form will update the document scores in a way that
-increases more the precision than the pseudo feedback. 
+positive impact on the overal performance of the ranked retrieval.
 
+\newpage
 \subsection{Memory Management} \label{memory}
 
 When developing \texttt{Searcher}, we decided to implement an intelligent memory
@@ -479,38 +476,43 @@ returned from 100 to 50, 20 and 10.
 The later reached a precision of 26\%, with a query throughput of ..............
 queries per second, which was good news to us.
 
+Unfortunately, the introduction of relevance feedback fell short of our expectations.
 With the use of pseudo feedback, the throughput went significantly up, as expected,
-and ........... precision gain .....................
-With the user feedback, on the other hand, although taking even longer to answer
-each query, proved to have great value when tested.
-To test these forms of feedback, we varied the parameters \texttt{n} (number of 
-retrieved documents considered for the Rocchio algorithm) between 5, 10 and 20
-with the \texttt{a}, \texttt{b} and \texttt{g} parameters fixed at 1.0, 0.5 and
-0.25 respectively.
-The final precision for each \texttt{n} was .....\%, .....\% and .....\% for pseudo, and
-28\%, 29\% and 29\% for the user feedback.
-At last we inverted the parameters variation in order to study the effects of 
-$\alpha$, $\beta$ and $\gamma$.
-To do this, we fixed \texttt{n} at 10 and tested the 3 parameters for values
-between 0 and 1, but this time only to the user feedback as it showed the best 
-potential to achieve higher precision percentages.
-The parameter values with the best precision were \texttt{$\alpha$ = 1.0}, 
-\texttt{$\beta$ = 1.0} and \texttt{$\gamma$ = 0.1}, with a final precision of 31\%.
+and the precision actually fell around 2\%.
+The user feedback, taking even longer to answer each query, was also not very
+much effective.
+To test these forms of feedback and reach the presented values, we varied the 
+parameters \texttt{n} (number of retrieved documents considered for the Rocchio 
+algorithm) between 5, 10 and 20 with the \texttt{a}, \texttt{b} and \texttt{g} 
+parameters fixed at 1.0, 0.5 and 0.25 respectively.
+Then we inverted the parameters variation in order to study the effects of 
+$\alpha$, $\beta$ and $\gamma$: we fixed \texttt{n} at 10 and tested the 3 
+parameters for values between 0 and 1, but this time only to the user feedback 
+as it showed the best  potential to achieve higher precision percentages.
+The parameter values with the best precision were \texttt{$\alpha$=1.0}, 
+\texttt{$\beta$=1.0} and \texttt{$\gamma$=0.1}, with a precision of 26\%.
+
 Table \ref{tab:tab1} (located at the end of this document) presents the performance 
 metrics of the best combination achieved for further analysis.
+The configurations was: complex tokenizer, no RAM limit, no feedback, champions list of
+size $10^4$, returning only 10 results.
 Other tables are present in our repository for different number of results returned 
 and without relevance feedback.
 
 Finally the time related metrics. 
-As already said query response time is very crucial, since the user wants instant results.
-Our implementation is able to respond to all 50 queries within 35 seconds if no 
+As it was already stated, query response time is very crucial, since the user wants 
+instant results.
+Our implementation is able to respond to all 50 queries within 15 seconds if no 
 memory restrictions are placed. 
 Due to system fluctuations and memory restrictions to the system, it may reach 
-60 seconds of execution time, for example if the memory is restricted to 250Mb.
+35 seconds of execution time, for example if the memory is restricted to 250Mb.
 This means that in general the system is capable of accomplishing a query 
-throughput of 1.43 queries per second and a query latency of 0.7 seconds.
+throughput of 3.33 queries per second and a query latency of 0.3 seconds.
 When relevance feedback is introduced, the values are not quite the same.
-................................
+For the pseudo feedback, query throughput climbs up to .......... queries per second,
+and for the user feedback the value is ........ queries per second.
+This is obvious, as the same calculations must be done, plus the addition of query 
+terms and the recalculation of the document scores.
 
 \subsection{Discussion}\label{discussion}
 
@@ -557,7 +559,6 @@ And the more documents considered on the algorithm, the more the results will
 be closer to the truly relevant documents and further from the non relevant, as 
 more documents from the results are affected by this regulatory feature.
 The best parameter combination found for the algorithm was $\alpha=1, \beta=1$ and $\gamma=0.1$. 
-...................
 This makes sense since what those values try to convey is that the original query 
 results must be really relevant, that the values from the relevant document 
 feedback are as relevant as the query (which is logical since it knows 
