@@ -471,7 +471,7 @@ information and relevant documents started to have a big impact on the performan
 as for a list of size $10^3$ the precision dropped to about 16\%.
 With the champions list at size $10^4$, we tried to reduce the number of results
 returned from 100 to 50, 20 and 10. 
-The later(10 results) reached a precision of 26\%, with a query throughput of ..............
+The later (10 results) reached a precision of 26\%, with a query throughput of ..............
 queries per second, which was good news to us.
 
 Unfortunately, the introduction of relevance feedback fell short of our expectations.
@@ -568,6 +568,7 @@ shift of the query vector closer to relevant documents with $\beta=1$ and distan
 them from the irrelevant documents but not so much as to distance them again 
 from the relevant ones, hence the $\gamma=0.1$.
 
+\newpage
 In our analysis we only mention precision as a means of determining whether 
 the variation of parameters was good or bad, but in reality our observations 
 are also verified by the other metrics, only their evolution is not as 
