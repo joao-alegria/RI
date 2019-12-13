@@ -54,6 +54,7 @@ class Searcher(ABC):
         inputFiles = os.listdir(inputFolder)
         for f in inputFiles:
             self.files.append(f)
+        self.files = sorted(self.files)
 
         translationFile = open("../indexMetadata.txt")
         self.translations = []
@@ -113,16 +114,18 @@ class IndexSearcher(Searcher):
             if t in self.internalCache:
                 self.requiredFiles["_cached_"].append(t)
             else:
-                for file in self.files:
-                    aux = file.split("_")
-                    if t > aux[0] and t < aux[1]:
-                        if file not in self.requiredFiles:
-                            self.requiredFiles[file] = [t]
-                        else:
-                            self.requiredFiles[file].append(t)
-                        break
+                for i, file in enumerate(self.files):
+                    if t > file:
+                        if i == len(self.files)-1 or t < self.files[i+1]:
+                            if file not in self.requiredFiles:
+                                self.requiredFiles[file] = [t]
+                            else:
+                                self.requiredFiles[file].append(t)
+                            break
 
     def calculateScores(self, queryIdx=None):
+        queryTermsIdf = {}
+
         for f, v in self.requiredFiles.items():  # for each required file
             if f == "_cached_":  # if file is in cache
                 for t in v:
@@ -134,6 +137,8 @@ class IndexSearcher(Searcher):
                         else:
                             self.scores[self.translations[int(docID)-1]
                                         ] += float(weight) * self.internalCache[t][1]
+                    queryTermsIdf[t] = self.internalCache[t][1]
+
             else:  # if file is not in cache
                 for line in open(self.inputFolder+f):
                     line = line.strip().split(";")[:self.numChamps+1]
@@ -158,8 +163,148 @@ class IndexSearcher(Searcher):
                             else:
                                 self.scores[self.translations[docID-1]
                                             ] += float(weight) * curIdf
+                        queryTermsIdf[curTerm] = curIdf
+
                         if len(v) <= 0:
                             break
+
+        if self.feedback:
+            assert self.rocchioScope, "Error: integer rocchioScope defines the number of docs to be considered relevant in pseudo feedback, if you want this feedback you must define this value"
+
+            # index cache -> docID;term:weight;term:weight;...
+            indexCacheFile = open("../docCache")
+
+            self.scores = sorted(self.scores.items(),
+                                 key=lambda kv: kv[1], reverse=True)
+
+            alpha = self.rocchioWeights[0]
+            beta = self.rocchioWeights[1]
+
+            relevantDocs = []
+            #relevantSumDj = 0.0
+
+            for t in queryTermsIdf.keys():
+                queryTermsIdf[t] = queryTermsIdf[t]*alpha
+
+            if self.feedback == "pseudo":
+                for s in self.scores[:self.rocchioScope]:
+                    relevantDocs.append(s[0])
+
+                for line in indexCacheFile:
+                    content = line.split(";")
+                    if self.translations[int(content[0])-1] in relevantDocs:
+                        for d in content[1:]:
+                            d = d.split(":")
+                            if d[0] not in self.tokenizer.tokens:
+                                self.tokenizer.tokens.append(d[0])
+                            if d[0] in queryTermsIdf.keys():
+                                queryTermsIdf[d[0]] += beta * \
+                                    float(d[1])/len(relevantDocs)
+                            else:
+                                queryTermsIdf[d[0]] = beta * \
+                                    float(d[1])/len(relevantDocs)
+
+            else:  # == "user"
+                gamma = self.rocchioWeights[2]
+                irrelevantDocs = []
+                #irrelevantSumDj = 0.0
+
+                gold = {}
+                for standard in open("../queries.relevance.txt"):
+                    line = standard.strip().split("\t")
+                    if int(line[0]) not in gold:
+                        gold[int(line[0])] = [int(line[1])]
+                    else:
+                        gold[int(line[0])].append(int(line[1]))
+
+                for s in self.scores[:self.rocchioScope]:
+                    if s[0] in gold[int(queryIdx)]:
+                        relevantDocs.append(s[0])
+                    else:
+                        irrelevantDocs.append(s[0])
+
+                for line in indexCacheFile:
+                    content = line.split(";")
+                    if self.translations[int(content[0])-1] in relevantDocs:
+                        for d in content[1:]:
+                            d = d.split(":")
+                            if d[0] not in self.tokenizer.tokens:
+                                self.tokenizer.tokens.append(d[0])
+                            if d[0] in queryTermsIdf.keys():
+                                queryTermsIdf[d[0]] += beta * \
+                                    float(d[1])/len(relevantDocs)
+                            else:
+                                queryTermsIdf[d[0]] = beta * \
+                                    float(d[1])/len(relevantDocs)
+
+                indexCacheFile.seek(0, 0)
+                for line in indexCacheFile:
+                    content = line.split(";")
+                    if self.translations[int(content[0])-1] in irrelevantDocs:
+                        for d in content[1:]:
+                            d = d.split(":")
+                            if d[0] in queryTermsIdf.keys():
+                                queryTermsIdf[d[0]] -= gamma * \
+                                    float(d[1])/len(irrelevantDocs)
+
+            indexCacheFile.close()
+            self.scores = {}
+
+            self.requiredFiles = {"_cached_": []}
+            for t in self.tokenizer.tokens:
+                if t in self.internalCache:
+                    self.requiredFiles["_cached_"].append(t)
+                else:
+                    for i, file in enumerate(self.files):
+                        if t > file:
+                            if i == len(self.files)-1 or t < self.files[i+1]:
+                                if file not in self.requiredFiles:
+                                    self.requiredFiles[file] = [t]
+                                else:
+                                    self.requiredFiles[file].append(t)
+                                break
+
+            for f, v in self.requiredFiles.items():  # for each required file
+                if f == "_cached_":  # if file is in cache
+                    for t in v:
+                        self.internalCache[t][0] += 1
+
+                        for docID, weight in self.internalCache[t][2]:
+                            if self.translations[int(docID)-1] not in self.scores.keys():
+                                self.scores[self.translations[int(docID)-1]
+                                            ] = float(weight) * queryTermsIdf[t]
+                            else:
+                                self.scores[self.translations[int(docID)-1]
+                                            ] += float(weight) * queryTermsIdf[t]
+
+                else:  # if file is not in cache
+                    for line in open(self.inputFolder+f):
+                        line = line.strip().split(";")[:self.numChamps+1]
+                        curTerm = line[0].split(":")[0]
+                        if curTerm in v:
+                            v.remove(curTerm)
+                            curIdf = float(line[0].split(":")[1])
+                            if self.isMemoryAvailable():
+                                self.internalCache[curTerm] = [
+                                    1, curIdf, [(x.split(":")[0], x.split(":")[1]) for x in line[1:]]]
+                            else:
+                                self.internalCache = sorted(
+                                    self.internalCache.items(), key=lambda tup: tup[1][0], reverse=True)
+                                self.internalCache = dict(
+                                    self.internalCache[:round(len(self.internalCache)/10)])
+
+                            for c in line[1:]:  # champions list of size numChamps
+                                docID = int(c.split(":")[0])
+                                weight = c.split(":")[1]
+                                if self.translations[int(docID)-1] not in self.scores.keys():
+                                    self.scores[self.translations[int(docID)-1]
+                                                ] = float(weight) * queryTermsIdf[curTerm]
+                                else:
+                                    self.scores[self.translations[int(docID)-1]
+                                                ] += float(weight) * queryTermsIdf[curTerm]
+
+                            if len(v) <= 0:
+                                break
 
     def sortAndWriteResults(self, outputFile):
         """
@@ -198,7 +343,7 @@ class IndexSearcher(Searcher):
         # get program memory usage
         processMemory = psutil.Process(os.getpid()).memory_info().rss
         # print(processMemory)
-        if processMemory >= int(self.maximumRAM*0.85):
+        if processMemory >= int(self.maximumRAM*0.90):
             return False
 
         return True

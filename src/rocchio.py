@@ -15,14 +15,13 @@ import Searcher
 
 inputFolder = "../index/"
 inputFiles = os.listdir(inputFolder)
-positionCalc = False
 tokenizer = Tokenizer.ComplexTokenizer()
 limit = 20
 maximumRAM = None
-feedback = None
+feedback = "user" #None
 N = [5, 10, 20]
 k = 10000
-rocchioWeights = []
+rocchioWeights = [1.0, 1.0, 0.1] #[]
 
 for n in N:
     queriesFile = open("../queries.txt", "r")
@@ -33,7 +32,7 @@ for n in N:
         # process each query
         query = line.split("\t")
         searcher = Searcher.IndexSearcher(
-            positionCalc, tokenizer, limit, inputFolder, maximumRAM, feedback, n, k, rocchioWeights)
+            tokenizer, limit, inputFolder, maximumRAM, feedback, n, k, rocchioWeights)
         searcher.retrieveRequiredFiles(query[1])
 
         searcher.calculateScores()

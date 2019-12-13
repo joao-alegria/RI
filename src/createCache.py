@@ -2,7 +2,7 @@ import os
 
 inputDir = "../extraindex/"
 files = os.listdir(inputDir)
-limitcache = 5
+limitcache = 3
 cache = {}
 for file in files:
     for line in open(inputDir+file):
@@ -25,3 +25,8 @@ for file in files:
                             cache[doc].append(
                                 (token, weight))
                             break
+
+
+f = open("../docCache", "w")
+for key in cache:
+    f.write(key+"".join(";"+str(x[0])+":"+str(x[1]) for x in cache[key])+"\n")

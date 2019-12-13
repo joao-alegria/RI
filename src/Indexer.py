@@ -9,6 +9,7 @@ from decimal import *
 import time
 from abc import ABC, abstractmethod
 
+LIMITCACHE = 3
 getcontext().prec = 2
 
 
@@ -44,6 +45,7 @@ class Indexer(ABC):
         self.index = {}
         self.docID = 0
         self.translation = []
+        self.bestTerms = {}
 
     @abstractmethod
     def createIndex(self, content=None):
@@ -62,6 +64,7 @@ class Indexer(ABC):
         self.index = {}
         self.docs = {}
         self.translation = []
+        self.bestTerms = {}
 
 
 class FileIndexer(Indexer):
@@ -106,6 +109,18 @@ class FileIndexer(Indexer):
                 for doc, posts in docs.items():
                     posts[0] = round(posts[0]/norme, 2)
 
+                    if doc not in self.bestTerms:
+                        self.bestTerms[doc] = [(term, posts[0])]
+                    else:
+                        if len(self.bestTerms[doc]) < LIMITCACHE:
+                            self.bestTerms[doc].append((term, posts[0]))
+                        else:
+                            for t, w in self.bestTerms[doc]:
+                                if posts[0] > w:
+                                    self.bestTerms[doc].remove((t, w))
+                                    self.bestTerms[doc].append(
+                                        (term, posts[0]))
+
         for x in tmpTC:
             if x not in self.index:
                 self.index[x] = tmpTC[x]
@@ -121,3 +136,4 @@ class FileIndexer(Indexer):
         self.index = {}
         self.docs = {}
         self.translation = []
+        self.bestTerms = {}

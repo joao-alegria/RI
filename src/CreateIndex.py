@@ -161,6 +161,10 @@ def assignment1(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
         persister = PersistIndex.PersistCSV(
             outputFolder, fileLimit, indexer, parser.numDocs)
         persister.persist()
+
+    if len(indexer.bestTerms.keys()) > 0:
+        for key in indexer.bestTerms.keys():
+            persister.persistCache(key, indexer.bestTerms[key])
     persister.persistTranslations(
         sorted(indexer.translation, key=lambda tup: tup[0]))
 
@@ -227,6 +231,9 @@ def assignment2(tokenizer, outputFolder, inputFolder, limit, weightCalc, positio
         persister.setTotalNumDocs(parser.numDocs)
         persister.persistTranslations(
             sorted(indexer.translation, key=lambda tup: tup[0]))
+        if len(indexer.bestTerms.keys()) > 0:
+            for key in indexer.bestTerms.keys():
+                persister.persistCache(key, indexer.bestTerms[key])
         if not runSPIMI and blockCounter == 1:
             persister.persist(indexer.index)
             return 0
@@ -293,7 +300,7 @@ def isMemoryAvailable(maximumRAM):
     # get program memory usage
     processMemory = process.memory_info().rss
     # print(processMemory)
-    if processMemory >= int(maximumRAM*0.82):
+    if processMemory >= int(maximumRAM*0.85):
         return False
 
     return True

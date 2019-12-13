@@ -41,7 +41,6 @@ class PersistIndex(ABC):
         self.fileLimit = fileLimit
         self.translationFile = open(outputFolder+"/../indexMetadata.txt", "w")
         self.cacheFile = open("../docCache", "w")
-        self.docCache = {}
 
     def setTotalNumDocs(self, totalNumDocs):
         """
@@ -61,6 +60,18 @@ class PersistIndex(ABC):
         """
         for t in translations:
             self.translationFile.write(t[0]+","+t[1]+"\n")
+
+    def persistCache(self, docID, bestTerms):
+        """
+        Auxiliary function that persists the a document cache consisting of the documents and the top K best terms.
+
+        :param docID: document identifier
+        :type docID: int
+        :param bestTerms: list of terms that the indexer considers important
+        :type docID: list<str>
+        """
+        self.cacheFile.write(str(docID)+"".join(";"+str(x[0])+":"+str(x[1])
+                                                for x in bestTerms)+"\n")
 
     @abstractmethod
     def persist(self, index=None, overrideFile=None):
@@ -249,27 +260,6 @@ class PersistCSVWeightedPosition(PersistIndex):
                     str(countPositions[0])+":"+str(countPositions[1][0]) + \
                     "".join(","+str(x) for x in countPositions[1][1:])
             # batch-like writting, writting 1 token and its ocurrences at a time
-
-                # weight = [countPositions[0]][0]
-                # term = [token][0]
-                # doc = [docID][0]
-                # if doc not in self.docCache:
-                #     self.docCache[doc] = [(term, weight)]
-                # else:
-                #     if len(self.docCache[doc]) < LIMITCACHE:
-                #         self.docCache[doc].append((term, weight))
-                #     else:
-                #         for termcache, termweight in self.docCache[doc]:
-                #             if termweight < weight:
-                #                 self.docCache[doc].remove(
-                #                     (termcache, termweight))
-                #                 self.docCache[doc].append(
-                #                     (term, weight))
-                #                 break
-
-                # weight = 0
-                # term = ""
-                # doc = 0
 
             count += len(currStr)
             f.write(currStr+"\n")

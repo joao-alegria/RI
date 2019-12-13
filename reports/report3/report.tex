@@ -31,7 +31,7 @@
 }
 {\end{list}}
 
-\title{Assignment 3} 
+\title{Assignment  3} 
 
 \author
 {Filipe Pires [85122], João Alegria [85048]\\
@@ -92,10 +92,11 @@ Our choice was based on the analysis of the requirements for the ranked retrieve
 we wanted to implement, as there seemed to be no need to keep the notion of where
 each term appeared at in each document.
 This also made the code adaptations to the indexing pipeline more straightforward 
-and, as we previously mentioned, the final size in disk of the index smaller.
-The execution time of this pipeline thankfully did not evolve as fast as the
-disk space, passing from 20 minutes without the abstract to approximately 1 hour
-and 20 minutes with it.
+and, as we previously mentioned, the final size in disk smaller.
+The execution time of this pipeline passed from 20 minutes without the abstract to under an hour and a 
+half with it. Both processing the weights without positions and limited by 2Gb of memory usage.
+
+Below it's shown an example of the existing information on the text corpus about one document.
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
@@ -110,20 +111,21 @@ PG  - 255-60
 AB  - Specific steroid antibodies, by the immunofluorescence 
       technique, regularly reveal fluorescent centrioles and 
       cilia-bearing basal bodies in target and nontarget cells. 
-      Although the precise identity of the immunoreactive 
-      steroid substance has not yet been established, it seems 
-      noteworthy that exogenous steroids can be vitally 
-      concentrated by centrioles, perhaps by exchange with 
-      steroids already present at this level. This unexpected 
-      localization suggests that steroids may affect cell
-      growth and differentiation in some way different from the 
-      two-step receptor mechanism.
+      (...)
 (...)
 \end{verbatim}
 \end{quote}
 \endgroup
 \vspace{-10pt}
-Above is an example of the existing information on the text corpus about one document.
+
+\newpage
+The new version of our indexing program outputs 2 additional files useful for 
+querying.
+One contains some metadata regarding the index, which is basically a 
+translation of each internal document ID to the respective PMID from the corpus.
+The other contains the weights of the most frequent terms of each document; this
+will be useful for the relevance feedback we implemented explained in \ref{rocchio}.
+The information for both structures is managed by the Indexer, since that is class responsible for the main logic of the index structure and is the stored by the Persister, where the communication between them is made by the pipeline created, the CreateIndex script. This additional processing does not slow down the indexing process and still allows the indexing process to be limited in the memory usage.  
 
 \newpage
 \section{Ranked Retrieval of Relevant Documents}
@@ -136,6 +138,13 @@ In this chapter we describe our implementation of a query results ranked retriev
 We also explain how we prepared it for memory limitations and present the 
 updates done to our class diagram.
 
+\begin{figure}[h!]
+\includegraphics[width=\linewidth]{ClassDiagram_assign3.png}
+\caption{Program's class diagram.}
+\label{fig:classdiagram}
+\end{figure}
+
+\newpage
 \subsection{Document Ranked Scores}
 
 The file \texttt{Searcher.py} contains an abstract class called \texttt{Searcher}
@@ -144,6 +153,8 @@ For our purposes, we developed \texttt{IndexSearcher}, a class that extends from
 \texttt{Searcher} and is capable of selecting which index files are required to 
 answer a given query, assigning scores to indexed documents and returning those 
 considered most relevant to the query according to these scores.
+Figure \ref{fig:classdiagram} shows the diagram of all developed classes, 
+including those for index creation and those for querying.
 
 The step of determining which index files will be needed is done by 
 \textit{retrieveRequiredFiles()} and is basically a comparison of each query 
@@ -177,12 +188,12 @@ relevant that others with fewer.
 
 \begin{equation}
   \label{score}
-  Score_{d} = \sum_{t=0}^{nT} W_{qt} * W_{dt}
+  Score_{d} = \sum_{t=0}^{nT} W_{qt} \times W_{dt}
 \end{equation}
 
 \begin{equation}
   \label{simple}
-  W_{qt} = 1 + \log(tf) * idf => Simplifying => W_{qt} = 1 * idf
+  W_{qt} = 1 + \log(tf) \times idf => Simplifying => W_{qt} = 1 \times idf
 \end{equation}
 
 Scores are calculated to allow the ordering of the documents considered potentially
@@ -197,7 +208,7 @@ only once in the query, which doesn't compromise the performance of the search
 since the terms are still considered and the number of times a term appears in 
 the query should not significantly affect the relevance of a document. 
 This allows our process to simply skip the step of calculating the query term 
-weights as shown in \ref{simple}, which can translates to crucial processing time speedup.
+weights as shown in \ref{simple}, as well as skip the values normalization, which can translates to crucial processing time speedup.
 
 Once the scores are found, \textit{sortAndWriteResults()} does what its name 
 suggests: sorts the documents by score and writes to a results file the first 
@@ -212,7 +223,7 @@ So the idea of attempting to expand queries was introduced through feeding back
 to the Searcher information that would help it fine tune its results.
 
 The aim of relevance feedback is to try to steer the search process behavior 
-in a way that guides the results to more relevant document.
+in a way that guides the results to more relevant documents.
 This is accomplished by transforming the query vectors (consisting in the weights 
 of each query term in the query) into new vectors closer to the trully
 relevant documents and further away from the remainder.
@@ -232,48 +243,68 @@ calculation is proposed by the following the formula \cite{rocchio}:
   \vec{q}_{m} = \alpha\vec{q}_{0} + \beta\frac{1}{|D_{r}|} \sum_{ \vec{d}_{j} \in D_{r}} \vec{d}_{j} - \gamma\frac{1}{|D_{nr}|} \sum_{ \vec{d}_{j} \in D_{nr}} \vec{d}_{j}
 \end{equation}
  
-Where $\vec{q}_{0}$ is the original query vector, i.e. the weights of each term 
-in the query, that in our context is simplified to $1 \times idf$; 
+In it, $\alpha$, $\beta$ and $\gamma$ are parameters that can be altered by the 
+user to improve the performance of the algorithm;
+$\vec{q}_{0}$ is the original query vector, i.e. the weights of each term 
+in the query, that in our context are simplified to $1 \times idf$; 
 $D_{r}$ is the list of known relevant documents;
 $D_{nr}$ is the list of known non-relevant documents; 
-finally $\alpha$, $\beta$ and $\gamma$ are parameters that can be altered by the 
-user to improve the performance of the algorithm. 
+$\vec{d}_{j}$ is the vector of term weights of the document j.
 
 Developing the formula we end up with the addition of three vectors: 
-the original query, the sum of all relevant document vectors and the sum of all 
-non-relevant vectors, which when applying the formula and summing all the values 
-of the resulting vector we achieve the new score of the document.
+the original query and the sums of all relevant and of all non-relevant document 
+vectors, which when applying the formula and summing all values of the resulting 
+vector we achieve the new document score.
 
-Taking a closer look at what the algorithm attempts to do, in a first analysis 
-it appears to do the same for all documents, which could translate in maintaining 
-the relations between them, but it's from our understanding that although true, 
-(referring to the vector space model that the algorithm is based on) what's 
-really happening is that the algorithm is trying to shift the query closer to 
-the relevant documents by the addition of its middle point 
-($\frac{1}{|D_{r}|} \sum_{ \vec{d}_{j} \in D_{r}} \vec{d}_{j}$) and distance it 
-from the non-relevant documents through the substation of its middle point 
-($\frac{1}{|D_{nr}|} \sum_{ \vec{d}_{j} \in D_{nr}} \vec{d}_{j}$).
-This algorithm had a considerable impact in our system, which will be further 
-explained in sections \ref{results} and \ref{discussion}.
+\newpage
+The implementation of this form of performance improvement began in the indexation
+process.
+Collecting the relevant and irrelevant documents to apply the formula was achievable
+during retrieval and without additional information, but to know the weights of
+each term of the vectors of all considered documents (relevant or irrelevant), 
+the information needed to be acquired some other way.
+To do this, we went back to our \texttt{Merger} and, before writing the index 
+files to disk, we select the 5 most frequent terms of each document and write 
+them, along with the respective document ID, to an additional file mentioned in
+chapter \ref{updates}.
+Now, inside \texttt{Searcher} the program can access this file and consider each
+document as $j$ and the term weights as $\vec{d}_{j}$ and so sum all vectors from 
+relevant documents and all from irrelevants. 
+Simultaneously, the program adds the new terms to the query, expanding it, 
+applies the formula to determine the modified query vector and in consequence
+recalculates the scores with feedback.
 
-We decided to implement 2 distinct approaches of providing feedback.
-The first was a simulation of the user feedback and the other was a pseudo feedback. 
-To achieve the first strategy we executed the information retrieval normally, 
-obtaining the best results our system could supply and compared the obtained 
-top K results with the gold standard supplied to us for the assignment. 
-From those, the results that checked with the gold standard were considered as 
-relevant documents and the remaining as irrelevant; 
-this information was partially processed and persisted in files to make its 
-further usage easier. 
-A similar process was made to the pseudo feedback, being this one quite simpler 
-since it only considers the relevant documents and defines them by selecting the 
-top K values returned.
+In practice, what is happening is that the algorithm adds terms from documents 
+considered relevant and recalculates the query vector to shift it closer to 
+the relevant documents ($+ \beta \frac{1}{|D_{r}|} \sum_{ \vec{d}_{j} \in D_{r}} \vec{d}_{j}$)
+and away from the irrelevant ones ($- \gamma \frac{1}{|D_{nr}|} \sum_{ \vec{d}_{j} \in D_{nr}} \vec{d}_{j}$).
+The reason we limit the number of terms to add to the query vector is both for 
+execution time reduction and to ignore terms that will most likely not affect the 
+outcome in a significant way.
 
-A Python script was developed to perform all of this automatically.
-As it served only as an auxiliary function, we didn't took in consideration the 
-execution time nor the memory usage, since the values it produces should ideally, 
-in a real world situation, be selected and verified in a more controlled and reliable way.
+But how exactly are the relevant and irrelevant documents determined?
+The two ways we explored to answer this question was through a simulated user 
+feedback and a pseudo feedback strategy.
+To achieve the first feedback, the program normally executes the ranked retrieval
+obtaining the best results it can supply and compares the obtained top S results 
+(where S is the scope of scores considered for the Rocchio algorithm and is 
+definable by the user through the parameter \texttt{rocchioScope}, as seen in 
+section \ref{results}) with the gold standard.
+This gold standard is an external source of information given to us for the 
+assignment that contains the list of documents considered relevant for each of
+the also given queries by actual users.
+This comparison is done to determine which of our top documents match the 
+documents in the gold standard for the query being considered and defining them 
+as relevant for the algorithm, and those that do not match are defined as irrelevant.
+The second form of feedback is less computationally demanding, as it directly 
+considers our top S results are truly relevant (hence the word 'pseudo') and 
+uses the simplification of not using the negative feedback so it does not require
+knowledge about the irrelevant documents.
+As both forms of feedback will add terms to the query vector and change its 
+position in the multidimensional space, it is expected that both will have a 
+positive impact on the overal performance of the ranked retrieval.
 
+\newpage
 \subsection{Memory Management} \label{memory}
 
 When developing \texttt{Searcher}, we decided to implement an intelligent memory
@@ -292,14 +323,9 @@ will decrease the execution time, due to less I/O operations.
 After cleaning the internal cache the process verifies that memory was freed and 
 continues writing the terms used which may become the new most used terms.
 
-Below we present the diagram of all developed classes, including those for index 
-creation and those for index querying.
+We know that there are several approaches to this problem of using the memory in a intelligent way. An option is to load big portions of the index files to memory so that in case a query demands one of the terms already in memory it's is almost instant to obtain the information related to that term, but on the other hand that demands a large amount of memory space and in some cases can cause some troubles since if the query need a term not in memory and the memory is full, it's required to dump one of the portions previously loaded and load the portion that contains the term needed, process that can be quite demanding.
 
-\begin{figure}[h!]
-\includegraphics[width=\linewidth]{ClassDiagram_assign3.png}
-\caption{Program's class diagram.}
-\label{fig:classdiagram}
-\end{figure}
+Has there is always tradeoffs in every strategy we decided to implement the one defined above. We know that his solution is limited, as it does not avoid having to read from the same  file in disk in consecutive queries if the terms from the first query (now in  cache) are not the same as any of the second but are indexed in the same file. But on the other hand this allows significantly less memory space and by keeping the most used terms until then it may end up being worth using this strategy since more and more queries will use the terms already in memory.
 
 \newpage
 \section{Evaluation and Results Discussion}
@@ -378,7 +404,8 @@ less time.
 
 The tests phase of the project was conducted with the help of \texttt{QueryIndex}
 to execute the ranked retrievals and \texttt{QueryAnalyzer} to evaluate the results.
-They considered the original dataset indexed with the updates mentioned in section \ref{updates} and all 50 given queries.
+They considered the original dataset indexed with the updates mentioned in section
+\ref{updates} and all 50 given queries.
 
 \texttt{QueryIndex.py} works as the script that creates an instance of the 
 \texttt{IndexSearcher} and, for each query, tells it to retrieve the best results.
@@ -407,7 +434,7 @@ Option \texttt{-r} allows the user to define the maximum amount of memory that c
 be used by the process running the program.
 Option \texttt{-f} makes possible for the user to choose a form of relevance 
 feedback, so that there is a greater assurance that the returned documents are
-actually relevant to the query.
+actually relevant to the query. 
 The alternatives are: 'pseudo' and 'user'.
 Options \texttt{-s}, \texttt{-c} and \texttt{-l} allow the definition of the 
 number of retrieved documents considered for the Rocchio algorithm (applied in
@@ -418,15 +445,15 @@ must appear right after the respective options.
 \texttt{QueryFile} and \texttt{indexFolder} are the only obligatory parameters,
 as they tell the program where are the queries and the index files.
 \texttt{A}, \texttt{b} and \texttt{g} are optional parameters that must be defined
-if the relevance feedback is activated (if \texttt{-f} and \texttt{-s} are also
-defined), as they correspond to the Rocchio algorithm's parameters $\alpha$,
-$\beta$ and $\gamma$.
+if the relevance feedback is activated (if \texttt{-f} and \texttt{-s} are defined), 
+as they correspond to Rocchio' parameters $\alpha$, $\beta$ and $\gamma$.
 
+\newpage
 We executed \texttt{QueryIndex.py} for different combinations of parameters to
 ensure its correct functioning and to search for the configuration with highest 
 performances.
 It was initially tested with indexes with positions and both types of tokenizers, 
-although the remaining tests were all using only weights to reduce execution times
+although the remaining tests were all using only weights
 and only the complex tokenizer to remove noise and increase precision.
 Then we tested the program with and without champions list (although this was
 not done through the command's parameters) and for champions lists of different sizes.
@@ -442,34 +469,48 @@ space of the program for each query without loosing valuable information.
 What we later understood was that, if its size was reduced, the lost of useful
 information and relevant documents started to have a big impact on the performance,
 as for a list of size $10^3$ the precision dropped to about 16\%.
-
 With the champions list at size $10^4$, we tried to reduce the number of results
 returned from 100 to 50, 20 and 10. 
-The later reached a precision of 26\%, which was good news to us.
+The later(10 results) reached a precision of 26\%, with a query throughput of ..............
+queries per second, which was good news to us.
 
-Although pseudo feedback was also part of our tests, we knew \textit{a priori} 
-that this would not influence the results at all, since it assumed that the first
-results the program already considered more relevant were in fact relevant and 
-increased their final scores.
-User feedback, on the other hand, proved to have great value when tested.
-To test this form of feedback, we varied the parameters \texttt{n} (number of 
-retrieved documents considered for the Rocchio algorithm) between 5, 10 and 20
-with the \texttt{a}, \texttt{b} and \texttt{g} parameters fixed at 1.0, 0.5 and
-0.25 respectively.
-The final precision for each \texttt{n} was: 28\%, 29\% and 29\%. 
-At last we inverted the parameters variation in order to study the effects of 
-$\alpha$, $\beta$ and $\gamma$.
-To do this, we fixed \texttt{n} at 10 and tested the 3 parameters for values
-between 0 and 1.
-The values with the best precision were \texttt{$\alpha$ = 1.0}, 
-\texttt{$\beta$ = 1.0} and \texttt{$\gamma$ = 0.1}, with a final precision of 31\%.
-Table \ref{tab:tab1} (located at the end of this document) presents the performance metrics of the best combination achieved for further analysis.
+Unfortunately, the introduction of relevance feedback fell short of our expectations.
+With the use of pseudo feedback, the throughput went significantly up, as expected,
+and the precision actually fell around 2\%.
+The user feedback, taking even longer to answer each query, was also not very
+much effective.
+To test these forms of feedback and reach the presented values, we varied the 
+parameters \texttt{n} (number of retrieved documents considered for the Rocchio 
+algorithm) between 5, 10 and 20 with the \texttt{a}, \texttt{b} and \texttt{g} 
+parameters fixed at 1.0, 0.5 and 0.25 respectively.
+Then we inverted the parameters variation in order to study the effects of 
+$\alpha$, $\beta$ and $\gamma$: we fixed \texttt{n} at 10 and tested the 3 
+parameters for values between 0 and 1, but this time only to the user feedback 
+as it showed the best  potential to achieve higher precision percentages.
+The parameter values with the best precision were \texttt{$\alpha$=1.0}, 
+\texttt{$\beta$=1.0} and \texttt{$\gamma$=0.1}, with a precision of 26\%.
+
+Table \ref{tab:tab1} (located at the end of this document) presents the performance 
+metrics of the best combination achieved for further analysis.
+The configurations was: complex tokenizer, no RAM limit, no feedback, champions list of
+size $10^4$, returning only 10 results.
 Other tables are present in our repository for different number of results returned 
 and without relevance feedback.
-Finally the time related metrics. As already said query response time is very crucial, since the user wants instant results.
-Our implementation is able to respond to all 50 queries within 35 seconds if no memory restrictions are placed. Due to system fluctuations and memory restrictions to the system, it may reach 60 seconds of execution time, for example if the memory is restricted to 250Mb.
-This means that in general the system is capable of accomplishing a query throughput
-of 1.43 queries per second and a query latency of 0.7 seconds.
+
+Finally the time related metrics. 
+As it was already stated, query response time is very crucial, since the user wants 
+instant results.
+Our implementation is able to respond to all 50 queries within 15 seconds if no 
+memory restrictions are placed. 
+Due to system fluctuations and memory restrictions to the system, it may reach 
+35 seconds of execution time, for example if the memory is restricted to 250Mb.
+This means that in general the system is capable of accomplishing a query 
+throughput of 3.33 queries per second and a query latency of 0.3 seconds.
+When relevance feedback is introduced, the values are not quite the same.
+For the pseudo feedback, query throughput climbs up to .......... queries per second,
+and for the user feedback the value is ........ queries per second.
+This is obvious, as the same calculations must be done, plus the addition of query 
+terms and the recalculation of the document scores.
 
 \subsection{Discussion}\label{discussion}
 
@@ -504,9 +545,11 @@ When increasing the size of the returned list, it increases the probability of
 including documents that our system considers relevant but may not actually be 
 relevant at all.
 
+As we have previously mentioned, user feedback was expected to give better results
+than the pseudo feedback.
 The way the user feedback through the Rocchio algorithm works is: scores from 
-documents considered not relevant to a given query by users must be lowered and 
-scores from relevant documents must be increased.
+documents considered not relevant by real users to a given query must be lowered 
+and scores from relevant documents must be increased.
 Well, it is only natural that, when applied with appropriate scores regulation,
 this feedback will positively influence the program's precision because it gives
 "inside information" on what the user making the query is probably looking for.
@@ -566,7 +609,16 @@ We found that, without memory restrictions, the minimum amount of memory require
 for retrievals to work reasonably well is only 500Mb, taking in consideration 
 that the index process was made with 2Gb of memory space.
 Adding restrictions slows down retrieval but makes the program capable of managing
-the used memory to lower values. Due ro the fact that our implementation was made using Python, when reading the index to find the documents that contain a certain term we need to read the entire line, since Python from our knowledge isn't capable of reading portions of a file line. With that in mind, although we implemented internal memory management we couldn't control that, making our process need at least 400 Mb of memory.
+the used memory to lower values. 
+
+One limitation we were not able to surpass was that, when reading a line from an 
+index file, although the content might only be partially stored in memory, the act
+of reading is anatomic and so if the line is large enough it might surpass the 
+defined memory restrictions.
+This issue is intrinsic to the programming language chosen and we did not find a 
+way to only partially read a line.
+For this reason, even if the memory is limited, we determined that the minimum 
+amount of RAM required was of 400Mb.
 
 There are some facts that explain why a high precision is never achieved.
 The first is the lack of consideration for synonym terms and similar and related 
@@ -599,19 +651,13 @@ The biggest challenge we faced was definitely the implementation of the Rocchio
 algorithm.
 Understanding it required the capacity to visually place the query vectors in a 
 multidimensional space and interpret what the algorithm did and how could it be 
-achieved programmatically.
+achieved programmatically. 
 
 Another big challenge was the memory management.
 As there was a need to ensure a minimum amount of available memory for the internal
 variables to be properly used and we wished to keep information from query to query,
 this process was not trivial and required a lot of brainstorming and code changes 
 to achieve its final version.
-One limitation we were not able to surpass was that, when reading a line from an 
-index file, although the content might only be partially stored in memory, the act
-of reading is anatomic and so if the line is large enough it might surpass the 
-defined memory restrictions.
-This issue is intrinsic to the programming language chosen and we did not find a 
-way to only partially read a line.
 
 From this assignment, we take a deeper understanding of the way search engines 
 and other information retrieval systems decide which elements can be considered
@@ -619,6 +665,12 @@ more relevant and appropriate to return.
 Our research and development made us gain knowledge on powerful optimization 
 techniques in a practical way and challenged us to use what we had previously
 developed for the first assignments the best possible way.
+
+For future work we believed it could be beneficial to explore a probabilistic
+relevance feedback strategy such as BM-25 to compare with the Rocchio algorithm
+or perhaps even combine both.
+In addition, different forms of memory management could be explored in search
+for a better tradeoff than of the solution presented in this report.
 
 The overall perspective of our performance regarding the project is very positive,
 as we were able to make a detailed study on what was at our reach to achieve the 
@@ -646,8 +698,6 @@ careful and find that the delivered code is properly presented to any developer.
     accessed in 12/2019.
   
 \end{thebibliography}
-
-\clearpage
 
 \appendix
 \section*{Appendix}
