@@ -464,16 +464,16 @@ And finally we tested the program with relevance feedback, with both pseudo and
 simulated user feedbacks, and with different Rocchio parameters values.
 
 The presence of the champions list seemed to have no relevant impact on the 
-overall performance, with tests at the time rounding 19\% of precision
+overall performance, with tests at the time rounding 18\% of precision
 (with a champions list of size $10^4$).
 This feature was important for the execution times, as it reduced the search 
 space of the program for each query without loosing valuable information.
 What we later understood was that, if its size was reduced, the lost of useful
-information and relevant documents started to have a big impact on the performance,
-as for a list of size $10^3$ the precision dropped to about 16\%.
-With the champions list at size $10^4$, we tried to reduce the number of results
+information and relevant documents had a big impact on the performance,
+as for a list of size $10^3$ the precision dropped to 16\%.
+With the champions list at size $10^4$, we reduced the number of results
 returned from 100 to 50, 20 and 10. 
-The later reached a precision of 26\%, with a query throughput of ..............
+The last reached a precision of 25\%, with a throughput of 7.1
 queries per second, which was good news to us.
 
 Unfortunately, the introduction of relevance feedback fell short of our expectations.
@@ -490,7 +490,7 @@ $\alpha$, $\beta$ and $\gamma$: we fixed \texttt{n} at 10 and tested the 3
 parameters for values between 0 and 1, but this time only to the user feedback 
 as it showed the best  potential to achieve higher precision percentages.
 The parameter values with the best precision were \texttt{$\alpha$=1.0}, 
-\texttt{$\beta$=1.0} and \texttt{$\gamma$=0.1}, with a precision of 26\%.
+\texttt{$\beta$=1.0} and \texttt{$\gamma$=0.1}, with a precision of 25\%.
 
 Table \ref{tab:tab1} (located at the end of this document) presents the performance 
 metrics of the best combination achieved for further analysis.
@@ -507,10 +507,10 @@ memory restrictions are placed.
 Due to system fluctuations and memory restrictions to the system, it may reach 
 35 seconds of execution time, for example if the memory is restricted to 250Mb.
 This means that in general the system is capable of accomplishing a query 
-throughput of 3.33 queries per second and a query latency of 0.3 seconds.
+throughput of around 4 queries per second and a query latency of less than 0.4 seconds.
 When relevance feedback is introduced, the values are not quite the same.
-For the pseudo feedback, query throughput climbs up to .......... queries per second,
-and for the user feedback the value is ........ queries per second.
+For the pseudo feedback, query throughput falls down to 0.2 queries per second,
+and for the user feedback the value is 0.125 queries per second.
 This is obvious, as the same calculations must be done, plus the addition of query 
 terms and the recalculation of the document scores.
 
@@ -547,28 +547,51 @@ When increasing the size of the returned list, it increases the probability of
 including documents that our system considers relevant but may not actually be 
 relevant at all.
 
-As we have previously mentioned, user feedback was expected to give better results
-than the pseudo feedback.
-The way the user feedback through the Rocchio algorithm works is: scores from 
-documents considered not relevant by real users to a given query must be lowered 
-and scores from relevant documents must be increased.
-Well, it is only natural that, when applied with appropriate scores regulation,
-this feedback will positively influence the program's precision because it gives
-"inside information" on what the user making the query is probably looking for.
-And the more documents considered on the algorithm, the more the results will 
-be closer to the truly relevant documents and further from the non relevant, as 
-more documents from the results are affected by this regulatory feature.
-The best parameter combination found for the algorithm was $\alpha=1, \beta=1$ and $\gamma=0.1$. 
-This makes sense since what those values try to convey is that the original query 
-results must be really relevant, that the values from the relevant document 
-feedback are as relevant as the query (which is logical since it knows 
-\textit{a priori} that those documents are truly relevant), and that the irrelevant 
-results need to be considered but their importance is much smaller.
-Referring to section \ref{rocchio}, one can understand that those values are 
-reasonable based on the Vector Space Model, where the intention is to allow the 
-shift of the query vector closer to relevant documents with $\beta=1$ and distance 
-them from the irrelevant documents but not so much as to distance them again 
-from the relevant ones, hence the $\gamma=0.1$.
+As we have previously mentioned, both pseudo and user feedback presented 
+unexpected results.
+However, these were not unexplainable, as they had indeed a reason to be as such.
+From what we understood, the reason they were not able to improve the program's
+performance was because both feedbacks were introducing to the query vector 
+terms that were not relevant for the query.
+These terms were chosen based only on their high weights on the documents they
+belonged to, but that does not ensure they should be relevant to a given query.
+The result is the creation of a new query vector more generalized and thus the results
+will also be generalised.
+
+But not all is bad news actually.
+Through a deeper analysis of what was occurring with this algorithm, we discovered 
+that in most queries whose precision was extremely low, the addition of these new
+terms actually improved their precision up to 10\%.
+The negative effect was more noticeable on those queries whose previous results
+were already very accurate and now lowered due to the noise introduction (of the new
+terms).
+
+With regards to the best found parameters for the Rocchio algorithm, 
+$\alpha=1, \beta=1$ and $\gamma=0.1$, referring to section \ref{rocchio},
+one can understand that those values are reasonable based on the Vector Space Model, 
+where the intention is to allow the shift of the query vector closer to relevant 
+documents with $\beta=1$ and distance them from the irrelevant documents but not 
+so much as to distance them again from the relevant ones, hence the $\gamma=0.1$.
+But in practise the newly added terms changed the vector too much and had a negative
+inpact on the outcome.
+
+In Figure \ref{fig:precisionbarchart}, we present a bar chart with the precision and
+query latency growth as we fine tuned the program with the proper parameters.
+The first bar corresponds to running \texttt{QueryIndex.py} for all 50 queries with 
+a champions list of size $10^3$, without feedback and returning 50 documents;
+The second is the same but returning only 10 documents;
+The third and fourth are the same as the previous but for a champions list of size $10^4$;
+The fifth and sixth use the same champions list and return 10 documents and use pseudo
+feedback with $\alpha=1$ and $\beta=0.5$ and the scopes are 5 and 20 (respectively);
+Finally the last 3 use the same champions list size and return 10 documents as well, but use
+user feedback with scopes 5, 10 and 20 (respectively) and $\alpha=1$, $\beta=0.5$, $\gamma=0.25$,
+$\alpha=1$, $\beta=0.9$, $\gamma=0.3$, and $\alpha=1$, $\beta=1$, $\gamma=0.1$ (respectively).
+
+\begin{figure}[h!]
+\includegraphics[width=\linewidth]{BarChart.png}
+\caption{Precision and query latency evolution according to parameter variation.}
+\label{fig:precisionbarchart}
+\end{figure}
 
 \newpage
 In our analysis we only mention precision as a means of determining whether 
@@ -595,7 +618,7 @@ acceptable, which we didn't expect from the poor precision values obtained.
 
 So far we have explored ways of improving the program's performance through
 limited, although relevant, strategies.
-But the hard truth is that a precision of 30\% on a sort of search engine is not
+But the hard truth is that a precision of 26\% on a sort of search engine is not
 exactly something to be very much proud of, or, at least, not the ideal value 
 a regular user expects from such system.
 In this section we attempt to understand why our solution is so limited and 
@@ -623,6 +646,7 @@ way to only partially read a line.
 For this reason, even if the memory is limited, we determined that the minimum 
 amount of RAM required was of 400Mb.
 
+\newpage
 There are some facts that explain why a high precision is never achieved.
 The first is the lack of consideration for synonym terms and similar and related 
 words when retrieving the documents.
@@ -645,6 +669,7 @@ in a smart, automatic and adaptive way.
 This is only achievable if a lot of data to analyse is available, and is a technique
 very much explored by large search engines.
 
+\newpage
 \section{Conclusions}
 
 After completing the assignment, we drew a few conclusions regarding our
@@ -669,8 +694,12 @@ Our research and development made us gain knowledge on powerful optimization
 techniques in a practical way and challenged us to use what we had previously
 developed for the first assignments the best possible way.
 
-For future work we believed it could be beneficial to explore a probabilistic
-relevance feedback strategy such as BM-25 to compare with the Rocchio algorithm
+For future work we intended to explore the query expansion further, attempting
+to find a way of choosing terms during indexation that could bring more value
+to the Rocchio algorithm instead of choosing them according to their document 
+weights.
+We also believed it could be beneficial to explore a probabilistic relevance 
+feedback strategy such as BM-25 to compare with the Rocchio algorithm
 or perhaps even combine both.
 In addition, different forms of memory management could be explored in search
 for a better tradeoff than of the solution presented in this report.
