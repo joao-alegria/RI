@@ -93,16 +93,10 @@ we wanted to implement, as there seemed to be no need to keep the notion of wher
 each term appeared at in each document.
 This also made the code adaptations to the indexing pipeline more straightforward 
 and, as we previously mentioned, the final size in disk smaller.
-The execution time of this pipeline thankfully did not evolve as fast as the
-disk space, passing from 20 minutes without the abstract to under an hour and a 
-half with it.
+The execution time of this pipeline passed from 20 minutes without the abstract to under an hour and a 
+half with it. Both processing the weights without positions and limited by 2Gb of memory usage.
 
-The new version of our indexing program outputs 2 additional files useful for 
-querying.
-One contains a sort of metadata regarding the index, which is basically a 
-translation of each internal document ID to the respective PMID from the corpus.
-The other contains the weights of the most frequent terms of each document; this
-will be useful for the relevance feedback we implemented explained in \ref{rocchio}.
+Below it's shown an example of the existing information on the text corpus about one document.
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
@@ -123,7 +117,15 @@ AB  - Specific steroid antibodies, by the immunofluorescence
 \end{quote}
 \endgroup
 \vspace{-10pt}
-Above is an example of the existing information on the text corpus about one document.
+
+\newpage
+The new version of our indexing program outputs 2 additional files useful for 
+querying.
+One contains some metadata regarding the index, which is basically a 
+translation of each internal document ID to the respective PMID from the corpus.
+The other contains the weights of the most frequent terms of each document; this
+will be useful for the relevance feedback we implemented explained in \ref{rocchio}.
+The information for both structures is managed by the Indexer, since that is class responsible for the main logic of the index structure and is the stored by the Persister, where the communication between them is made by the pipeline created, the CreateIndex script. This additional processing does not slow down the indexing process and still allows the indexing process to be limited in the memory usage.  
 
 \newpage
 \section{Ranked Retrieval of Relevant Documents}
@@ -206,7 +208,7 @@ only once in the query, which doesn't compromise the performance of the search
 since the terms are still considered and the number of times a term appears in 
 the query should not significantly affect the relevance of a document. 
 This allows our process to simply skip the step of calculating the query term 
-weights as shown in \ref{simple}, which can translates to crucial processing time speedup.
+weights as shown in \ref{simple}, as well as skip the values normalization, which can translates to crucial processing time speedup.
 
 Once the scores are found, \textit{sortAndWriteResults()} does what its name 
 suggests: sorts the documents by score and writes to a results file the first 
@@ -261,15 +263,14 @@ Collecting the relevant and irrelevant documents to apply the formula was achiev
 during retrieval and without additional information, but to know the weights of
 each term of the vectors of all considered documents (relevant or irrelevant), 
 the information needed to be acquired some other way.
-To do this, we went back to our \texttt{Merger} and, before writing the index 
-files to disk, we select the 5 most frequent terms of each document and write 
+To do this, we went back to our \texttt{Indexer} and, when handling one document to insert it's content in the index, we select the 5 most frequent terms of each document and write 
 them, along with the respective document ID, to an additional file mentioned in
 chapter \ref{updates}.
 Now, inside \texttt{Searcher} the program can access this file and consider each
 document as $j$ and the term weights as $\vec{d}_{j}$ and so sum all vectors from 
 relevant documents and all from irrelevants. 
 Simultaneously, the program adds the new terms to the query, expanding it, 
-applies the formula to determine the modified query vector and in consequence
+applying the formula to determine the modified query vector and in consequence
 recalculates the scores with feedback.
 
 In practice, what is happening is that the algorithm adds terms from documents 
@@ -321,13 +322,9 @@ will decrease the execution time, due to less I/O operations.
 After cleaning the internal cache the process verifies that memory was freed and 
 continues writing the terms used which may become the new most used terms.
 
-This solution is limited, as it does not avoid having to read from the same 
-file in disk in consecutive queries if the terms from the first query (now in 
-cache) are not the same as any of the second but are indexed in the same file.
-The actual chances of any of the terms from the new query to be in cache are 
-very small, but we believe this could make room for future improvements that 
-considered popular terms (instead of or in complement to the terms of previous
-queries) in order to make this memory usage strategy more worthwhile.
+We know that there are several approaches to this problem of using the memory in a intelligent way. An option is to load big portions of the index files to memory so that in case a query demands one of the terms already in memory it's is almost instant to obtain the information related to that term, but on the other hand that demands a large amount of memory space and in some cases can cause some troubles since if the query need a term not in memory and the memory is full, it's required to dump one of the portions previously loaded and load the portion that contains the term needed, process that can be quite demanding.
+
+Has there is always tradeoffs in every strategy we decided to implement the one defined above. We know that his solution is limited, as it does not avoid having to read from the same  file in disk in consecutive queries if the terms from the first query (now in  cache) are not the same as any of the second but are indexed in the same file. But on the other hand this allows significantly less memory space and by keeping the most used terms until then it may end up being worth using this strategy since more and more queries will use the terms already in memory.
 
 \newpage
 \section{Evaluation and Results Discussion}
@@ -455,7 +452,7 @@ We executed \texttt{QueryIndex.py} for different combinations of parameters to
 ensure its correct functioning and to search for the configuration with highest 
 performances.
 It was initially tested with indexes with positions and both types of tokenizers, 
-although the remaining tests were all using only weights to reduce execution times
+although the remaining tests were all using only weights
 and only the complex tokenizer to remove noise and increase precision.
 Then we tested the program with and without champions list (although this was
 not done through the command's parameters) and for champions lists of different sizes.
@@ -532,7 +529,7 @@ It makes sense then that, if a sufficient amount of unnecessary computations are
 avoided, the query answering is significantly reduced.
 This is also why champion lists too small have a negative impact on the overall 
 performance, since there is a higher probability of discarding entries that in 
-reality would be benefitial.
+reality would be beneficial.
 
 The fact that the number of results returned directly influences the results 
 precision is also simple to understand.
@@ -743,58 +740,58 @@ careful and find that the delivered code is properly presented to any developer.
   \endhead
   %
   1 & 0.50 & 0.06 & 0.11 & 0.80 & 0.80 & 1.00 \\ \hline
-  2 & 0.60 & 0.06 & 0.11 & 0.68 & 0.68 & 0.83 \\ \hline
+  2 & 0.50 & 0.05 & 0.09 & 0.60 & 0.60 & 0.94 \\ \hline
   3 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   4 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  5 & 0.10 & 0.04 & 0.06 & 0.00 & 0.00 & 0.50 \\ \hline
+  5 & 0.10 & 0.04 & 0.06 & 0.00 & 0.00 & 0.43 \\ \hline
   6 & 1.00 & 0.11 & 0.19 & 0.90 & 0.90 & 1.00 \\ \hline
-  7 & 0.80 & 0.07 & 0.13 & 0.80 & 0.80 & 0.86 \\ \hline
+  7 & 0.50 & 0.04 & 0.08 & 0.52 & 0.52 & 0.82 \\ \hline
   8 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  9 & 0.70 & 0.06 & 0.11 & 0.47 & 0.47 & 0.64 \\ \hline
+  9 & 0.60 & 0.05 & 0.10 & 0.36 & 0.36 & 0.54 \\ \hline
   10 & 1.00 & 0.75 & 0.86 & 0.67 & 0.67 & 1.00 \\ \hline
-  11 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  12 & 0.30 & 0.01 & 0.02 & 0.67 & 0.67 & 1.00 \\ \hline
-  13 & 0.10 & 0.04 & 0.06 & 0.00 & 0.00 & 0.32 \\ \hline
+  11 & 0.10 & 0.01 & 0.02 & 0.00 & 0.00 & 0.39 \\ \hline
+  12 & 0.40 & 0.02 & 0.03 & 0.75 & 0.75 & 1.00 \\ \hline
+  13 & 0.20 & 0.08 & 0.12 & 0.10 & 0.10 & 0.69 \\ \hline
   14 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   15 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  16 & 0.70 & 0.05 & 0.09 & 0.52 & 0.52 & 0.80 \\ \hline
+  16 & 0.30 & 0.02 & 0.04 & 0.14 & 0.14 & 0.50 \\ \hline
   17 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   18 & 1.00 & 1.00 & 1.00 & 0.00 & 0.00 & 1.00 \\ \hline
   19 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  20 & 0.30 & 0.03 & 0.05 & 0.15 & 0.15 & 0.56 \\ \hline
-  21 & 0.50 & 0.06 & 0.11 & 0.71 & 0.71 & 0.86 \\ \hline
+  20 & 0.10 & 0.01 & 0.02 & 0.00 & 0.00 & 1.00 \\ \hline
+  21 & 0.50 & 0.06 & 0.11 & 0.62 & 0.62 & 0.95 \\ \hline
   22 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   23 & 0.20 & 0.01 & 0.02 & 0.13 & 0.13 & 0.81 \\ \hline
-  24 & 1.00 & 0.38 & 0.56 & 0.90 & 0.90 & 0.84 \\ \hline
+  24 & 0.60 & 0.23 & 0.33 & 0.41 & 0.41 & 0.62 \\ \hline
   25 & 0.10 & 0.03 & 0.05 & 0.00 & 0.00 & 0.39 \\ \hline
-  26 & 0.80 & 0.17 & 0.28 & 0.63 & 0.63 & 0.85 \\ \hline
+  26 & 0.60 & 0.13 & 0.21 & 0.44 & 0.44 & 0.75 \\ \hline
   27 & 0.10 & 0.03 & 0.05 & 0.00 & 0.00 & 1.00 \\ \hline
-  28 & 0.20 & 0.15 & 0.17 & 0.25 & 0.25 & 0.75 \\ \hline
-  29 & 0.10 & 0.02 & 0.04 & 0.00 & 0.00 & 0.43 \\ \hline
-  30 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 0.30 \\ \hline
+  28 & 0.10 & 0.08 & 0.09 & 0.00 & 0.00 & 1.00 \\ \hline
+  29 & 0.10 & 0.02 & 0.04 & 0.00 & 0.00 & 0.50 \\ \hline
+  30 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   31 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   32 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   33 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  34 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  35 & 0.40 & 0.01 & 0.03 & 0.38 & 0.38 & 0.77 \\ \hline
+  34 & 0.10 & 0.03 & 0.05 & 0.00 & 0.00 & 0.36 \\ \hline
+  35 & 0.40 & 0.01 & 0.03 & 0.60 & 0.60 & 0.94 \\ \hline
   36 & 0.80 & 0.03 & 0.06 & 0.58 & 0.58 & 0.82 \\ \hline
   37 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   38 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
   39 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  40 & 0.20 & 0.01 & 0.01 & 0.17 & 0.17 & 0.83 \\ \hline
-  41 & 1.00 & 0.02 & 0.03 & 0.90 & 0.90 & 0.89 \\ \hline
-  42 & 0.40 & 0.01 & 0.01 & 0.24 & 0.24 & 0.67 \\ \hline
-  43 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 1.00 \\ \hline
-  44 & 0.40 & 0.01 & 0.01 & 0.24 & 0.24 & 0.48 \\ \hline
-  45 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 1.00 \\ \hline
-  46 & 1.00 & 0.05 & 0.10 & 0.90 & 0.90 & 1.00 \\ \hline
+  40 & 0.20 & 0.01 & 0.01 & 0.06 & 0.06 & 0.41 \\ \hline
+  41 & 0.10 & 0.00 & 0.00 & 0.00 & 0.00 & 0.30 \\ \hline
+  42 & 0.10 & 0.00 & 0.00 & 0.00 & 0.00 & 0.50 \\ \hline
+  43 & 0.10 & 0.01 & 0.01 & 0.00 & 0.00 & 0.50 \\ \hline
+  44 & 0.30 & 0.00 & 0.01 & 0.28 & 0.28 & 0.59 \\ \hline
+  45 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
+  46 & 0.80 & 0.04 & 0.08 & 0.54 & 0.54 & 0.78 \\ \hline
   47 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  48 & 0.60 & 0.04 & 0.07 & 0.44 & 0.44 & 0.75 \\ \hline
-  49 & 0.40 & 0.05 & 0.10 & 0.43 & 0.43 & 0.73 \\ \hline
-  50 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\ \hline
-  Avg & 0.31 & 0.07 & 0.09 & 0.25 & 0.25 & 0.49 \\ \hline
-  \caption{Values for 10 documents, user feedback(1,1,0.1)}
-  \label{tab:tab1} 
+  48 & 0.20 & 0.01 & 0.02 & 0.25 & 0.25 & 0.88 \\ \hline
+  49 & 0.40 & 0.05 & 0.10 & 0.43 & 0.43 & 0.85 \\ \hline
+  50 & 0.10 & 0.00 & 0.01 & 0.00 & 0.00 & 0.33 \\ \hline
+  Avg & 0.25 & 0.06 & 0.08 & 0.18 & 0.18 & 0.47 \\ \hline
+  \caption{Values obtained for 10 documents, no feedback, 10000 champions}
+  \label{tab:tab1}\\
   \end{longtable}
 
 
