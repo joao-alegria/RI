@@ -96,7 +96,7 @@ and, as we previously mentioned, the final size in disk smaller.
 The execution time of this pipeline passed from 20 minutes without the abstract to under an hour and a 
 half with it. Both processing the weights without positions and limited by 2Gb of memory usage.
 
-Below it's shown an example of the existing information on the text corpus about one document.
+Next we present an example of the information fields on the text corpus about 1 document.
 
 \begingroup
 \addtolength\leftmargini{-0.4in}
@@ -118,7 +118,6 @@ AB  - Specific steroid antibodies, by the immunofluorescence
 \endgroup
 \vspace{-10pt}
 
-\newpage
 The new version of our indexing program outputs 2 additional files useful for 
 querying.
 One contains some metadata regarding the index, which is basically a 
@@ -127,7 +126,6 @@ The other contains the weights of the most frequent terms of each document; this
 will be useful for the relevance feedback we implemented explained in \ref{rocchio}.
 The information for both structures is managed by the Indexer, since that is class responsible for the main logic of the index structure and is the stored by the Persister, where the communication between them is made by the pipeline created, the CreateIndex script. This additional processing does not slow down the indexing process and still allows the indexing process to be limited in the memory usage.  
 
-\newpage
 \section{Ranked Retrieval of Relevant Documents}
 
 With an entirely functional index creator and a folder of generated indexes from
@@ -139,7 +137,8 @@ We also explain how we prepared it for memory limitations and present the
 updates done to our class diagram.
 
 \begin{figure}[h!]
-\includegraphics[width=\linewidth]{ClassDiagram_assign3.png}
+\centering
+\includegraphics[width=0.95\linewidth]{ClassDiagram_assign3.png}
 \caption{Program's class diagram.}
 \label{fig:classdiagram}
 \end{figure}
