@@ -13,12 +13,9 @@ queryResults
 heal.py
 indexMetadata.txt
 extraIndex
-<<<<<<< HEAD
 extraindex
 backup2
 backup3
 t
 docCache
-=======
->>>>>>> 30852825267b0384d440bb0cd2066ea3f5712586
 *.xlsx
